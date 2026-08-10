@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Resource Hub Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans'] min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+    <!-- AUTH SECTION -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all duration-300">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+            
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-cyan-500/10 text-cyan-400 mb-4 text-2xl shadow-inner">
+                    <i class="fa-solid fa-cube"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">File Resource Hub</h1>
+                <p class="text-slate-400 text-sm mt-1">Silakan masuk atau daftar untuk melanjutkan</p>
+            </div>
+
+            <div class="flex rounded-xl bg-slate-950 p-1 mb-6 border border-slate-800/60">
+                <button onclick="switchTab('user-login')" id="tab-user-login" class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-cyan-400 bg-slate-800 shadow-sm cursor-pointer">Login User</button>
+                <button onclick="switchTab('user-reg')" id="tab-user-reg" class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200 cursor-pointer">Daftar User</button>
+                <button onclick="switchTab('admin-login')" id="tab-admin-login" class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200 cursor-pointer">Admin</button>
+            </div>
+
+            <!-- Form User Login -->
+            <form id="form-user-login" onsubmit="handleLogin(event, 'user')" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-user"></i></span>
+                        <input type="text" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" placeholder="Username...">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-lock"></i></span>
+                        <input type="password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" placeholder="••••••••">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/25 cursor-pointer mt-2">Masuk User</button>
+            </form>
+
+            <!-- Form User Register -->
+            <form id="form-user-reg" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Username Baru</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-user-plus"></i></span>
+                        <input type="text" id="reg-username" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" placeholder="Buat username...">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-lock"></i></span>
+                        <input type="password" id="reg-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" placeholder="••••••••">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/25 cursor-pointer mt-2">Daftar Sekarang</button>
+            </form>
+
+            <!-- Form Admin Login -->
+            <form id="form-admin-login" onsubmit="handleLogin(event, 'admin')" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Username Admin</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-user-shield"></i></span>
+                        <input type="text" id="admin-user-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" value="admin">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Password Admin</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-lock"></i></span>
+                        <input type="password" id="admin-pass-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" value="admin123">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">PIN Khusus Admin</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-key"></i></span>
+                        <input type="password" id="admin-pin-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" value="9999">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer mt-2">Login Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP INTERFACE -->
+    <div id="main-app" class="hidden flex-col min-h-screen">
+        <!-- Navbar -->
+        <header class="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchMainView('home')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
+                        <i class="fa-solid fa-cube text-white"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">FileHub Pro</span>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <button onclick="switchMainView('profile')" id="nav-profile-btn" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                        <i class="fa-regular fa-user-circle text-cyan-400"></i> Profil Saya
+                    </button>
+                    <div class="text-right hidden md:block border-l border-slate-800 pl-3">
+                        <div id="user-display-name" class="text-xs font-bold text-cyan-400"></div>
+                        <div id="user-role-badge" class="text-[10px] text-slate-400 uppercase tracking-wider"></div>
+                    </div>
+                    <button onclick="logout()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 transition-all border border-slate-700/50 cursor-pointer" title="Keluar">
+                        <i class="fa-solid fa-power-off text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Body -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+            
+            <!-- ADMIN PANEL VIEW -->
+            <div id="admin-panel" class="hidden space-y-8 animate-fadeIn">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Administrator</h2>
+                        <p class="text-slate-400 text-sm mt-1">Kelola tautan unduhan, pengumuman, dan pengaturan keamanan admin.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="switchAdminTab('upload')" id="btn-tab-upload" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md">Form Upload Link</button>
+                        <button onclick="switchAdminTab('announcement')" id="btn-tab-announcement" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Buat Pengumuman</button>
+                        <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola File</button>
+                        <button onclick="switchAdminTab('analytics')" id="btn-tab-analytics" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Statistik & Laporan</button>
+                        <button onclick="switchAdminTab('settings')" id="btn-tab-settings" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Pengaturan Admin</button>
+                    </div>
+                </div>
+
+                <!-- Form Upload Link / Resource -->
+                <div id="admin-upload-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h3 id="form-upload-title" class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-cloud-arrow-up"></i> Tambah Link File / Aplikasi Baru</h3>
+                    <form onsubmit="handleSaveResource(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="hidden" id="edit-resource-id" value="">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Nama File / Judul</label>
+                            <input type="text" id="up-name" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="Contoh: Sketchware Pro Mod">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Kategori Utama</label>
+                            <select id="up-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer">
+                                <option value="File">File</option>
+                                <option value="Aplikasi">Aplikasi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Sub Kategori (Ketik Manual)</label>
+                            <input type="text" id="up-subcategory" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="Contoh: Modifikasi, Panduan, Tools, dll">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Tautan Unduhan (G-Drive / MediaFire / Mega)</label>
+                            <input type="url" id="up-link-url" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Ukuran File / App (Contoh: 25.4 MB)</label>
+                            <input type="text" id="up-link-size" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="Contoh: 15 MB">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Deskripsi Lengkap</label>
+                            <textarea id="up-desc" rows="4" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:outline-none focus:border-cyan-500" placeholder="Detail fitur dan petunjuk..."></textarea>
+                        </div>
+                        <div class="md:col-span-2 flex gap-4">
+                            <button type="submit" id="btn-submit-resource" class="flex-1 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-upload"></i> Publikasikan Tautan Resource
+                            </button>
+                            <button type="button" id="btn-cancel-edit" onclick="resetUploadForm()" class="hidden px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all cursor-pointer">Batal</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Announcement Form -->
+                <div id="admin-announcement-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-bullhorn"></i> Buat Pengumuman Admin</h3>
+                    <form onsubmit="handlePostAnnouncement(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Judul Pengumuman</label>
+                            <input type="text" id="ann-title" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500" placeholder="Judul...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Isi Pengumuman</label>
+                            <textarea id="ann-content" rows="4" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:outline-none focus:border-amber-500" placeholder="Isi pengumuman..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Kirim Pengumuman
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Manage Files Section -->
+                <div id="admin-manage-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Kelola & Hapus Resource Tautan</h3>
+                    <div id="admin-manage-list" class="space-y-3"></div>
+                </div>
+
+                <!-- Admin Analytics & Broken Links Reports -->
+                <div id="admin-analytics-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2 text-amber-400"><i class="fa-solid fa-chart-line"></i> Statistik & Laporan Link Rusak</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-400">Total File / Aplikasi Dipublikasikan</span>
+                            <h4 id="stat-total-res" class="text-2xl font-bold text-cyan-400 mt-1">0</h4>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <span class="text-xs text-slate-400">Total Akun Pengguna Terdaftar</span>
+                            <h4 id="stat-total-users" class="text-2xl font-bold text-amber-400 mt-1">0</h4>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Laporan Link Rusak dari Pengguna</h4>
+                        <div id="admin-reports-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Admin Settings Section -->
+                <div id="admin-settings-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-shield-halved"></i> Pengaturan Kredensial Admin</h3>
+                    <form onsubmit="handleUpdateAdminCredentials(event)" class="space-y-4 max-w-md">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Username Admin Baru</label>
+                            <input type="text" id="set-admin-user" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">Password Admin Baru</label>
+                            <input type="password" id="set-admin-pass" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1.5">PIN Khusus Admin Baru</label>
+                            <input type="password" id="set-admin-pin" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <button type="submit" class="py-3 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer">Simpan Kredensial Admin</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- USER HOME VIEW -->
+            <div id="user-panel" class="space-y-8 animate-fadeIn">
+                <div id="announcement-container" class="space-y-4"></div>
+
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl backdrop-blur-md">
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <button onclick="filterCategory('All')" id="cat-btn-All" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md">Semua</button>
+                        <button onclick="filterCategory('File')" id="cat-btn-File" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer">File</button>
+                        <button onclick="filterCategory('Aplikasi')" id="cat-btn-Aplikasi" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer">Aplikasi</button>
+                        <button onclick="filterSaved()" id="cat-btn-Saved" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-bookmark"></i> Disimpan</button>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <select id="sort-select" onchange="renderResources()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer">
+                            <option value="newest">Terbaru</option>
+                            <option value="popular">Paling Disukai</option>
+                            <option value="downloads">Download Terbanyak</option>
+                        </select>
+                        <div class="w-full md:w-60 relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" id="search-input" oninput="renderResources()" placeholder="Cari file..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:border-cyan-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resource-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- USER PROFILE VIEW -->
+            <div id="profile-panel" class="hidden space-y-6 animate-fadeIn">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-2xl font-bold">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div>
+                            <h2 id="profile-username" class="text-xl font-bold text-white"></h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Member Aktif File Resource Hub Pro</p>
+                        </div>
+                    </div>
+                    <button onclick="togglePasswordForm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer">Ubah Password</button>
+                </div>
+
+                <!-- Form Ganti Password User -->
+                <div id="profile-password-box" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md hidden space-y-4">
+                    <h3 class="font-bold text-sm text-cyan-400">Ganti Password Akun</h3>
+                    <form onsubmit="handleChangeUserPassword(event)" class="space-y-3">
+                        <input type="password" id="new-user-pass" required placeholder="Password Baru..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <button type="submit" class="px-4 py-2 bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer">Simpan Password</button>
+                    </form>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                        <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-download"></i> Riwayat Download Anda</h3>
+                        <div id="profile-download-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                        <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> File Disimpan</h3>
+                        <div id="profile-saved-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-800/80 bg-slate-900/30 py-6 mt-auto text-center text-xs text-slate-500">
+            <p>&copy; 2026 File Resource Hub Pro. Secured & Powered by Netlify Static Hosting.</p>
+        </footer>
+    </div>
+
+    <!-- DETAIL MODAL & RATING -->
+    <div id="detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+                <div class="flex items-center gap-3">
+                    <div id="modal-file-icon" class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl"></div>
+                    <div>
+                        <h3 id="modal-title" class="font-bold text-base text-white"></h3>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="modal-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold"></span>
+                            <span id="modal-avg-rating" class="text-[11px] text-amber-400 font-bold"><i class="fa-solid fa-star"></i> 0.0</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <div>
+                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Deskripsi Resource</h4>
+                    <p id="modal-desc" class="text-sm text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800/60 p-4 rounded-xl whitespace-pre-line"></p>
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <span class="text-xs font-semibold text-slate-300">Beri Rating File Ini:</span>
+                    <div class="flex gap-1 text-lg text-slate-600" id="star-container">
+                        <button onclick="rateResource(1)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                        <button onclick="rateResource(2)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                        <button onclick="rateResource(3)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                        <button onclick="rateResource(4)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                        <button onclick="rateResource(5)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a id="modal-download-btn" href="#" onclick="recordDownload()" target="_blank" class="flex-1 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-download"></i> Download Tautan (<span id="modal-file-size">0 MB</span>)
+                    </a>
+                    <button onclick="reportBrokenLink()" class="px-4 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold rounded-xl text-xs transition-all cursor-pointer border border-rose-500/20">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Lapor Link Rusak
+                    </button>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-slate-800">
+                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-regular fa-comments text-cyan-400"></i> Diskusi & Komentar (<span id="comment-count">0</span>)</h4>
+                    <div id="comment-list" class="space-y-3 max-h-48 overflow-y-auto pr-2"></div>
+
+                    <form onsubmit="handlePostComment(event)" class="flex gap-2 pt-2">
+                        <input type="text" id="comment-input" required placeholder="Tulis komentar..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <button type="submit" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer">Kirim</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
