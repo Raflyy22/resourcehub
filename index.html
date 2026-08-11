@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Resource Hub Ultimate Suite - Enterprise v11</title>
+    <title>File Resource Hub Ultimate Suite - Enterprise v12</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class', }
@@ -91,7 +91,7 @@
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
                         <i class="fa-solid fa-cube text-white"></i>
                     </div>
-                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v11</span>
+                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v12</span>
                 </div>
                 
                 <div class="flex items-center space-x-2 sm:space-x-3">
@@ -145,16 +145,17 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
                     <div>
                         <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Super Administrator</h2>
-                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user (hapus, reset, blokir berjangka), bot Telegram, dan manajemen reward redeem.</p>
+                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user, broadcast, edit/update post, bot Telegram, dan reset logs.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="switchAdminTab('upload')" id="btn-tab-upload" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md">Form Upload</button>
                         <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola File</button>
                         <button onclick="switchAdminTab('users')" id="btn-tab-users" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kontrol User & Poin</button>
+                        <button onclick="switchAdminTab('broadcast')" id="btn-tab-broadcast" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Broadcast</button>
                         <button onclick="switchAdminTab('telegram')" id="btn-tab-telegram" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Bot Telegram</button>
                         <button onclick="switchAdminTab('logs')" id="btn-tab-logs" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Pusat Logs</button>
                         <button onclick="switchAdminTab('livechat')" id="btn-tab-livechat" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Live Chat Masuk</button>
-                        <button onclick="switchAdminTab('rewards')" id="btn-tab-rewards" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kustom Reward Redeem</button>
+                        <button onclick="switchAdminTab('rewards')" id="btn-tab-rewards" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kustom Reward</button>
                         <button onclick="switchAdminTab('requests')" id="btn-tab-requests" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Request</button>
                         <button onclick="switchAdminTab('analytics')" id="btn-tab-analytics" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Statistik</button>
                         <button onclick="switchAdminTab('backup')" id="btn-tab-backup" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Backup</button>
@@ -225,17 +226,35 @@
                     </form>
                 </div>
 
-                <!-- Kelola File & Post Section -->
+                <!-- Kelola File & Post Khusus Section -->
                 <div id="admin-manage-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Kontrol Post & Manajemen File</h3>
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Kelola Postingan Khusus & File</h3>
+                    <p class="text-xs text-slate-400">Atur postingan mana saja yang berstatus akses khusus dan kelola file komunitas.</p>
                     <div id="admin-manage-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
 
-                <!-- Kontrol Akun User & Izin Akses Section -->
+                <!-- Kontrol Akun User Section -->
                 <div id="admin-users-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User, Hapus, Reset & Blokir Berjangka</h3>
-                    <p class="text-xs text-slate-400">Atur saldo poin, reset akun, hapus akun permanen, atau blokir dengan durasi tertentu (7d, 30d, 120d, 9999d, Permanen).</p>
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User & Akses Postingan Khusus</h3>
+                    <p class="text-xs text-slate-400">Atur saldo poin, beri VVIP otomatis 1 bulan, dan berikan akses postingan khusus untuk user tertentu.</p>
                     <div id="admin-users-list" class="space-y-3"></div>
+                </div>
+
+                <!-- Broadcast Dashboard Section -->
+                <div id="admin-broadcast-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4 max-w-xl">
+                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-bullhorn"></i> Pengaturan Broadcast Pesan User</h3>
+                    <p class="text-xs text-slate-400">Kirim pengumuman berjalan yang akan muncul di dashboard semua user.</p>
+                    <form onsubmit="handleSaveBroadcast(event)" class="space-y-4 pt-2">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Judul Broadcast</label>
+                            <input type="text" id="bc-title" required placeholder="Cth: Pengumuman Penting Update v12" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Pesan / Isi Pengumuman</label>
+                            <textarea id="bc-content" rows="4" required placeholder="Tulis pesan broadcast..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs focus:outline-none focus:border-cyan-500"></textarea>
+                        </div>
+                        <button type="submit" class="py-3 px-6 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Publikasikan Broadcast</button>
+                    </form>
                 </div>
 
                 <!-- Konfigurasi Bot Telegram Section -->
@@ -259,18 +278,16 @@
                 <div id="admin-logs-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
                         <h3 class="text-lg font-bold flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-file-lines"></i> Pusat Logs Sistem</h3>
-                        <div class="flex flex-wrap gap-1.5 text-xs">
-                            <button onclick="filterLogsCategory('all')" id="log-btn-all" class="px-3 py-1 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Semua</button>
-                            <button onclick="filterLogsCategory('naik_level')" id="log-btn-naik_level" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Naik Level</button>
-                            <button onclick="filterLogsCategory('redeem_point')" id="log-btn-redeem_point" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Redeem Point</button>
-                            <button onclick="filterLogsCategory('redeem_saldo')" id="log-btn-redeem_saldo" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Redeem Saldo</button>
-                            <button onclick="filterLogsCategory('selesai_quest')" id="log-btn-selesai_quest" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Selesai Quest</button>
-                            <button onclick="filterLogsCategory('like_post')" id="log-btn-like_post" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Like Post</button>
-                            <button onclick="filterLogsCategory('komentar_post')" id="log-btn-komentar_post" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Komentar</button>
-                            <button onclick="filterLogsCategory('rating_post')" id="log-btn-rating_post" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Rating</button>
-                            <button onclick="filterLogsCategory('daftar_baru')" id="log-btn-daftar_baru" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Daftar Baru</button>
-                            <button onclick="filterLogsCategory('akun_login')" id="log-btn-akun_login" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Login</button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="resetAllLogs()" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-bold text-xs rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-trash-can"></i> Reset All Logs</button>
                         </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 text-xs pb-2 border-b border-slate-800/60">
+                        <button onclick="filterLogsCategory('all')" id="log-btn-all" class="px-3 py-1 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Semua</button>
+                        <button onclick="filterLogsCategory('naik_level')" id="log-btn-naik_level" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Naik Level</button>
+                        <button onclick="filterLogsCategory('redeem_point')" id="log-btn-redeem_point" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Redeem Point</button>
+                        <button onclick="filterLogsCategory('redeem_saldo')" id="log-btn-redeem_saldo" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Redeem Saldo</button>
+                        <button onclick="filterLogsCategory('selesai_quest')" id="log-btn-selesai_quest" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Selesai Quest</button>
                     </div>
                     <div id="admin-logs-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 font-mono text-xs"></div>
                 </div>
@@ -306,7 +323,7 @@
                         <input type="text" id="rew-name" required placeholder="Nama Hadiah..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
                         <input type="number" id="rew-cost" required placeholder="Poin..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
                         <select id="rew-type" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer">
-                            <option value="vip">Kategori Akses (VVIP)</option>
+                            <option value="vip">Kategori Akses (VVIP 1 Bulan)</option>
                             <option value="post_access">Kategori Akses (Post Khusus)</option>
                             <option value="dana">Kategori Saldo (Dana)</option>
                             <option value="gopay">Kategori Saldo (Gopay)</option>
@@ -418,6 +435,9 @@
 
             <!-- USER HOME VIEW -->
             <div id="user-panel" class="space-y-8 animate-fadeIn">
+                <!-- BROADCAST RUNNING CONTAINER -->
+                <div id="broadcast-banner-container"></div>
+
                 <div id="announcement-container" class="space-y-4"></div>
 
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl backdrop-blur-md">
@@ -553,8 +573,35 @@
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/30 py-6 mt-auto text-center text-xs text-slate-500">
-            <p>&copy; 2026 File Resource Hub Ultimate Suite v11. Secured & Powered by Netlify Static Hosting.</p>
+            <p>&copy; 2026 File Resource Hub Ultimate Suite v12. Secured & Powered by Netlify Static Hosting.</p>
         </footer>
+    </div>
+
+    <!-- FLOATING SUPPORT CHAT ICON (BOTTOM RIGHT) -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button onclick="toggleSupportChatModal()" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center text-xl shadow-2xl hover:scale-105 transition-all cursor-pointer animate-bounce" title="Bantuan & Request Chat">
+            <i class="fa-solid fa-headset"></i>
+        </button>
+    </div>
+
+    <!-- SUPPORT CHAT SELECTION MODAL -->
+    <div id="support-chat-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-6 rounded-2xl shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-xl mx-auto flex items-center justify-center text-xl">
+                <i class="fa-solid fa-headset"></i>
+            </div>
+            <h3 class="font-bold text-base text-white">Pusat Layanan Bantuan & Request</h3>
+            <p class="text-xs text-slate-400">Silakan pilih jenis layanan yang Anda perlukan untuk terhubung langsung dengan admin secara real-time:</p>
+            <div class="space-y-2 pt-2">
+                <button onclick="selectSupportCategory('Bantuan')" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs cursor-pointer shadow-md">
+                    <i class="fa-solid fa-circle-question mr-1"></i> Bantuan / Kendala Akun & Transaksi
+                </button>
+                <button onclick="selectSupportCategory('Request')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold rounded-xl text-xs cursor-pointer">
+                    <i class="fa-solid fa-hands-holding-child mr-1"></i> Request File / Aplikasi Baru
+                </button>
+            </div>
+            <button onclick="toggleSupportChatModal()" class="text-slate-500 text-xs hover:underline pt-2 block w-full">Tutup</button>
+        </div>
     </div>
 
     <!-- MODAL REDEEM PILIH POSTINGAN KHUSUS -->
