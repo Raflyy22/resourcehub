@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Resource Hub Ultimate Suite - Enterprise v10</title>
+    <title>File Resource Hub Ultimate Suite - Enterprise v11</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class', }
@@ -91,7 +91,7 @@
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
                         <i class="fa-solid fa-cube text-white"></i>
                     </div>
-                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v10</span>
+                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v11</span>
                 </div>
                 
                 <div class="flex items-center space-x-2 sm:space-x-3">
@@ -145,12 +145,13 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
                     <div>
                         <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Super Administrator</h2>
-                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user & poin, live chat real-time, manajemen reward redeem (batas user & kuota), dan validasi saldo.</p>
+                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user (hapus, reset, blokir berjangka), bot Telegram, dan manajemen reward redeem.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="switchAdminTab('upload')" id="btn-tab-upload" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md">Form Upload</button>
                         <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola File</button>
                         <button onclick="switchAdminTab('users')" id="btn-tab-users" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kontrol User & Poin</button>
+                        <button onclick="switchAdminTab('telegram')" id="btn-tab-telegram" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Bot Telegram</button>
                         <button onclick="switchAdminTab('logs')" id="btn-tab-logs" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Pusat Logs</button>
                         <button onclick="switchAdminTab('livechat')" id="btn-tab-livechat" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Live Chat Masuk</button>
                         <button onclick="switchAdminTab('rewards')" id="btn-tab-rewards" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kustom Reward Redeem</button>
@@ -232,9 +233,26 @@
 
                 <!-- Kontrol Akun User & Izin Akses Section -->
                 <div id="admin-users-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User, Kelola Poin & Akses Postingan</h3>
-                    <p class="text-xs text-slate-400">Atur saldo poin user (tambah/kurang), link tanpa iklan VIP, dan buka akses postingan spesifik secara real-time.</p>
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User, Hapus, Reset & Blokir Berjangka</h3>
+                    <p class="text-xs text-slate-400">Atur saldo poin, reset akun, hapus akun permanen, atau blokir dengan durasi tertentu (7d, 30d, 120d, 9999d, Permanen).</p>
                     <div id="admin-users-list" class="space-y-3"></div>
+                </div>
+
+                <!-- Konfigurasi Bot Telegram Section -->
+                <div id="admin-telegram-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4 max-w-xl">
+                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-brands fa-telegram"></i> Konfigurasi Bot Telegram</h3>
+                    <p class="text-xs text-slate-400">Atur Bot Token dan Chat/Channel ID untuk mengirim notifikasi pusat logs & livechat ke Telegram.</p>
+                    <form onsubmit="handleSaveTelegramConfig(event)" class="space-y-4 pt-2">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Telegram Bot Token</label>
+                            <input type="text" id="tg-token" placeholder="Cth: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Channel / Chat ID (Pusat Logs & Livechat)</label>
+                            <input type="text" id="tg-chatid" placeholder="Cth: -1001234567890 atau @channelname" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-mono">
+                        </div>
+                        <button type="submit" class="py-3 px-6 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Simpan Konfigurasi Telegram</button>
+                    </form>
                 </div>
 
                 <!-- Admin Logs Section -->
@@ -460,7 +478,7 @@
                             </div>
                             <div class="flex items-center gap-3 mt-1">
                                 <p id="profile-points-label" class="text-xs text-amber-400 font-semibold">Poin Reward: 0 Pts</p>
-                                <p id="profile-level-label" class="text-xs text-cyan-400 font-bold">Level: 1 (EXP: 0/10)</p>
+                                <p id="profile-level-label" class="text-xs text-cyan-400 font-bold">Level: 1 (EXP: 0/50)</p>
                             </div>
                             <div id="profile-vip-status" class="text-xs text-emerald-400 font-bold mt-1"></div>
                             <div id="profile-trophies" class="flex flex-wrap gap-1.5 mt-2"></div>
@@ -535,7 +553,7 @@
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/30 py-6 mt-auto text-center text-xs text-slate-500">
-            <p>&copy; 2026 File Resource Hub Ultimate Suite v10. Secured & Powered by Netlify Static Hosting.</p>
+            <p>&copy; 2026 File Resource Hub Ultimate Suite v11. Secured & Powered by Netlify Static Hosting.</p>
         </footer>
     </div>
 

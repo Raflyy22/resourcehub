@@ -3,6 +3,8 @@ let adminCreds = JSON.parse(localStorage.getItem('frh_admin_creds')) || { user: 
 let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0;
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
+let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
+
 let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
     {
         id: 1,
@@ -31,7 +33,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v10!", content: "Pembaruan sistem validasi ketat akses post, kuota & batasan redeem, serta sistem EXP random level 1-100 aktif.", date: "11 Agustus 2026" }
+    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v11!", content: "Pembaruan fitur hapus/reset user, blokir berjangka, proteksi ketat detail post khusus, serta integrasi Bot Telegram aktif.", date: "11 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [
@@ -56,19 +58,20 @@ let redeemRewards = JSON.parse(localStorage.getItem('frh_redeem_rewards')) || [
 
 let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) || {};
 let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
-let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {}; // { username: { level: 1, exp: 0 } }
+let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {}; 
 let userQuestClaims = JSON.parse(localStorage.getItem('frh_user_quest_claims')) || {};
 let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; 
-let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {}; // { username: [resId1, resId2] }
+let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {}; 
 let userAuditLogs = JSON.parse(localStorage.getItem('frh_user_audit_logs')) || {};
 let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || []; 
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v10!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v11!", type: 'info', read: false, time: "Baru saja" }
 ];
-let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; // { username: { rewardId: count } }
-let pendingSaldoRedeems = JSON.parse(localStorage.getItem('frh_pending_saldo_redeems')) || []; // [{ id, username, rewardName, number, accName, time, status }]
+let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
+let pendingSaldoRedeems = JSON.parse(localStorage.getItem('frh_pending_saldo_redeems')) || []; 
+let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; // { username: banUntilTimestamp (or 9999999999999 for permanent) }
 
 let currentFilter = 'All';
 let activeResourceId = null;
@@ -79,6 +82,7 @@ let currentLogFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     checkVipExpiration();
+    checkBanExpiration();
     checkAuthState();
     checkAdminLockState();
     renderNotifications();
@@ -121,8 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ========================================================
-   OTOMATIS HAPUS VVIP SAAT SUDAH 1 BULAN
+   OTOMATIS CEK KADALUARSA BLOKIR & VVIP
    ======================================================== */
+function checkBanExpiration() {
+    let now = Date.now();
+    let updated = false;
+    for (let uname in userBans) {
+        let banUntil = userBans[uname];
+        if (banUntil !== 'permanent' && now > banUntil) {
+            delete userBans[uname];
+            updated = true;
+        }
+    }
+    if (updated) {
+        localStorage.setItem('frh_user_bans', JSON.stringify(userBans));
+    }
+}
+
 function checkVipExpiration() {
     let now = Date.now();
     let updated = false;
@@ -179,6 +198,33 @@ function logUserAction(username, actionText) {
     localStorage.setItem('frh_user_audit_logs', JSON.stringify(userAuditLogs));
 }
 
+/* ========================================================
+   FITUR 4: KONEKSI BOT TELEGRAM (KIRIM KE API TELEGRAM)
+   ======================================================== */
+function sendTelegramNotification(text) {
+    if (!telegramConfig.token || !telegramConfig.chatId) return;
+    let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
+    let data = {
+        chat_id: telegramConfig.chatId,
+        text: `🤖 [FileHub Ultimate v11]\n${text}`,
+        parse_mode: 'HTML'
+    };
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(err => console.error('Telegram API Error:', err));
+}
+
+function handleSaveTelegramConfig(e) {
+    e.preventDefault();
+    telegramConfig.token = document.getElementById('tg-token').value.trim();
+    telegramConfig.chatId = document.getElementById('tg-chatid').value.trim();
+    localStorage.setItem('frh_telegram_config', JSON.stringify(telegramConfig));
+    alert('Konfigurasi Bot Telegram berhasil disimpan!');
+    sendTelegramNotification('✅ Bot Telegram berhasil dihubungkan ke pusat logs dan livechat.');
+}
+
 function recordSystemLog(logType, detailText, uname = null) {
     const logItem = {
         id: Date.now(),
@@ -190,6 +236,9 @@ function recordSystemLog(logType, detailText, uname = null) {
     systemLogs.unshift(logItem);
     if (systemLogs.length > 200) systemLogs.pop();
     localStorage.setItem('frh_system_logs', JSON.stringify(systemLogs));
+
+    // Kirim notifikasi ke Bot Telegram
+    sendTelegramNotification(`<b>[LOGS: ${logType.toUpperCase()}]</b>\nDetail: ${detailText}\nUser: @${logItem.user}\nWaktu: ${logItem.time}`);
 }
 
 function addNotification(text, type = 'info') {
@@ -249,17 +298,15 @@ function addPoints(username, amount) {
 }
 
 /* ========================================================
-   FITUR 4: SISTEM LEVEL AKUN & EXP RANDOM (1-100)
-   Level 1-10: 10 progres per level
-   Level 11-20: 20 progres per level, dst kelipatannya.
+   FITUR 5: NAIK LEVEL DIPERSULIT (EXP BUTUH LEBIH BANYAK)
    ======================================================== */
 function addExpAndLevelProgress(username, amount = null) {
     if (!username) return;
     if (!userLevels[username]) userLevels[username] = { level: 1, exp: 0 };
     let uData = userLevels[username];
 
-    // Jika amount tidak ditentukan, dapat random antara 1 sampai 5
-    let expGain = amount !== null ? amount : Math.floor(Math.random() * 5) + 1;
+    // Diper-sulit: EXP gain lebih kecil (1-2), target exp per level jauh lebih besar (50 * level)
+    let expGain = amount !== null ? amount : (Math.random() < 0.7 ? 1 : 2);
     uData.exp += expGain;
 
     let targetExp = getTargetExpForLevel(uData.level);
@@ -268,7 +315,7 @@ function addExpAndLevelProgress(username, amount = null) {
         uData.level++;
         targetExp = getTargetExpForLevel(uData.level);
         addNotification(`Selamat! Akun Anda naik ke Level ${uData.level}!`, 'admin');
-        recordSystemLog('naik_level', `User @${username} naik level otomatis ke Level ${uData.level}.`, username);
+        recordSystemLog('naik_level', `User @${username} naik level ke Level ${uData.level}.`, username);
     }
 
     if (uData.level >= 100) {
@@ -280,10 +327,8 @@ function addExpAndLevelProgress(username, amount = null) {
 }
 
 function getTargetExpForLevel(lvl) {
-    // Level 1-10 butuh 10 progres per level
-    // Level 11-20 butuh 20 progres, dst (kelipatan 10 setiap 10 level)
-    let block = Math.floor((lvl - 1) / 10);
-    return (block + 1) * 10;
+    // Diper-sulit secara signifikan: 50 EXP dikali level saat ini
+    return lvl * 50;
 }
 
 function formatFileSizeInput(el) {
@@ -354,6 +399,16 @@ function handleUnifiedLogin(e) {
     } else {
         let users = JSON.parse(localStorage.getItem('frh_users')) || [];
         const validUser = users.find(u => u.username === uVal && u.password === pVal);
+        
+        // Cek status blokir
+        if (userBans[uVal]) {
+            let banUntil = userBans[uVal];
+            if (banUntil === 'permanent' || Date.now() < banUntil) {
+                alert('Akun Anda sedang diblokir oleh Administrator.');
+                return;
+            }
+        }
+
         if (validUser && validUser.banned) {
             alert('Akun Anda telah diblokir oleh Administrator.');
             return;
@@ -456,18 +511,15 @@ function checkAuthState() {
     }
 }
 
-/* ========================================================
-   FITUR 5: BADGE DIPERKETAT / LUMAYAN SULIT DIDAPATKAN
-   ======================================================== */
 function getUserBadge(username) {
     let pts = userPoints[username] || 0;
     let uLvl = userLevels[username] ? userLevels[username].level : 1;
 
-    if (pts >= 800 && uLvl >= 50) return 'Grandmaster Elite 👑🔥';
-    if (pts >= 500 && uLvl >= 30) return 'Legendary Contributor ⚡';
-    if (pts >= 300 && uLvl >= 20) return 'Master Contributor 🏆';
-    if (pts >= 150 && uLvl >= 10) return 'Senior Contributor 🌟';
-    if (pts >= 75 && uLvl >= 5) return 'Active Contributor ✨';
+    if (pts >= 1000 && uLvl >= 70) return 'Grandmaster Elite 👑🔥';
+    if (pts >= 700 && uLvl >= 50) return 'Legendary Contributor ⚡';
+    if (pts >= 400 && uLvl >= 30) return 'Master Contributor 🏆';
+    if (pts >= 200 && uLvl >= 15) return 'Senior Contributor 🌟';
+    if (pts >= 100 && uLvl >= 8) return 'Active Contributor ✨';
     return 'Member Baru 🌱';
 }
 
@@ -581,7 +633,7 @@ function renderLeaderboardPage() {
 }
 
 function switchAdminTab(type) {
-    ['upload', 'manage', 'users', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
+    ['upload', 'manage', 'users', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
         if(sec) sec.classList.add('hidden');
@@ -594,6 +646,10 @@ function switchAdminTab(type) {
     
     if (type === 'manage') renderAdminManageList();
     if (type === 'users') renderAdminUsersList();
+    if (type === 'telegram') {
+        document.getElementById('tg-token').value = telegramConfig.token || '';
+        document.getElementById('tg-chatid').value = telegramConfig.chatId || '';
+    }
     if (type === 'logs') renderAdminLogsList();
     if (type === 'livechat') renderAdminLiveChatUsers();
     if (type === 'rewards') renderAdminRewardsList();
@@ -601,6 +657,9 @@ function switchAdminTab(type) {
     if (type === 'analytics') renderAdminAnalytics();
 }
 
+/* ========================================================
+   FITUR 2 & 3: KONTROL USER (HAPUS, RESET, BLOKIR BERJANGKA)
+   ======================================================== */
 function renderAdminUsersList() {
     const list = document.getElementById('admin-users-list');
     if (!list) return;
@@ -612,38 +671,103 @@ function renderAdminUsersList() {
     }
     users.forEach((u, idx) => {
         let isVip = userVipSubscriptions[u.username] && Date.now() < userVipSubscriptions[u.username];
-        let unlockedArr = userUnlockedPosts[u.username] || [];
         let uPts = userPoints[u.username] || 0;
-
-        let postCheckboxes = resources.map(res => {
-            let isUnlocked = unlockedArr.includes(res.id);
-            return `<label class="flex items-center gap-1.5 text-[10px] text-slate-300"><input type="checkbox" ${isUnlocked ? 'checked' : ''} onchange="toggleAdminUserPostAccess('${u.username}', ${res.id})" class="accent-cyan-500"> ${res.name}</label>`;
-        }).join('');
+        let isBanned = userBans[u.username] ? true : false;
 
         list.innerHTML += `
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <span class="font-bold text-white text-sm block">${u.username}</span>
-                        <span class="text-[10px] text-slate-400">Status: ${u.banned ? '<span class="text-rose-400">Diblokir</span>' : '<span class="text-emerald-400">Aktif</span>'} | Poin: <span class="text-amber-400 font-bold">${uPts} Pts</span> | VVIP: <span class="${isVip ? 'text-amber-400 font-bold' : 'text-slate-400'}">${isVip ? 'Aktif' : 'Non-VVIP'}</span></span>
+                        <span class="text-[10px] text-slate-400">Poin: <span class="text-amber-400 font-bold">${uPts} Pts</span> | Status: <span class="${isBanned ? 'text-rose-400 font-bold' : 'text-emerald-400'}">${isBanned ? 'Diblokir' : 'Aktif'}</span></span>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
                         <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
-                            <input type="number" id="point-input-${u.username}" placeholder="Jumlah" class="w-16 bg-slate-950 px-2 py-1 text-[11px] text-white rounded focus:outline-none">
-                            <button onclick="modifyUserPoints('${u.username}', 'add')" class="px-2 py-1 bg-emerald-500 text-slate-950 font-bold rounded text-[10px]" title="Tambah Poin">+ Poin</button>
-                            <button onclick="modifyUserPoints('${u.username}', 'sub')" class="px-2 py-1 bg-rose-500 text-slate-950 font-bold rounded text-[10px]" title="Kurangi Poin">- Poin</button>
+                            <input type="number" id="point-input-${u.username}" placeholder="Poin" class="w-14 bg-slate-950 px-2 py-1 text-[11px] text-white rounded focus:outline-none">
+                            <button onclick="modifyUserPoints('${u.username}', 'add')" class="px-2 py-1 bg-emerald-500 text-slate-950 font-bold rounded text-[10px]">+</button>
+                            <button onclick="modifyUserPoints('${u.username}', 'sub')" class="px-2 py-1 bg-rose-500 text-slate-950 font-bold rounded text-[10px]">-</button>
                         </div>
-                        <button onclick="toggleVipSubscription('${u.username}')" class="px-3 py-1.5 ${isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'} font-bold rounded-lg cursor-pointer">${isVip ? 'Cabut VVIP' : 'Beri VVIP'}</button>
-                        <button onclick="toggleUserBan(${idx})" class="px-3 py-1.5 ${u.banned ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'} font-bold rounded-lg cursor-pointer">${u.banned ? 'Pulihkan' : 'Blokir'}</button>
+                        <select id="ban-select-${u.username}" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-200">
+                            <option value="7">Blokir 7 Hari</option>
+                            <option value="30">Blokir 30 Hari</option>
+                            <option value="120">Blokir 120 Hari</option>
+                            <option value="9999">Blokir 9999 Hari</option>
+                            <option value="permanent">Blokir Permanen</option>
+                        </select>
+                        <button onclick="applyUserBan('${u.username}')" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded-lg cursor-pointer">Blokir</button>
+                        <button onclick="unbanUser('${u.username}')" class="px-3 py-1 bg-emerald-500/20 text-emerald-400 font-bold rounded-lg cursor-pointer">Buka Blokir</button>
+                        <button onclick="resetUserAccount('${u.username}')" class="px-3 py-1 bg-amber-500/20 text-amber-400 font-bold rounded-lg cursor-pointer">Reset</button>
+                        <button onclick="deleteUserAccount('${u.username}', ${idx})" class="px-3 py-1 bg-rose-500 text-slate-950 font-bold rounded-lg cursor-pointer">Hapus Akun</button>
                     </div>
-                </div>
-                <div class="border-t border-slate-900 pt-2">
-                    <span class="text-[11px] font-semibold text-cyan-400 block mb-1">Akses Postingan Khusus Satuan:</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${postCheckboxes || '<span class="text-slate-500 text-[10px]">Belum ada post</span>'}</div>
                 </div>
             </div>
         `;
     });
+}
+
+function applyUserBan(username) {
+    const daysStr = document.getElementById(`ban-select-${username}`).value;
+    let banUntil = 'permanent';
+    if (daysStr !== 'permanent') {
+        let days = parseInt(daysStr);
+        banUntil = Date.now() + (days * 24 * 60 * 60 * 1000);
+    }
+    userBans[username] = banUntil;
+    localStorage.setItem('frh_user_bans', JSON.stringify(userBans));
+    recordSystemLog('redeem_point', `Admin memblokir akun @${username} (Durasi: ${daysStr}).`, username);
+    alert(`Akun @${username} berhasil diblokir.`);
+    renderAdminUsersList();
+}
+
+function unbanUser(username) {
+    delete userBans[username];
+    localStorage.setItem('frh_user_bans', JSON.stringify(userBans));
+    recordSystemLog('redeem_point', `Admin membuka blokir akun @${username}.`, username);
+    alert(`Blokir untuk @${username} telah dibuka.`);
+    renderAdminUsersList();
+}
+
+function resetUserAccount(username) {
+    if (confirm(`Apakah Anda yakin ingin mereset akun @${username} (poin, level, quest, unlock post)?`)) {
+        delete userPoints[username];
+        delete userLevels[username];
+        delete userQuestClaims[username];
+        delete userUnlockedPosts[username];
+        delete userVipSubscriptions[username];
+        localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+        localStorage.setItem('frh_user_levels', JSON.stringify(userLevels));
+        localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
+        localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
+        localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
+
+        recordSystemLog('redeem_point', `Admin mereset data akun @${username}.`, username);
+        alert(`Akun @${username} berhasil direset.`);
+        renderAdminUsersList();
+    }
+}
+
+function deleteUserAccount(username, idx) {
+    if (confirm(`PERHATIAN: Apakah Anda yakin ingin MENGHAPUS PERMANEN akun @${username}?`)) {
+        let users = JSON.parse(localStorage.getItem('frh_users')) || [];
+        users.splice(idx, 1);
+        localStorage.setItem('frh_users', JSON.stringify(users));
+
+        delete userPoints[username];
+        delete userLevels[username];
+        delete userQuestClaims[username];
+        delete userUnlockedPosts[username];
+        delete userVipSubscriptions[username];
+        delete userBans[username];
+
+        localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+        localStorage.setItem('frh_user_levels', JSON.stringify(userLevels));
+        localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
+        localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
+
+        recordSystemLog('redeem_point', `Admin menghapus permanen akun @${username}.`, username);
+        alert(`Akun @${username} berhasil dihapus permanen.`);
+        renderAdminUsersList();
+    }
 }
 
 function modifyUserPoints(username, action) {
@@ -671,9 +795,6 @@ function modifyUserPoints(username, action) {
     renderAdminUsersList();
 }
 
-/* ========================================================
-   FITUR 3 & FITUR 6: LOGS & VALIDASI SALDO / KUOTA REDEEM
-   ======================================================== */
 function filterLogsCategory(cat) {
     currentLogFilter = cat;
     ['all', 'naik_level', 'redeem_point', 'redeem_saldo', 'selesai_quest', 'like_post', 'komentar_post', 'rating_post', 'daftar_baru', 'akun_login'].forEach(c => {
@@ -738,49 +859,11 @@ function approveSaldoRedeem(pendingId) {
     pItem.status = 'approved';
     localStorage.setItem('frh_pending_saldo_redeems', JSON.stringify(pendingSaldoRedeems));
 
-    // Kirim notifikasi ke user
     addNotification(`Redeem saldo "${pItem.rewardName}" Anda telah disetujui & berhasil diproses oleh admin!`, 'admin');
     recordSystemLog('redeem_saldo', `Admin menyetujui redeem saldo "${pItem.rewardName}" untuk @${pItem.username}. No: ${pItem.number}, Nama: ${pItem.accName}.`, pItem.username);
 
     alert(`Redeem saldo untuk @${pItem.username} berhasil dicentang dan notifikasi telah dikirim.`);
     renderAdminLogsList();
-}
-
-function toggleAdminUserPostAccess(username, resId) {
-    if (!userUnlockedPosts[username]) userUnlockedPosts[username] = [];
-    let idx = userUnlockedPosts[username].indexOf(resId);
-    if (idx > -1) {
-        userUnlockedPosts[username].splice(idx, 1);
-    } else {
-        userUnlockedPosts[username].push(resId);
-    }
-    localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
-    recordSystemLog('redeem_point', `Admin mengatur akses post ID ${resId} untuk @${username}.`, username);
-    alert(`Akses postingan untuk @${username} diperbarui.`);
-}
-
-function toggleVipSubscription(username) {
-    let isVipActive = userVipSubscriptions[username] && Date.now() < userVipSubscriptions[username];
-    if (isVipActive) {
-        delete userVipSubscriptions[username];
-        recordSystemLog('redeem_point', `Admin mencabut VVIP @${username}.`, username);
-    } else {
-        userVipSubscriptions[username] = Date.now() + (30 * 24 * 60 * 60 * 1000); // 1 Bulan
-        recordSystemLog('redeem_point', `Admin memberikan VVIP 1 bulan untuk @${username}.`, username);
-    }
-    localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
-    renderAdminUsersList();
-    alert(`Status VVIP untuk @${username} berhasil diperbarui.`);
-}
-
-function toggleUserBan(idx) {
-    let users = JSON.parse(localStorage.getItem('frh_users')) || [];
-    if (users[idx]) {
-        users[idx].banned = !users[idx].banned;
-        localStorage.setItem('frh_users', JSON.stringify(users));
-        renderAdminUsersList();
-        alert('Status akun berhasil diperbarui.');
-    }
 }
 
 function renderAdminLiveChatUsers() {
@@ -848,6 +931,7 @@ function handleAdminSendChat(e) {
     localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
     input.value = '';
     renderAdminChatMessages();
+    sendTelegramNotification(`<b>[LIVECHAT ADMIN -> @${activeChatUser}]</b>\n${text}`);
 }
 
 function handleAdminUploadImage(e) {
@@ -899,6 +983,7 @@ function handleUserSendChat(e) {
     localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
     input.value = '';
     renderUserLiveChatMessages();
+    sendTelegramNotification(`<b>[LIVECHAT @${currentUser.username} -> ADMIN]</b>\n${text}`);
 }
 
 function handleUserUploadImage(e) {
@@ -997,9 +1082,6 @@ function renderUserRedeemRewardsList() {
     });
 }
 
-/* ========================================================
-   FITUR 1 & 2: REDEEM KATEGORI AKSES & SALDO (DANA, GOPAY, SHOPEEPAY)
-   ======================================================== */
 function initRedeemReward(id) {
     let rew = redeemRewards.find(r => r.id === id);
     let uname = currentUser.username;
@@ -1125,7 +1207,6 @@ function submitEWalletRedeem(e) {
     rew.claimedCount = (rew.claimedCount || 0) + 1;
     localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
 
-    // Masuk ke pending saldo logs agar admin harus centang berhasil
     let pendingItem = {
         id: Date.now(),
         username: uname,
@@ -1139,7 +1220,6 @@ function submitEWalletRedeem(e) {
     localStorage.setItem('frh_pending_saldo_redeems', JSON.stringify(pendingSaldoRedeems));
 
     recordSystemLog('redeem_saldo', `User @${uname} menukar ${rew.cost} poin untuk "${rew.name}". No: ${number}, Nama: ${accName} (Menunggu Validasi Admin).`, uname);
-    // Masukkan ID pending di logs terbaru
     systemLogs[0].pendingId = pendingItem.id;
     localStorage.setItem('frh_system_logs', JSON.stringify(systemLogs));
 
@@ -1376,7 +1456,7 @@ function exportDataBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "filehub_ultimatesuite_v10_backup.json");
+    dlAnchor.setAttribute("download", "filehub_ultimatesuite_v11_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -1507,8 +1587,6 @@ function renderResources() {
         return;
     }
 
-    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-
     filtered.forEach(res => {
         const isLiked = res.likedBy && res.likedBy.includes(currentUser.username);
         const isSaved = res.savedBy && res.savedBy.includes(currentUser.username);
@@ -1584,7 +1662,7 @@ function toggleLike(id) {
         res.likedBy.push(currentUser.username);
         res.likes += 1;
         addPoints(currentUser.username, 2);
-        addExpAndLevelProgress(currentUser.username); // EXP Random
+        addExpAndLevelProgress(currentUser.username);
         logUserAction(currentUser.username, `Menyukai resource: ${res.name}`);
         recordSystemLog('like_post', `User @${currentUser.username} menyukai post "${res.name}".`, currentUser.username);
     }
@@ -1607,11 +1685,25 @@ function toggleSave(id) {
     renderResources();
 }
 
+/* ========================================================
+   FITUR 1: VALIDASI KETAT AKSES POSTINGAN KHUSUS (TIDAK BISA LIHAT DETAIL)
+   ======================================================== */
 function openDetail(id, openModalWindow = true) {
-    activeResourceId = id;
     const res = resources.find(r => r.id === id);
     if (!res) return;
 
+    let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
+    let unlockedArr = userUnlockedPosts[currentUser.username] || [];
+    let isUnlockedPost = unlockedArr.includes(res.id);
+    let hasAccess = currentUser.role === 'admin' || isVip || (!res.isSpecialAccess) || isUnlockedPost;
+
+    if (!hasAccess) {
+        alert('Akses Ditolak! Postingan ini dikunci sebagai Akses Khusus. Anda tidak memiliki akses untuk melihat detail postingan ini. Silakan buka akses di menu profil atau tukar poin redeem.');
+        switchMainView('profile');
+        return;
+    }
+
+    activeResourceId = id;
     res.views = (res.views || 0) + 1;
     localStorage.setItem('frh_resources', JSON.stringify(resources));
 
@@ -1621,7 +1713,7 @@ function openDetail(id, openModalWindow = true) {
         userViewHistory[currentUser.username].unshift(res.name);
         if (userViewHistory[currentUser.username].length > 15) userViewHistory[currentUser.username].pop();
         localStorage.setItem('frh_user_view_history', JSON.stringify(userViewHistory));
-        addExpAndLevelProgress(currentUser.username); // EXP Random dari lihat post
+        addExpAndLevelProgress(currentUser.username); 
     }
 
     if (openModalWindow) {
@@ -1656,28 +1748,8 @@ function openDetail(id, openModalWindow = true) {
     const downloadNoAdBtn = document.getElementById('modal-download-noad-btn');
 
     downloadAdBtn.href = res.linkAd;
-
-    /* ========================================================
-       FITUR 1: VALIDASI KETAT AKSES POSTINGAN KHUSUS
-       ======================================================== */
-    let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
-    let unlockedArr = userUnlockedPosts[currentUser.username] || [];
-    let isUnlockedPost = unlockedArr.includes(res.id);
-    let canAccessCleanLink = currentUser.role === 'admin' || isVip || (!res.isSpecialAccess) || isUnlockedPost;
-
-    if (canAccessCleanLink) {
-        downloadNoAdBtn.href = res.linkNoAd;
-        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (${res.fileSize}) [Akses Valid Terverifikasi]`;
-    } else {
-        downloadNoAdBtn.href = "#";
-        downloadNoAdBtn.onclick = (e) => {
-            e.preventDefault();
-            alert('Akses Ditolak! Postingan ini dikunci sebagai Akses Khusus. Validasi sistem mendapati akun Anda belum membuka akses untuk postingan ini.');
-            switchMainView('profile');
-            closeModal();
-        };
-        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Link Tanpa Iklan (Akses Khusus Terkunci)`;
-    }
+    downloadNoAdBtn.href = res.linkNoAd;
+    downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (${res.fileSize}) [Akses Aktif]`;
 
     const iconDiv = document.getElementById('modal-file-icon');
     iconDiv.innerHTML = `<i class="${res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400'}"></i>`;
@@ -1755,7 +1827,7 @@ function handlePostRatingAndReview(e) {
     res.reviews.unshift({ user: currentUser.username, rating: currentSelectedStar, text: reviewText });
 
     addPoints(currentUser.username, 10);
-    addExpAndLevelProgress(currentUser.username); // EXP Random dari rating
+    addExpAndLevelProgress(currentUser.username); 
     logUserAction(currentUser.username, `Memberi rating ${currentSelectedStar} bintang & ulasan pada ${res.name}`);
     recordSystemLog('rating_post', `User @${currentUser.username} memberi rating ${currentSelectedStar} bintang pada post "${res.name}".`, currentUser.username);
 
@@ -1773,22 +1845,6 @@ function recordDownload(e, type) {
         alert('Anda wajib login atau daftar terlebih dahulu sebelum mengunduh file.');
         document.getElementById('auth-modal').classList.remove('hidden');
         return;
-    }
-
-    if (type === 'noad') {
-        let res = resources.find(r => r.id === activeResourceId);
-        let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
-        let unlockedArr = userUnlockedPosts[currentUser.username] || [];
-        let isUnlocked = unlockedArr.includes(res.id);
-        let canAccess = currentUser.role === 'admin' || isVip || (!res.isSpecialAccess) || isUnlocked;
-
-        if (!canAccess) {
-            e.preventDefault();
-            alert('Validasi Gagal! Postingan ini terkunci sebagai Akses Khusus. Silakan buka akses terlebih dahulu.');
-            switchMainView('profile');
-            closeModal();
-            return;
-        }
     }
 
     addPoints(currentUser.username, 5);
@@ -1829,7 +1885,7 @@ function handlePostComment(e) {
     res.comments.push({ user: currentUser.username, text: text });
     
     addPoints(currentUser.username, 5);
-    addExpAndLevelProgress(currentUser.username); // EXP Random dari komentar
+    addExpAndLevelProgress(currentUser.username); 
     logUserAction(currentUser.username, `Mengomentari resource: ${res.name}`);
     recordSystemLog('komentar_post', `User @${currentUser.username} berkomentar pada post "${res.name}".`, currentUser.username);
 
@@ -1913,7 +1969,7 @@ function claimProfileQuest(questId, target, type, reward) {
         userQuestClaims[uname][questId] = true;
         localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
         addPoints(uname, reward);
-        addExpAndLevelProgress(uname, 15); // EXP Bonus Quest
+        addExpAndLevelProgress(uname, 25); 
         addNotification(`Quest "${questId}" berhasil diklaim! (+${reward} Poin & EXP)`, 'admin');
         recordSystemLog('selesai_quest', `User @${uname} berhasil menyelesaikan dan mengklaim quest "${questId}" (+${reward} Poin).`, uname);
         alert(`Validasi Berhasil! Quest selesai. Anda mendapatkan +${reward} Poin & EXP.`);
