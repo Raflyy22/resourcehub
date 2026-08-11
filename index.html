@@ -145,13 +145,13 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
                     <div>
                         <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Super Administrator</h2>
-                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user & poin, live chat real-time, manajemen reward redeem, dan riwayat Logs aktivitas.</p>
+                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user & poin, live chat real-time, manajemen reward redeem, dan riwayat Logs kategori khusus.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="switchAdminTab('upload')" id="btn-tab-upload" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md">Form Upload</button>
                         <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola File</button>
                         <button onclick="switchAdminTab('users')" id="btn-tab-users" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kontrol User & Poin</button>
-                        <button onclick="switchAdminTab('logs')" id="btn-tab-logs" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Sistem Logs</button>
+                        <button onclick="switchAdminTab('logs')" id="btn-tab-logs" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Pusat Logs</button>
                         <button onclick="switchAdminTab('livechat')" id="btn-tab-livechat" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Live Chat Masuk</button>
                         <button onclick="switchAdminTab('rewards')" id="btn-tab-rewards" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kustom Reward Redeem</button>
                         <button onclick="switchAdminTab('requests')" id="btn-tab-requests" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Request</button>
@@ -197,9 +197,15 @@
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Ukuran File / App</label>
                             <input type="text" id="up-link-size" onblur="formatFileSizeInput(this)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="Contoh: 15 MB">
                         </div>
-                        <div class="flex items-center gap-2 pt-6">
-                            <input type="checkbox" id="up-verified" class="w-4 h-4 accent-cyan-500 rounded cursor-pointer">
-                            <label for="up-verified" class="text-xs font-medium text-emerald-400 cursor-pointer"><i class="fa-solid fa-shield-check"></i> Berikan Label Verifikasi "Aman & Teruji"</label>
+                        <div class="flex flex-col gap-2 pt-4">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="up-verified" class="w-4 h-4 accent-cyan-500 rounded cursor-pointer">
+                                <label for="up-verified" class="text-xs font-medium text-emerald-400 cursor-pointer"><i class="fa-solid fa-shield-check"></i> Berikan Label Verifikasi "Aman & Teruji"</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="up-special-access" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+                                <label for="up-special-access" class="text-xs font-medium text-amber-400 cursor-pointer"><i class="fa-solid fa-key"></i> Jadikan Postingan Akses Khusus</label>
+                            </div>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">URL Gambar Screenshot (Opsional)</label>
@@ -233,7 +239,21 @@
 
                 <!-- Admin Logs Section -->
                 <div id="admin-logs-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-file-lines"></i> Pusat Sistem Logs Aktivitas & Redeem</h3>
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <h3 class="text-lg font-bold flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-file-lines"></i> Pusat Logs Sistem</h3>
+                        <div class="flex flex-wrap gap-1.5 text-xs">
+                            <button onclick="filterLogsCategory('all')" id="log-btn-all" class="px-3 py-1 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Semua</button>
+                            <button onclick="filterLogsCategory('naik_level')" id="log-btn-naik_level" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Naik Level</button>
+                            <button onclick="filterLogsCategory('redeem_point')" id="log-btn-redeem_point" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Redeem Point</button>
+                            <button onclick="filterLogsCategory('redeem_saldo')" id="log-btn-redeem_saldo" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Redeem Saldo</button>
+                            <button onclick="filterLogsCategory('selesai_quest')" id="log-btn-selesai_quest" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Selesai Quest</button>
+                            <button onclick="filterLogsCategory('like_post')" id="log-btn-like_post" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Like Post</button>
+                            <button onclick="filterLogsCategory('komentar_post')" id="log-btn-komentar_post" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Komentar</button>
+                            <button onclick="filterLogsCategory('rating_post')" id="log-btn-rating_post" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Rating</button>
+                            <button onclick="filterLogsCategory('daftar_baru')" id="log-btn-daftar_baru" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Daftar Baru</button>
+                            <button onclick="filterLogsCategory('akun_login')" id="log-btn-akun_login" class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer">Login</button>
+                        </div>
+                    </div>
                     <div id="admin-logs-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 font-mono text-xs"></div>
                 </div>
 
@@ -265,9 +285,16 @@
                     <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-gift"></i> Pengaturan Kustom Reward Redeem Poin</h3>
                     <p class="text-xs text-slate-400">Tambahkan atau atur daftar hadiah yang dapat ditukar oleh user menggunakan Poin Reward.</p>
                     <form onsubmit="handleSaveReward(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <input type="text" id="rew-name" required placeholder="Nama Hadiah (Cth: Saldo DANA 50rb / Akses VIP)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="text" id="rew-name" required placeholder="Nama Hadiah (Cth: Saldo Dana 50rb / Akses VVIP)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
                         <input type="number" id="rew-cost" required placeholder="Poin yang Dibutuhkan (Cth: 100)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <button type="submit" class="bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Reward Baru</button>
+                        <select id="rew-type" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer">
+                            <option value="vip">Kategori Akses (VVIP Tanpa Iklan)</option>
+                            <option value="post_access">Kategori Akses (Link Postingan Khusus)</option>
+                            <option value="dana">Kategori Saldo (Dana)</option>
+                            <option value="gopay">Kategori Saldo (Gopay)</option>
+                            <option value="shopeepay">Kategori Saldo (Shopeepay)</option>
+                        </select>
+                        <button type="submit" class="md:col-span-3 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Reward Baru</button>
                     </form>
                     <div id="admin-rewards-list" class="space-y-2"></div>
                 </div>
@@ -378,6 +405,7 @@
                         <button onclick="filterCategory('All')" id="cat-btn-All" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md">Semua</button>
                         <button onclick="filterCategory('File')" id="cat-btn-File" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer">File</button>
                         <button onclick="filterCategory('Aplikasi')" id="cat-btn-Aplikasi" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer">Aplikasi</button>
+                        <button onclick="filterCategory('Special')" id="cat-btn-Special" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Khusus</button>
                         <button onclick="filterSaved()" id="cat-btn-Saved" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-bookmark"></i> Disimpan</button>
                     </div>
 
@@ -460,7 +488,7 @@
                 <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                         <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Redeem Poin Reward (Tukar Hadiah)</h3>
-                        <span class="text-xs text-slate-400">Tukarkan poin Anda dengan akses VIP atau saldo e-wallet</span>
+                        <span class="text-xs text-slate-400">Tukarkan poin Anda dengan akses VVIP atau saldo e-wallet</span>
                     </div>
                     <div id="user-redeem-rewards-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
@@ -512,17 +540,17 @@
     <!-- MODAL REDEEM PILIH POSTINGAN KHUSUS -->
     <div id="redeem-post-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
-            <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Pilih Postingan untuk Akses Satuan</h3>
-            <p class="text-xs text-slate-400">Silakan pilih postingan yang ingin Anda buka akses tanpa iklannya:</p>
+            <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Pilih Postingan untuk Akses Khusus</h3>
+            <p class="text-xs text-slate-400">Silakan pilih postingan dengan akses khusus yang ingin Anda buka:</p>
             <div id="redeem-post-selection-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
             <button onclick="closeRedeemPostModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
         </div>
     </div>
 
-    <!-- MODAL REDEEM SALDO E-WALLET -->
+    <!-- MODAL REDEEM SALDO E-WALLET (DANA, GOPAY, SHOPEEPAY) -->
     <div id="redeem-ewallet-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
-            <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-wallet"></i> Input Akun E-Wallet</h3>
+            <h3 id="ewallet-modal-title" class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-wallet"></i> Input Akun E-Wallet</h3>
             <form onsubmit="submitEWalletRedeem(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">Nomor E-Wallet / HP</label>
@@ -533,7 +561,7 @@
                     <input type="text" id="ewallet-name" required placeholder="Cth: Budi Santoso" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 py-2.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Kirim Redeem</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Kirim Redeem Saldo</button>
                     <button type="button" onclick="closeEWalletModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
                 </div>
             </form>
@@ -654,7 +682,7 @@
                         <i class="fa-solid fa-cloud-arrow-down"></i> Link dengan Iklan (Gratis)
                     </a>
                     <a id="modal-download-noad-btn" href="#" onclick="recordDownload(event, 'noad')" target="_blank" class="flex-1 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (VIP / Beli Post)
+                        <i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (VVIP / Beli Post)
                     </a>
                 </div>
                 <div class="flex gap-2">
