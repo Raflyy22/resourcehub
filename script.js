@@ -1949,7 +1949,7 @@ const profileQuestsDefinition = [
     { id: 'rate_star5_3', title: 'Lakukan Rating Bintang 5 Untuk 3 Postingan', reward: 45, target: 3, type: 'rate5' },
     { id: 'comment_10', title: 'Lakukan 10 Komentar Pada Postingan', reward: 50, target: 10, type: 'comment' },
     { id: 'view_100', title: 'Lihat 100 Postingan', reward: 75, target: 100, type: 'view' },
-    { id: 'get_badge', title: 'Dapatkan Badge Elite (Syarat Sulit)', reward: 100, target: 1, type: 'badge' }
+    { id: 'get_badge', title: 'Dapatkan Badge', reward: 100, target: 1, type: 'badge' }
 ];
 
 function checkQuestRealProgress(type) {
