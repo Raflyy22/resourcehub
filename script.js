@@ -13,7 +13,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
         linkAd: "https://safelink-sample.com/file1",
         linkNoAd: "https://drive.google.com/file1-clean",
         paidUnlockedUsers: [],
-        isSpecialAccess: true, // Dukungan postingan akses khusus
+        isSpecialAccess: true,
         description: "Aplikasi Android builder visual dengan dukungan modifikasi penuh.\n\n[Changelog v6.3]: Perbaikan bug kompilasi & peningkatan kecepatan.",
         fileSize: "15.4 MB",
         screenshot: "",
@@ -31,7 +31,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v9!", content: "Kategori Redeem VVIP & Saldo, setting postingan akses khusus di admin, serta kategori Logs terpisah aktif.", date: "10 Agustus 2026" }
+    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v10!", content: "Pembaruan sistem validasi ketat akses post, kuota & batasan redeem, serta sistem EXP random level 1-100 aktif.", date: "11 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [
@@ -40,33 +40,35 @@ let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests'
 
 let liveChatConversations = JSON.parse(localStorage.getItem('frh_livechat_conversations')) || {
     "Budi": [
-        { sender: "Budi", text: "Halo admin, saya ingin konfirmasi redeem poin untuk saldo Dana 50rb.", time: "10:00" },
-        { sender: "superadmin", text: "Baik Budi, silakan tunggu sebentar diproses.", time: "10:05" }
+        { sender: "Budi", text: "Halo admin, saya ingin konfirmasi redeem saldo Dana.", time: "10:00" },
+        { sender: "superadmin", text: "Baik Budi, silakan tunggu diverifikasi.", time: "10:05" }
     ]
 };
 let activeChatUser = "Budi";
 
 let redeemRewards = JSON.parse(localStorage.getItem('frh_redeem_rewards')) || [
-    { id: 1, name: "Akses VVIP Tanpa Iklan (1 Bulan)", cost: 50, type: "vip" },
-    { id: 2, name: "Akses Postingan Khusus Satuan", cost: 25, type: "post_access" },
-    { id: 3, name: "Saldo Dana Rp 25.000", cost: 100, type: "dana" },
-    { id: 4, name: "Saldo Gopay Rp 25.000", cost: 100, type: "gopay" },
-    { id: 5, name: "Saldo Shopeepay Rp 25.000", cost: 100, type: "shopeepay" }
+    { id: 1, name: "Akses VVIP Tanpa Iklan (1 Bulan)", cost: 50, type: "vip", limitPerUser: 1, quota: 100, claimedCount: 0 },
+    { id: 2, name: "Akses Postingan Khusus Satuan", cost: 25, type: "post_access", limitPerUser: 5, quota: 200, claimedCount: 0 },
+    { id: 3, name: "Saldo Dana Rp 25.000", cost: 100, type: "dana", limitPerUser: 1, quota: 50, claimedCount: 0 },
+    { id: 4, name: "Saldo Gopay Rp 25.000", cost: 100, type: "gopay", limitPerUser: 1, quota: 50, claimedCount: 0 },
+    { id: 5, name: "Saldo Shopeepay Rp 25.000", cost: 100, type: "shopeepay", limitPerUser: 1, quota: 50, claimedCount: 0 }
 ];
 
 let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) || {};
 let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
-let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {};
+let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {}; // { username: { level: 1, exp: 0 } }
 let userQuestClaims = JSON.parse(localStorage.getItem('frh_user_quest_claims')) || {};
-let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; // Menyimpan timestamp expired VVIP
-let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {};
+let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; 
+let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {}; // { username: [resId1, resId2] }
 let userAuditLogs = JSON.parse(localStorage.getItem('frh_user_audit_logs')) || {};
-let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || []; // Pusat Logs Terpisah
+let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || []; 
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v9!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v10!", type: 'info', read: false, time: "Baru saja" }
 ];
+let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; // { username: { rewardId: count } }
+let pendingSaldoRedeems = JSON.parse(localStorage.getItem('frh_pending_saldo_redeems')) || []; // [{ id, username, rewardName, number, accName, time, status }]
 
 let currentFilter = 'All';
 let activeResourceId = null;
@@ -181,7 +183,7 @@ function recordSystemLog(logType, detailText, uname = null) {
     const logItem = {
         id: Date.now(),
         user: uname || (currentUser ? currentUser.username : 'Guest'),
-        type: logType, // naik_level, redeem_point, redeem_saldo, selesai_quest, like_post, komentar_post, rating_post, daftar_baru, akun_login
+        type: logType, 
         detail: detailText,
         time: new Date().toLocaleString('id-ID')
     };
@@ -244,16 +246,44 @@ function addPoints(username, amount) {
     if (!userPoints[username]) userPoints[username] = 0;
     userPoints[username] += amount;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+}
 
-    // Cek naik level otomatis
-    let currentLvl = userLevels[username] || 1;
-    let expectedLvl = Math.min(100, Math.floor((userPoints[username] / 50)) + 1);
-    if (expectedLvl > currentLvl) {
-        userLevels[username] = expectedLvl;
-        localStorage.setItem('frh_user_levels', JSON.stringify(userLevels));
-        addNotification(`Selamat! Akun Anda naik ke Level ${expectedLvl}!`, 'admin');
-        recordSystemLog('naik_level', `User @${username} naik otomatis ke Level ${expectedLvl}.`, username);
+/* ========================================================
+   FITUR 4: SISTEM LEVEL AKUN & EXP RANDOM (1-100)
+   Level 1-10: 10 progres per level
+   Level 11-20: 20 progres per level, dst kelipatannya.
+   ======================================================== */
+function addExpAndLevelProgress(username, amount = null) {
+    if (!username) return;
+    if (!userLevels[username]) userLevels[username] = { level: 1, exp: 0 };
+    let uData = userLevels[username];
+
+    // Jika amount tidak ditentukan, dapat random antara 1 sampai 5
+    let expGain = amount !== null ? amount : Math.floor(Math.random() * 5) + 1;
+    uData.exp += expGain;
+
+    let targetExp = getTargetExpForLevel(uData.level);
+    while (uData.exp >= targetExp && uData.level < 100) {
+        uData.exp -= targetExp;
+        uData.level++;
+        targetExp = getTargetExpForLevel(uData.level);
+        addNotification(`Selamat! Akun Anda naik ke Level ${uData.level}!`, 'admin');
+        recordSystemLog('naik_level', `User @${username} naik level otomatis ke Level ${uData.level}.`, username);
     }
+
+    if (uData.level >= 100) {
+        uData.level = 100;
+        uData.exp = 0;
+    }
+
+    localStorage.setItem('frh_user_levels', JSON.stringify(userLevels));
+}
+
+function getTargetExpForLevel(lvl) {
+    // Level 1-10 butuh 10 progres per level
+    // Level 11-20 butuh 20 progres, dst (kelipatan 10 setiap 10 level)
+    let block = Math.floor((lvl - 1) / 10);
+    return (block + 1) * 10;
 }
 
 function formatFileSizeInput(el) {
@@ -426,11 +456,18 @@ function checkAuthState() {
     }
 }
 
+/* ========================================================
+   FITUR 5: BADGE DIPERKETAT / LUMAYAN SULIT DIDAPATKAN
+   ======================================================== */
 function getUserBadge(username) {
     let pts = userPoints[username] || 0;
-    if (pts >= 100) return 'Elite Contributor 🏆';
-    if (pts >= 50) return 'Active Contributor 🌟';
-    if (pts >= 20) return 'Active Member 💬';
+    let uLvl = userLevels[username] ? userLevels[username].level : 1;
+
+    if (pts >= 800 && uLvl >= 50) return 'Grandmaster Elite 👑🔥';
+    if (pts >= 500 && uLvl >= 30) return 'Legendary Contributor ⚡';
+    if (pts >= 300 && uLvl >= 20) return 'Master Contributor 🏆';
+    if (pts >= 150 && uLvl >= 10) return 'Senior Contributor 🌟';
+    if (pts >= 75 && uLvl >= 5) return 'Active Contributor ✨';
     return 'Member Baru 🌱';
 }
 
@@ -635,7 +672,7 @@ function modifyUserPoints(username, action) {
 }
 
 /* ========================================================
-   FITUR 3: PUSAT LOGS BERDASARKAN KATEGORI KHUSUS
+   FITUR 3 & FITUR 6: LOGS & VALIDASI SALDO / KUOTA REDEEM
    ======================================================== */
 function filterLogsCategory(cat) {
     currentLogFilter = cat;
@@ -671,6 +708,16 @@ function renderAdminLogsList() {
         if (lg.type === 'naik_level' || lg.type === 'selesai_quest') badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
         if (lg.type === 'daftar_baru' || lg.type === 'akun_login') badgeColor = 'bg-blue-500/20 text-blue-400 border-blue-500/30';
 
+        let actionCheckBtn = '';
+        if (lg.type === 'redeem_saldo' && lg.pendingId) {
+            let pItem = pendingSaldoRedeems.find(p => p.id === lg.pendingId);
+            if (pItem && pItem.status === 'pending') {
+                actionCheckBtn = `<button onclick="approveSaldoRedeem(${lg.pendingId})" class="mt-2 px-3 py-1 bg-emerald-500 text-slate-950 font-bold rounded text-[10px] cursor-pointer"><i class="fa-solid fa-check"></i> Centang Berhasil / Approve</button>`;
+            } else {
+                actionCheckBtn = `<span class="mt-2 block text-emerald-400 font-bold text-[10px]"><i class="fa-solid fa-check-double"></i> Telah Disetujui</span>`;
+            }
+        }
+
         list.innerHTML += `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
                 <div class="flex justify-between items-center text-[10px]">
@@ -678,9 +725,25 @@ function renderAdminLogsList() {
                     <span class="text-slate-500">${lg.time}</span>
                 </div>
                 <p class="text-slate-200">${lg.detail} <span class="text-cyan-400 font-bold">(@${lg.user})</span></p>
+                ${actionCheckBtn}
             </div>
         `;
     });
+}
+
+function approveSaldoRedeem(pendingId) {
+    let pItem = pendingSaldoRedeems.find(p => p.id === pendingId);
+    if (!pItem || pItem.status === 'approved') return;
+
+    pItem.status = 'approved';
+    localStorage.setItem('frh_pending_saldo_redeems', JSON.stringify(pendingSaldoRedeems));
+
+    // Kirim notifikasi ke user
+    addNotification(`Redeem saldo "${pItem.rewardName}" Anda telah disetujui & berhasil diproses oleh admin!`, 'admin');
+    recordSystemLog('redeem_saldo', `Admin menyetujui redeem saldo "${pItem.rewardName}" untuk @${pItem.username}. No: ${pItem.number}, Nama: ${pItem.accName}.`, pItem.username);
+
+    alert(`Redeem saldo untuk @${pItem.username} berhasil dicentang dan notifikasi telah dikirim.`);
+    renderAdminLogsList();
 }
 
 function toggleAdminUserPostAccess(username, resId) {
@@ -860,7 +923,7 @@ function renderAdminRewardsList() {
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                 <div>
                     <span class="font-bold text-white">${rew.name}</span>
-                    <span class="text-amber-400 block">${rew.cost} Poin (Kategori: ${rew.type})</span>
+                    <span class="text-amber-400 block">${rew.cost} Poin | Tipe: ${rew.type} | Max/User: ${rew.limitPerUser || 1} | Kuota: ${rew.claimedCount || 0}/${rew.quota || 100}</span>
                 </div>
                 <button onclick="deleteReward(${idx})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">Hapus</button>
             </div>
@@ -873,7 +936,10 @@ function handleSaveReward(e) {
     const name = document.getElementById('rew-name').value.trim();
     const cost = parseInt(document.getElementById('rew-cost').value);
     const type = document.getElementById('rew-type').value;
-    redeemRewards.push({ id: Date.now(), name, cost, type });
+    const limitPerUser = parseInt(document.getElementById('rew-limit-user').value) || 1;
+    const quota = parseInt(document.getElementById('rew-quota').value) || 100;
+
+    redeemRewards.push({ id: Date.now(), name, cost, type, limitPerUser, quota, claimedCount: 0 });
     localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
     e.target.reset();
     renderAdminRewardsList();
@@ -891,29 +957,68 @@ function renderUserRedeemRewardsList() {
     if (!list) return;
     list.innerHTML = '';
     let myPts = userPoints[currentUser.username] || 0;
+    let uname = currentUser.username;
 
     redeemRewards.forEach(rew => {
         let canAfford = myPts >= rew.cost;
+        if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
+        let userClaimedCount = userRedeemHistory[uname][rew.id] || 0;
+        let limit = rew.limitPerUser || 1;
+        let quotaMax = rew.quota || 100;
+        let claimedTotal = rew.claimedCount || 0;
+
+        let isReachedLimit = userClaimedCount >= limit;
+        let isQuotaFull = claimedTotal >= quotaMax;
+
+        let btnText = "Tukar Hadiah";
+        let isDisabled = false;
+
+        if (isReachedLimit) {
+            btnText = "Batas User Tercapai";
+            isDisabled = true;
+        } else if (isQuotaFull) {
+            btnText = "Kuota Habis";
+            isDisabled = true;
+        } else if (!canAfford) {
+            btnText = "Poin Tidak Cukup";
+            isDisabled = true;
+        }
+
         list.innerHTML += `
             <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col justify-between text-xs space-y-3">
                 <div>
                     <span class="font-bold text-white text-sm block">${rew.name}</span>
                     <span class="text-amber-400 font-bold mt-1 inline-block"><i class="fa-solid fa-coins"></i> ${rew.cost} Poin</span>
+                    <span class="text-[10px] text-slate-400 block mt-0.5">Limit/User: ${userClaimedCount}/${limit} | Kuota: ${claimedTotal}/${quotaMax}</span>
                 </div>
-                <button onclick="initRedeemReward(${rew.id})" class="w-full py-2.5 ${canAfford ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} rounded-xl transition-all cursor-pointer">Tukar Hadiah</button>
+                <button onclick="initRedeemReward(${rew.id})" ${isDisabled ? 'disabled' : ''} class="w-full py-2.5 ${isDisabled ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold'} rounded-xl transition-all cursor-pointer">${btnText}</button>
             </div>
         `;
     });
 }
 
 /* ========================================================
-   FITUR 1: REDEEM KATEGORI AKSES & SALDO (DANA, GOPAY, SHOPEEPAY)
+   FITUR 1 & 2: REDEEM KATEGORI AKSES & SALDO (DANA, GOPAY, SHOPEEPAY)
    ======================================================== */
 function initRedeemReward(id) {
     let rew = redeemRewards.find(r => r.id === id);
-    let myPts = userPoints[currentUser.username] || 0;
+    let uname = currentUser.username;
+    let myPts = userPoints[uname] || 0;
+
     if (myPts < rew.cost) {
         alert('Poin Anda tidak mencukupi untuk menukar hadiah ini.');
+        return;
+    }
+
+    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
+    let userClaimedCount = userRedeemHistory[uname][rew.id] || 0;
+    if (userClaimedCount >= (rew.limitPerUser || 1)) {
+        alert('Anda telah mencapai batas maksimal penukaran untuk reward ini.');
+        return;
+    }
+
+    if ((rew.claimedCount || 0) >= (rew.quota || 100)) {
+        alert('Kuota total penukaran reward ini sudah habis.');
         return;
     }
 
@@ -934,7 +1039,8 @@ function openRedeemPostModal(rew) {
     list.innerHTML = '';
     modal.classList.remove('hidden');
 
-    // Hanya tampilkan postingan yang diset akses khusus oleh admin
+    let uname = currentUser.username;
+    let unlockedArr = userUnlockedPosts[uname] || [];
     let specialResources = resources.filter(r => r.isSpecialAccess);
 
     if (specialResources.length === 0) {
@@ -943,13 +1049,18 @@ function openRedeemPostModal(rew) {
     }
 
     specialResources.forEach(res => {
+        let isAlreadyUnlocked = unlockedArr.includes(res.id);
+        let btnHtml = isAlreadyUnlocked 
+            ? `<span class="text-emerald-400 font-bold text-[10px]">Sudah Dibuka (1x Saja)</span>`
+            : `<button onclick="confirmRedeemPostAccess(${res.id}, '${rew.name.replace(/'/g, "")}', ${rew.cost}, ${rew.id})" class="px-3 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Pilih & Buka</button>`;
+
         list.innerHTML += `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                 <div>
                     <span class="font-bold text-white block">${res.name}</span>
                     <span class="text-[10px] text-amber-400">Akses Khusus (${res.version || 'v1.0'})</span>
                 </div>
-                <button onclick="confirmRedeemPostAccess(${res.id}, '${rew.name.replace(/'/g, "")}', ${rew.cost})" class="px-3 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Pilih & Buka</button>
+                <div>${btnHtml}</div>
             </div>
         `;
     });
@@ -959,15 +1070,28 @@ function closeRedeemPostModal() {
     document.getElementById('redeem-post-modal').classList.add('hidden');
 }
 
-function confirmRedeemPostAccess(resId, rewName, cost) {
+function confirmRedeemPostAccess(resId, rewName, cost, rewardId) {
     let uname = currentUser.username;
+    if (!userUnlockedPosts[uname]) userUnlockedPosts[uname] = [];
+    if (userUnlockedPosts[uname].includes(resId)) {
+        alert('Anda sudah membuka akses untuk postingan ini!');
+        return;
+    }
+
     userPoints[uname] -= cost;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
 
-    if (!userUnlockedPosts[uname]) userUnlockedPosts[uname] = [];
-    if (!userUnlockedPosts[uname].includes(resId)) {
-        userUnlockedPosts[uname].push(resId);
-        localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
+    userUnlockedPosts[uname].push(resId);
+    localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
+
+    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
+    userRedeemHistory[uname][rewardId] = (userRedeemHistory[uname][rewardId] || 0) + 1;
+    localStorage.setItem('frh_user_redeem_history', JSON.stringify(userRedeemHistory));
+
+    let rewObj = redeemRewards.find(r => r.id === rewardId);
+    if (rewObj) {
+        rewObj.claimedCount = (rewObj.claimedCount || 0) + 1;
+        localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
     }
 
     let targetRes = resources.find(r => r.id === resId);
@@ -994,12 +1118,34 @@ function submitEWalletRedeem(e) {
     userPoints[uname] -= rew.cost;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
 
-    // Masuk logs khusus redeem saldo
-    recordSystemLog('redeem_saldo', `User @${uname} menukar ${rew.cost} poin untuk "${rewName = rew.name}". No: ${number}, Nama Akun: ${accName}.`, uname);
+    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
+    userRedeemHistory[uname][rew.id] = (userRedeemHistory[uname][rew.id] || 0) + 1;
+    localStorage.setItem('frh_user_redeem_history', JSON.stringify(userRedeemHistory));
+
+    rew.claimedCount = (rew.claimedCount || 0) + 1;
+    localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
+
+    // Masuk ke pending saldo logs agar admin harus centang berhasil
+    let pendingItem = {
+        id: Date.now(),
+        username: uname,
+        rewardName: rew.name,
+        number,
+        accName,
+        time: new Date().toLocaleString('id-ID'),
+        status: 'pending'
+    };
+    pendingSaldoRedeems.push(pendingItem);
+    localStorage.setItem('frh_pending_saldo_redeems', JSON.stringify(pendingSaldoRedeems));
+
+    recordSystemLog('redeem_saldo', `User @${uname} menukar ${rew.cost} poin untuk "${rew.name}". No: ${number}, Nama: ${accName} (Menunggu Validasi Admin).`, uname);
+    // Masukkan ID pending di logs terbaru
+    systemLogs[0].pendingId = pendingItem.id;
+    localStorage.setItem('frh_system_logs', JSON.stringify(systemLogs));
 
     closeEWalletModal();
     e.target.reset();
-    alert(`Redeem saldo e-wallet berhasil diajukan! No: ${number} (${accName}). Logs tersimpan di kategori redeem saldo.`);
+    alert(`Redeem saldo e-wallet berhasil diajukan! Menunggu persetujuan admin di dashboard.`);
     renderProfilePage();
 }
 
@@ -1008,21 +1154,24 @@ function executeRedeemReward(rew) {
     userPoints[uname] -= rew.cost;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
 
+    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
+    userRedeemHistory[uname][rew.id] = (userRedeemHistory[uname][rew.id] || 0) + 1;
+    localStorage.setItem('frh_user_redeem_history', JSON.stringify(userRedeemHistory));
+
+    rew.claimedCount = (rew.claimedCount || 0) + 1;
+    localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
+
     if (rew.type === 'vip') {
-        // VVIP aktif selama 1 bulan (30 hari)
         userVipSubscriptions[uname] = Date.now() + (30 * 24 * 60 * 60 * 1000);
         localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
-        recordSystemLog('redeem_point', `User @${uname} mengaktifkan VVIP Tanpa Iklan 1 bulan via redeem poin.`, uname);
+        recordSystemLog('redeem_point', `User @${uname} mengaktifkan VVIP Tanpa Iklan 1 bulan otomatis via redeem poin.`, uname);
     }
 
     addNotification(`Berhasil menukar redeem: ${rew.name}`, 'admin');
-    alert(`Berhasil menukar poin dengan "${rew.name}"!`);
+    alert(`Berhasil menukar poin dengan "${rew.name}"! Akses langsung aktif.`);
     renderProfilePage();
 }
 
-/* ========================================================
-   FITUR 2: POSTINGAN DENGAN SETTING AKSES KHUSUS DI ADMIN
-   ======================================================== */
 function handleSaveResource(e) {
     e.preventDefault();
     const editId = document.getElementById('edit-resource-id').value;
@@ -1227,7 +1376,7 @@ function exportDataBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "filehub_ultimatesuite_v9_backup.json");
+    dlAnchor.setAttribute("download", "filehub_ultimatesuite_v10_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -1364,7 +1513,6 @@ function renderResources() {
         const isLiked = res.likedBy && res.likedBy.includes(currentUser.username);
         const isSaved = res.savedBy && res.savedBy.includes(currentUser.username);
         const isBroken = brokenReports.some(rep => rep.resName === res.name);
-        const isCommunityChoice = (res.views >= 100 || parseFloat(calculateAverageRating(res)) >= 4.5) && res.id > oneWeekAgo;
 
         const iconClass = res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400';
         const avgRating = calculateAverageRating(res);
@@ -1436,6 +1584,7 @@ function toggleLike(id) {
         res.likedBy.push(currentUser.username);
         res.likes += 1;
         addPoints(currentUser.username, 2);
+        addExpAndLevelProgress(currentUser.username); // EXP Random
         logUserAction(currentUser.username, `Menyukai resource: ${res.name}`);
         recordSystemLog('like_post', `User @${currentUser.username} menyukai post "${res.name}".`, currentUser.username);
     }
@@ -1472,6 +1621,7 @@ function openDetail(id, openModalWindow = true) {
         userViewHistory[currentUser.username].unshift(res.name);
         if (userViewHistory[currentUser.username].length > 15) userViewHistory[currentUser.username].pop();
         localStorage.setItem('frh_user_view_history', JSON.stringify(userViewHistory));
+        addExpAndLevelProgress(currentUser.username); // EXP Random dari lihat post
     }
 
     if (openModalWindow) {
@@ -1507,21 +1657,22 @@ function openDetail(id, openModalWindow = true) {
 
     downloadAdBtn.href = res.linkAd;
 
+    /* ========================================================
+       FITUR 1: VALIDASI KETAT AKSES POSTINGAN KHUSUS
+       ======================================================== */
     let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
     let unlockedArr = userUnlockedPosts[currentUser.username] || [];
     let isUnlockedPost = unlockedArr.includes(res.id);
-
-    // Jika postingan diset khusus, user wajib punya akses vvip atau unlock post tersebut
     let canAccessCleanLink = currentUser.role === 'admin' || isVip || (!res.isSpecialAccess) || isUnlockedPost;
 
     if (canAccessCleanLink) {
         downloadNoAdBtn.href = res.linkNoAd;
-        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (${res.fileSize}) [Akses Aktif]`;
+        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (${res.fileSize}) [Akses Valid Terverifikasi]`;
     } else {
         downloadNoAdBtn.href = "#";
         downloadNoAdBtn.onclick = (e) => {
             e.preventDefault();
-            alert('Postingan ini merupakan Akses Khusus! Anda memerlukan VVIP aktif atau menukar poin redeem untuk membuka akses post ini.');
+            alert('Akses Ditolak! Postingan ini dikunci sebagai Akses Khusus. Validasi sistem mendapati akun Anda belum membuka akses untuk postingan ini.');
             switchMainView('profile');
             closeModal();
         };
@@ -1604,12 +1755,13 @@ function handlePostRatingAndReview(e) {
     res.reviews.unshift({ user: currentUser.username, rating: currentSelectedStar, text: reviewText });
 
     addPoints(currentUser.username, 10);
+    addExpAndLevelProgress(currentUser.username); // EXP Random dari rating
     logUserAction(currentUser.username, `Memberi rating ${currentSelectedStar} bintang & ulasan pada ${res.name}`);
     recordSystemLog('rating_post', `User @${currentUser.username} memberi rating ${currentSelectedStar} bintang pada post "${res.name}".`, currentUser.username);
 
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     
-    alert(`Terima kasih! Ulasan & rating berhasil dikirim (+10 Poin).`);
+    alert(`Terima kasih! Ulasan & rating berhasil dikirim (+10 Poin & EXP).`);
     document.getElementById('review-input').value = '';
     openDetail(activeResourceId, false);
     renderResources();
@@ -1632,7 +1784,7 @@ function recordDownload(e, type) {
 
         if (!canAccess) {
             e.preventDefault();
-            alert('Akses Link Tanpa Iklan terkunci karena ini postingan Akses Khusus. Tukarkan poin redeem VVIP atau buka akses post ini.');
+            alert('Validasi Gagal! Postingan ini terkunci sebagai Akses Khusus. Silakan buka akses terlebih dahulu.');
             switchMainView('profile');
             closeModal();
             return;
@@ -1677,12 +1829,13 @@ function handlePostComment(e) {
     res.comments.push({ user: currentUser.username, text: text });
     
     addPoints(currentUser.username, 5);
+    addExpAndLevelProgress(currentUser.username); // EXP Random dari komentar
     logUserAction(currentUser.username, `Mengomentari resource: ${res.name}`);
     recordSystemLog('komentar_post', `User @${currentUser.username} berkomentar pada post "${res.name}".`, currentUser.username);
 
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     input.value = '';
-    alert('Komentar berhasil dikirim (+5 Poin).');
+    alert('Komentar berhasil dikirim (+5 Poin & EXP).');
     openDetail(activeResourceId, false);
 }
 
@@ -1711,10 +1864,8 @@ const profileQuestsDefinition = [
     { id: 'rate_star5_1', title: 'Lakukan Rating Bintang 5 Untuk 1 Postingan', reward: 15, target: 1, type: 'rate5' },
     { id: 'rate_star5_3', title: 'Lakukan Rating Bintang 5 Untuk 3 Postingan', reward: 45, target: 3, type: 'rate5' },
     { id: 'comment_10', title: 'Lakukan 10 Komentar Pada Postingan', reward: 50, target: 10, type: 'comment' },
-    { id: 'comment_50', title: 'Lakukan 50 Komentat Pada Postingan', reward: 200, target: 50, type: 'comment' },
-    { id: 'comment_100', title: 'Lakukan 100 Komentat Pada Postingan', reward: 400, target: 100, type: 'comment' },
     { id: 'view_100', title: 'Lihat 100 Postingan', reward: 75, target: 100, type: 'view' },
-    { id: 'get_badge', title: 'Dapatkan Badge Di Profile Kamu', reward: 50, target: 1, type: 'badge' }
+    { id: 'get_badge', title: 'Dapatkan Badge Elite (Syarat Sulit)', reward: 100, target: 1, type: 'badge' }
 ];
 
 function checkQuestRealProgress(type) {
@@ -1762,36 +1913,40 @@ function claimProfileQuest(questId, target, type, reward) {
         userQuestClaims[uname][questId] = true;
         localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
         addPoints(uname, reward);
-        addNotification(`Quest "${questId}" berhasil diklaim! (+${reward} Poin)`, 'admin');
+        addExpAndLevelProgress(uname, 15); // EXP Bonus Quest
+        addNotification(`Quest "${questId}" berhasil diklaim! (+${reward} Poin & EXP)`, 'admin');
         recordSystemLog('selesai_quest', `User @${uname} berhasil menyelesaikan dan mengklaim quest "${questId}" (+${reward} Poin).`, uname);
-        alert(`Validasi Berhasil! Quest selesai. Anda mendapatkan +${reward} Poin.`);
+        alert(`Validasi Berhasil! Quest selesai. Anda mendapatkan +${reward} Poin & EXP.`);
         renderProfilePage();
     } else {
-        alert(`Validasi Gagal! Anda belum memenuhi syarat (Progress saat ini: ${currentProgress}/${target}). Selesaikan dulu quest tersebut!`);
+        alert(`Validasi Gagal! Anda belum memenuhi syarat (Progress saat ini: ${currentProgress}/${target}).`);
     }
 }
 
 function renderProfilePage() {
-    document.getElementById('profile-username').textContent = currentUser.username;
-    document.getElementById('profile-badge-label').textContent = getUserBadge(currentUser.username);
-    document.getElementById('profile-points-label').textContent = `Poin Reward: ${userPoints[currentUser.username] || 0} Pts`;
+    let uname = currentUser.username;
+    document.getElementById('profile-username').textContent = uname;
+    document.getElementById('profile-badge-label').textContent = getUserBadge(uname);
+    document.getElementById('profile-points-label').textContent = `Poin Reward: ${userPoints[uname] || 0} Pts`;
     
-    let currentLvl = userLevels[currentUser.username] || 1;
-    document.getElementById('profile-level-label').textContent = `Level: ${currentLvl} (Progres Otomatis)`;
+    if (!userLevels[uname]) userLevels[uname] = { level: 1, exp: 0 };
+    let uLvlData = userLevels[uname];
+    let reqExp = getTargetExpForLevel(uLvlData.level);
+    document.getElementById('profile-level-label').textContent = `Level: ${uLvlData.level} (EXP: ${uLvlData.exp}/${reqExp})`;
 
-    let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
+    let isVip = userVipSubscriptions[uname] && Date.now() < userVipSubscriptions[uname];
     document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg"><i class="fa-solid fa-shield-halved"></i> VVIP Tanpa Iklan Aktif (1 Bulan)</span>` : `<span class="text-slate-400">Status: Member Free (Dengan Iklan)</span>`;
 
     const trophyBox = document.getElementById('profile-trophies');
     trophyBox.innerHTML = '';
-    let pts = userPoints[currentUser.username] || 0;
-    if (pts >= 20) trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold">Active Reviewer</span>`;
-    if (pts >= 50) trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full text-[10px] font-bold">Bug Hunter</span>`;
+    let badgeStr = getUserBadge(uname);
+    if (!badgeStr.includes('Member Baru')) {
+        trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold">${badgeStr}</span>`;
+    }
 
     const questList = document.getElementById('profile-quests-list');
     if (questList) {
         questList.innerHTML = '';
-        let uname = currentUser.username;
         if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
 
         profileQuestsDefinition.forEach(q => {
@@ -1812,7 +1967,7 @@ function renderProfilePage() {
                 <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between text-xs">
                     <div>
                         <span class="font-bold text-white block">${q.title}</span>
-                        <span class="text-amber-400 text-[10px]">Hadiah: +${q.reward} Poin</span>
+                        <span class="text-amber-400 text-[10px]">Hadiah: +${q.reward} Poin & EXP</span>
                     </div>
                     <div>${btnHtml}</div>
                 </div>
@@ -1824,7 +1979,7 @@ function renderProfilePage() {
 
     const viewList = document.getElementById('profile-view-history-list');
     viewList.innerHTML = '';
-    let myViews = userViewHistory[currentUser.username] || [];
+    let myViews = userViewHistory[uname] || [];
     if (myViews.length === 0) {
         viewList.innerHTML = `<p class="text-xs text-slate-500">Belum ada riwayat melihat post.</p>`;
     } else {
@@ -1835,7 +1990,7 @@ function renderProfilePage() {
 
     const savedList = document.getElementById('profile-saved-list');
     savedList.innerHTML = '';
-    let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(currentUser.username));
+    let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(uname));
     
     if (mySaved.length === 0) {
         savedList.innerHTML = `<p class="text-xs text-slate-500">Belum ada file disimpan.</p>`;

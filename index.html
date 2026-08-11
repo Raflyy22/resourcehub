@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Resource Hub Ultimate Suite - Enterprise v9</title>
+    <title>File Resource Hub Ultimate Suite - Enterprise v10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class', }
@@ -91,7 +91,7 @@
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
                         <i class="fa-solid fa-cube text-white"></i>
                     </div>
-                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v9</span>
+                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v10</span>
                 </div>
                 
                 <div class="flex items-center space-x-2 sm:space-x-3">
@@ -145,7 +145,7 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
                     <div>
                         <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Super Administrator</h2>
-                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user & poin, live chat real-time, manajemen reward redeem, dan riwayat Logs kategori khusus.</p>
+                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user & poin, live chat real-time, manajemen reward redeem (batas user & kuota), dan validasi saldo.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="switchAdminTab('upload')" id="btn-tab-upload" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md">Form Upload</button>
@@ -282,19 +282,21 @@
 
                 <!-- Kustom Reward Redeem Section -->
                 <div id="admin-rewards-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
-                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-gift"></i> Pengaturan Kustom Reward Redeem Poin</h3>
-                    <p class="text-xs text-slate-400">Tambahkan atau atur daftar hadiah yang dapat ditukar oleh user menggunakan Poin Reward.</p>
-                    <form onsubmit="handleSaveReward(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <input type="text" id="rew-name" required placeholder="Nama Hadiah (Cth: Saldo Dana 50rb / Akses VVIP)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <input type="number" id="rew-cost" required placeholder="Poin yang Dibutuhkan (Cth: 100)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-gift"></i> Pengaturan Kustom Reward Redeem Poin & Batasan Kuota</h3>
+                    <p class="text-xs text-slate-400">Atur batasan redeem per user serta kuota total tersisa untuk kategori akses atau saldo.</p>
+                    <form onsubmit="handleSaveReward(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <input type="text" id="rew-name" required placeholder="Nama Hadiah..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="number" id="rew-cost" required placeholder="Poin..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
                         <select id="rew-type" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer">
-                            <option value="vip">Kategori Akses (VVIP Tanpa Iklan)</option>
-                            <option value="post_access">Kategori Akses (Link Postingan Khusus)</option>
+                            <option value="vip">Kategori Akses (VVIP)</option>
+                            <option value="post_access">Kategori Akses (Post Khusus)</option>
                             <option value="dana">Kategori Saldo (Dana)</option>
                             <option value="gopay">Kategori Saldo (Gopay)</option>
                             <option value="shopeepay">Kategori Saldo (Shopeepay)</option>
                         </select>
-                        <button type="submit" class="md:col-span-3 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Reward Baru</button>
+                        <input type="number" id="rew-limit-user" placeholder="Max/User (Cth: 1)" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="number" id="rew-quota" placeholder="Kuota Total (Cth: 50)" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <button type="submit" class="lg:col-span-5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Reward Baru</button>
                     </form>
                     <div id="admin-rewards-list" class="space-y-2"></div>
                 </div>
@@ -458,7 +460,7 @@
                             </div>
                             <div class="flex items-center gap-3 mt-1">
                                 <p id="profile-points-label" class="text-xs text-amber-400 font-semibold">Poin Reward: 0 Pts</p>
-                                <p id="profile-level-label" class="text-xs text-cyan-400 font-bold">Level: 1 (Progres Otomatis)</p>
+                                <p id="profile-level-label" class="text-xs text-cyan-400 font-bold">Level: 1 (EXP: 0/10)</p>
                             </div>
                             <div id="profile-vip-status" class="text-xs text-emerald-400 font-bold mt-1"></div>
                             <div id="profile-trophies" class="flex flex-wrap gap-1.5 mt-2"></div>
@@ -533,7 +535,7 @@
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/30 py-6 mt-auto text-center text-xs text-slate-500">
-            <p>&copy; 2026 File Resource Hub Ultimate Suite v9. Secured & Powered by Netlify Static Hosting.</p>
+            <p>&copy; 2026 File Resource Hub Ultimate Suite v10. Secured & Powered by Netlify Static Hosting.</p>
         </footer>
     </div>
 
@@ -541,7 +543,7 @@
     <div id="redeem-post-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
             <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Pilih Postingan untuk Akses Khusus</h3>
-            <p class="text-xs text-slate-400">Silakan pilih postingan dengan akses khusus yang ingin Anda buka:</p>
+            <p class="text-xs text-slate-400">Silakan pilih postingan dengan akses khusus (hanya bisa 1x redeem per postingan):</p>
             <div id="redeem-post-selection-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
             <button onclick="closeRedeemPostModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
         </div>
@@ -654,7 +656,7 @@
 
                 <!-- Form Beri Rating & Ulasan -->
                 <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl space-y-3">
-                    <span class="text-xs font-semibold text-slate-300 block">Beri Rating & Ulasan Postingan Ini (+10 Poin):</span>
+                    <span class="text-xs font-semibold text-slate-300 block">Beri Rating & Ulasan Postingan Ini (+10 Poin & EXP):</span>
                     <form onsubmit="handlePostRatingAndReview(event)" class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-1 text-xl text-slate-600" id="star-container">
