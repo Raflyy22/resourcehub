@@ -2,73 +2,158 @@ let currentUser = JSON.parse(localStorage.getItem('frh_current_user')) || null;
 let adminCreds = JSON.parse(localStorage.getItem('frh_admin_creds')) || { user: 'superadmin', pass: 'securepass99', pin: '8888' };
 let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0;
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
+let telegramConfig = JSON.parse(localStorage.getItem('frh_tg_config')) || { token: '', chatId: '' };
 
 let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
     {
         id: 1,
         name: "Sketchware Pro Mod",
         category: "Aplikasi",
+        subcategory: "Android 64-bit",
         version: "v6.3",
         linkAd: "https://safelink-sample.com/file1",
         linkNoAd: "https://drive.google.com/file1-clean",
-        description: "Aplikasi Android builder visual dengan dukungan modifikasi penuh.",
+        paidUnlockedUsers: [],
+        description: "Aplikasi Android builder visual dengan dukungan modifikasi penuh.\n\n[Changelog v6.3]: Perbaikan bug kompilasi & peningkatan kecepatan.",
         fileSize: "15.4 MB",
         screenshot: "",
         verified: true,
+        uploader: "superadmin",
         likes: 12,
         views: 145,
         likedBy: [],
         savedBy: [],
-        ratings: { 5: 4 },
+        ratings: { 5: 4, 4: 2 },
         ratedUsers: {},
+        reviews: [{ user: "Budi", rating: 5, text: "Aplikasi sangat mantap dan berjalan lancar!" }],
         comments: [{ user: "Budi", text: "Mantap aplikasinya work 100%!" }]
     }
 ];
 
-let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
-let liveChatConversations = JSON.parse(localStorage.getItem('frh_livechat_conversations')) || {};
-let activeChatUser = "";
+let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
+    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v9!", content: "Fitur ulasan rating, batasan komen poin mingguan, kelola quest admin, dan manajemen poin user kini aktif.", date: "10 Agustus 2026" }
+];
+
+let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [
+    { id: 1, title: "Request Adobe Photoshop APK", desc: "Mohon sediakan versi modifikasinya.", user: "Budi", status: "Pending" }
+];
+
+let quests = JSON.parse(localStorage.getItem('frh_quests')) || [
+    { id: 1, title: "Unduh 3 File/Aplikasi Berbeda", reward: 15 },
+    { id: 2, title: "Berikan 1 Ulasan & Rating Postingan", reward: 10 },
+    { id: 3, title: "Kirim 1 Pesan di Live Chat Admin", reward: 5 }
+];
+
+let liveChatConversations = JSON.parse(localStorage.getItem('frh_livechat_conversations')) || {
+    "Budi": [
+        { sender: "Budi", text: "Halo admin, saya ingin konfirmasi redeem poin untuk saldo DANA 50rb.", time: "10:00" },
+        { sender: "superadmin", text: "Baik Budi, silakan tunggu sebentar diproses.", time: "10:05" }
+    ]
+};
+let activeChatUser = "Budi";
 
 let redeemRewards = JSON.parse(localStorage.getItem('frh_redeem_rewards')) || [
     { id: 1, name: "Akses VIP Tanpa Iklan (1 Bulan)", cost: 50, type: "vip" },
-    { id: 2, name: "Saldo E-Wallet Rp 25.000", cost: 100, type: "ewallet" }
+    { id: 2, name: "Akses Postingan Khusus Satuan", cost: 25, type: "post_access" },
+    { id: 3, name: "Saldo E-Wallet Rp 25.000", cost: 100, type: "ewallet" },
+    { id: 4, name: "Aplikasi Eksklusif Premium APK", cost: 75, type: "exclusive_app" }
 ];
 
-// 3. Quest Poin yang ditambahkan & diatur admin melalui dashboard admin
-let adminQuests = JSON.parse(localStorage.getItem('frh_admin_quests')) || [
-    { id: 1, title: "Bagikan tautan situs ke Telegram / WhatsApp", points: 150 },
-    { id: 2, title: "Unduh minimal 3 file aplikasi berbeda", points: 100 }
-];
-let userCompletedQuests = JSON.parse(localStorage.getItem('frh_user_completed_quests')) || {};
-
+let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) || {};
 let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
 let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {};
-let userCommentWeeklyData = JSON.parse(localStorage.getItem('frh_user_comment_weekly')) || {}; 
-let userDailyClaimData = JSON.parse(localStorage.getItem('frh_user_daily_claim')) || {}; 
-
+let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {};
+let userAuditLogs = JSON.parse(localStorage.getItem('frh_user_audit_logs')) || {};
+let userCommentWeeklyCount = JSON.parse(localStorage.getItem('frh_user_comment_weekly')) || {}; // Menyimpan data hitungan komen berpoin per minggu
+let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
+let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v10!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v9!", type: 'info', read: false, time: "Baru saja" }
 ];
 
 let currentFilter = 'All';
 let activeResourceId = null;
+let currentSelectedStar = 5;
 let adminSessionTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
     checkAdminLockState();
     renderNotifications();
+    checkAutoDarkModeSchedule();
     
+    const savedTheme = localStorage.getItem('frh_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const activeTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+    if (activeTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('theme-icon').className = "fa-solid fa-sun text-xs";
+    }
+
     const userInp = document.getElementById('uni-user');
     const passInp = document.getElementById('uni-pass');
     [userInp, passInp].forEach(el => {
         if (el) el.addEventListener('input', checkUnifiedAdminTrigger);
     });
 
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            const searchBox = document.getElementById('search-input');
+            if (searchBox) searchBox.focus();
+        }
+        if (e.key === 'Escape') {
+            closeModal();
+            closeCustomConfirm();
+            closeReaderMode();
+            closeRequestModal();
+        }
+    });
+
     if (currentUser && currentUser.role === 'admin') {
         resetAdminSessionTimer();
     }
 });
+
+function checkAutoDarkModeSchedule() {
+    const hour = new Date().getHours();
+    if (hour >= 18 || hour < 6) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('frh_theme', 'dark');
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    const themeIcon = document.getElementById('theme-icon');
+    if (isDark) {
+        localStorage.setItem('frh_theme', 'dark');
+        themeIcon.className = "fa-solid fa-moon text-xs";
+    } else {
+        localStorage.setItem('frh_theme', 'light');
+        themeIcon.className = "fa-solid fa-sun text-xs";
+    }
+}
+
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = "fa-regular fa-eye-slash";
+    } else {
+        input.type = 'password';
+        icon.className = "fa-regular fa-eye";
+    }
+}
+
+function logUserAction(username, actionText) {
+    if (!userAuditLogs[username]) userAuditLogs[username] = [];
+    userAuditLogs[username].unshift({ text: actionText, time: new Date().toLocaleTimeString('id-ID') });
+    if (userAuditLogs[username].length > 10) userAuditLogs[username].pop();
+    localStorage.setItem('frh_user_audit_logs', JSON.stringify(userAuditLogs));
+}
 
 function addNotification(text, type = 'info') {
     notifications.unshift({ id: Date.now(), text, type, read: false, time: "Baru saja" });
@@ -77,34 +162,41 @@ function addNotification(text, type = 'info') {
 }
 
 function renderNotifications() {
-    const badgeNav = document.getElementById('notif-badge-nav');
-    const fullList = document.getElementById('notifications-full-list');
+    const list = document.getElementById('notif-list');
+    const badge = document.getElementById('notif-badge');
+    if (!list || !badge) return;
+    list.innerHTML = '';
     
     let unreadCount = notifications.filter(n => !n.read).length;
-    if (badgeNav) {
-        if (unreadCount > 0) {
-            badgeNav.textContent = unreadCount;
-            badgeNav.classList.remove('hidden');
-        } else {
-            badgeNav.classList.add('hidden');
-        }
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
     }
 
-    if (fullList) {
-        fullList.innerHTML = '';
-        if (notifications.length === 0) {
-            fullList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Tidak ada notifikasi.</p>`;
-            return;
-        }
-        notifications.forEach(n => {
-            fullList.innerHTML += `
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1 ${n.read ? 'opacity-60' : ''}">
-                    <p class="text-slate-300">${n.text}</p>
-                    <span class="text-[9px] text-slate-500">Baru saja</span>
-                </div>
-            `;
-        });
+    if (notifications.length === 0) {
+        list.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada notifikasi.</p>`;
+        return;
     }
+
+    notifications.forEach(n => {
+        let borderColor = 'border-cyan-500/30';
+        if (n.type === 'admin') borderColor = 'border-amber-500/30';
+        if (n.type === 'danger') borderColor = 'border-rose-500/30';
+
+        list.innerHTML += `
+            <div class="bg-slate-950 p-2.5 rounded-xl border ${borderColor} text-xs space-y-1 ${n.read ? 'opacity-60' : ''}">
+                <p class="text-slate-300">${n.text}</p>
+                <span class="text-[9px] text-slate-500">Baru saja</span>
+            </div>
+        `;
+    });
+}
+
+function toggleNotificationDropdown() {
+    const dropdown = document.getElementById('notif-dropdown');
+    if (dropdown) dropdown.classList.toggle('hidden');
 }
 
 function clearNotifications() {
@@ -122,9 +214,11 @@ function addPoints(username, amount) {
 function formatFileSizeInput(el) {
     let val = el.value.trim();
     if (!val) return;
-    if (!val.toLowerCase().includes('mb') && !val.toLowerCase().includes('kb')) {
+    if (!val.toLowerCase().includes('mb') && !val.toLowerCase().includes('kb') && !val.toLowerCase().includes('gb')) {
         let num = parseFloat(val);
-        if (!isNaN(num)) el.value = num + " MB";
+        if (!isNaN(num)) {
+            el.value = num + " MB";
+        }
     }
 }
 
@@ -146,6 +240,7 @@ function checkUnifiedAdminTrigger() {
     const uVal = document.getElementById('uni-user').value.trim();
     const pVal = document.getElementById('uni-pass').value;
     const pinContainer = document.getElementById('container-admin-pin');
+
     if (uVal === adminCreds.user && pVal === adminCreds.pass) {
         pinContainer.classList.remove('hidden');
     } else {
@@ -162,6 +257,7 @@ function handleUnifiedLogin(e) {
     if (uVal === adminCreds.user && pVal === adminCreds.pass) {
         const now = Date.now();
         if (now < adminLockUntil) return;
+
         if (pinVal === adminCreds.pin) {
             adminFailedAttempts = 0;
             localStorage.setItem('frh_admin_fails', adminFailedAttempts);
@@ -173,6 +269,8 @@ function handleUnifiedLogin(e) {
             if (adminFailedAttempts >= 3) {
                 adminLockUntil = Date.now() + 30000;
                 localStorage.setItem('frh_admin_lock', adminLockUntil);
+                adminFailedAttempts = 0;
+                localStorage.setItem('frh_admin_fails', adminFailedAttempts);
             }
             alert(`PIN Super Admin Salah! Percobaan gagal: ${adminFailedAttempts}/3`);
             checkAdminLockState();
@@ -182,7 +280,7 @@ function handleUnifiedLogin(e) {
         let users = JSON.parse(localStorage.getItem('frh_users')) || [];
         const validUser = users.find(u => u.username === uVal && u.password === pVal);
         if (validUser && validUser.banned) {
-            alert('Akun Anda telah diblokir.');
+            alert('Akun Anda telah diblokir oleh Administrator.');
             return;
         }
         if (!validUser && uVal !== 'user') {
@@ -190,6 +288,7 @@ function handleUnifiedLogin(e) {
             return;
         }
         currentUser = { username: uVal, role: 'user' };
+        logUserAction(uVal, 'Masuk ke sistem');
     }
     localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
     checkAuthState();
@@ -198,10 +297,13 @@ function handleUnifiedLogin(e) {
 function resetAdminSessionTimer() {
     if (adminSessionTimer) clearTimeout(adminSessionTimer);
     adminSessionTimer = setTimeout(() => {
-        alert('Sesi Super Admin telah berakhir.');
+        alert('Sesi Super Admin telah berakhir karena tidak ada aktivitas selama 15 menit.');
         logout();
     }, 15 * 60 * 1000);
 }
+
+document.addEventListener('mousemove', () => { if (currentUser && currentUser.role === 'admin') resetAdminSessionTimer(); });
+document.addEventListener('keypress', () => { if (currentUser && currentUser.role === 'admin') resetAdminSessionTimer(); });
 
 function handleRegister(e) {
     e.preventDefault();
@@ -222,17 +324,19 @@ function checkAdminLockState() {
     const now = Date.now();
     const warningEl = document.getElementById('admin-lock-warning');
     const submitBtn = document.getElementById('uni-submit-btn');
+    if (!warningEl || !submitBtn) return;
+
     if (now < adminLockUntil) {
         const remainingSec = Math.ceil((adminLockUntil - now) / 1000);
-        if (warningEl) {
-            warningEl.textContent = `Akses Admin terkunci. Coba lagi dalam ${remainingSec} detik.`;
-            warningEl.classList.remove('hidden');
-        }
-        if (submitBtn) submitBtn.disabled = true;
+        warningEl.textContent = `Akses Admin terkunci karena salah PIN 3x. Coba lagi dalam ${remainingSec} detik.`;
+        warningEl.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
         setTimeout(checkAdminLockState, 1000);
     } else {
-        if (warningEl) warningEl.classList.add('hidden');
-        if (submitBtn) submitBtn.disabled = false;
+        warningEl.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 }
 
@@ -263,11 +367,14 @@ function checkAuthState() {
             document.getElementById('leaderboard-panel').classList.add('hidden');
             document.getElementById('requests-panel').classList.add('hidden');
             document.getElementById('livechat-panel').classList.add('hidden');
-            document.getElementById('notifications-panel').classList.add('hidden');
+            document.getElementById('quests-panel').classList.add('hidden');
+            document.getElementById('nav-profile-btn').classList.add('hidden');
             renderAdminDashboard();
         } else {
             document.getElementById('admin-panel').classList.add('hidden');
             document.getElementById('user-panel').classList.remove('hidden');
+            document.getElementById('nav-profile-btn').classList.remove('hidden');
+            renderAnnouncements();
             renderResources();
         }
     }
@@ -275,22 +382,16 @@ function checkAuthState() {
 
 function getUserBadge(username) {
     let pts = userPoints[username] || 0;
-    if (pts >= 1000) return 'Elite Contributor 🏆';
-    if (pts >= 500) return 'Active Contributor 🌟';
+    if (pts >= 100) return 'Elite Contributor 🏆';
+    if (pts >= 50) return 'Active Contributor 🌟';
+    if (pts >= 20) return 'Active Member 💬';
     return 'Member Baru 🌱';
 }
 
 function switchMainView(view) {
-    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel', 'notifications-panel'].forEach(id => {
+    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel', 'quests-panel'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
-    });
-
-    ['home', 'profile', 'notifications'].forEach(m => {
-        const btn = document.getElementById(`nav-menu-${m === 'home' ? 'home' : m === 'profile' ? 'profile' : 'notif'}`);
-        if (btn) {
-            btn.className = m === view ? "px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 transition-all cursor-pointer" : "px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-400 transition-all cursor-pointer";
-        }
     });
 
     if (view === 'home') {
@@ -299,9 +400,6 @@ function switchMainView(view) {
     } else if (view === 'profile') {
         document.getElementById('profile-panel').classList.remove('hidden');
         renderProfilePage();
-    } else if (view === 'notifications') {
-        document.getElementById('notifications-panel').classList.remove('hidden');
-        renderNotifications();
     } else if (view === 'faq') {
         document.getElementById('faq-panel').classList.remove('hidden');
     } else if (view === 'leaderboard') {
@@ -313,11 +411,21 @@ function switchMainView(view) {
     } else if (view === 'livechat') {
         document.getElementById('livechat-panel').classList.remove('hidden');
         renderUserLiveChatMessages();
+    } else if (view === 'quests') {
+        document.getElementById('quests-panel').classList.remove('hidden');
+        renderUserQuestsPage();
     }
 }
 
-function openRequestModal() { document.getElementById('request-modal').classList.remove('hidden'); }
-function closeRequestModal() { document.getElementById('request-modal').classList.add('hidden'); }
+function openRequestModal() {
+    const modal = document.getElementById('request-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeRequestModal() {
+    const modal = document.getElementById('request-modal');
+    if (modal) modal.classList.add('hidden');
+}
 
 function handlePostRequest(e) {
     e.preventDefault();
@@ -328,40 +436,90 @@ function handlePostRequest(e) {
     closeRequestModal();
     e.target.reset();
     renderCommunityRequests();
-    alert('Request file berhasil diajukan!');
+    alert('Request file berhasil diajukan ke admin!');
 }
 
 function renderCommunityRequests() {
     const list = document.getElementById('user-requests-list');
     if (!list) return;
     list.innerHTML = '';
+    if (communityRequests.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada request file.</p>`;
+        return;
+    }
     communityRequests.forEach(req => {
         list.innerHTML += `
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                 <div>
                     <span class="font-bold text-white text-sm block">${req.title}</span>
                     <p class="text-slate-400 mt-0.5">${req.desc}</p>
+                    <span class="text-[10px] text-cyan-400 mt-1 inline-block">Diajukan oleh: ${req.user} (${req.status})</span>
                 </div>
-                <span class="text-[10px] text-cyan-400">${req.status}</span>
+                ${currentUser.role === 'admin' ? `<button onclick="fulfillRequest(${req.id})" class="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg cursor-pointer">Tandai Selesai</button>` : ''}
             </div>
         `;
     });
+}
+
+function fulfillRequest(id) {
+    let req = communityRequests.find(r => r.id === id);
+    if (req) {
+        req.status = 'Dipenuhi';
+        localStorage.setItem('frh_community_requests', JSON.stringify(communityRequests));
+        renderCommunityRequests();
+        alert('Request ditandai selesai.');
+    }
+}
+
+function renderUserQuestsPage() {
+    const list = document.getElementById('user-quests-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (quests.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada quest tersedia saat ini.</p>`;
+        return;
+    }
+    quests.forEach(q => {
+        list.innerHTML += `
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                <div>
+                    <span class="font-bold text-white text-sm block"><i class="fa-solid fa-circle-check text-cyan-400 mr-2"></i>${q.title}</span>
+                    <span class="text-[10px] text-amber-400 mt-1 inline-block"><i class="fa-solid fa-coins"></i> Hadiah: +${q.reward} Poin</span>
+                </div>
+                <button onclick="claimQuest(${q.reward}, '${q.title}')" class="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl cursor-pointer">Selesaikan</button>
+            </div>
+        `;
+    });
+}
+
+function claimQuest(reward, title) {
+    addPoints(currentUser.username, reward);
+    addNotification(`Berhasil menyelesaikan quest: "${title}" (+${reward} Poin)`, 'admin');
+    alert(`Selamat! Anda mendapatkan +${reward} Poin dari quest "${title}".`);
+    switchMainView('home');
 }
 
 function renderLeaderboardPage() {
     const list = document.getElementById('leaderboard-list');
     if (!list) return;
     list.innerHTML = '';
+    
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
     let ranking = users.map(u => ({ username: u.username, points: userPoints[u.username] || 0 }));
-    ranking.push({ username: 'superadmin', points: userPoints['superadmin'] || 1500 });
+    ranking.push({ username: 'superadmin', points: userPoints['superadmin'] || 150 });
+
     ranking.sort((a, b) => b.points - a.points);
 
     ranking.forEach((r, idx) => {
+        let rankBadge = `#${idx + 1}`;
+        if (idx === 0) rankBadge = '👑 #1';
+        if (idx === 1) rankBadge = '🥈 #2';
+        if (idx === 2) rankBadge = '🥉 #3';
+
         list.innerHTML += `
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                 <div class="flex items-center gap-3">
-                    <span class="font-bold text-amber-400 w-10">#${idx + 1}</span>
+                    <span class="font-bold text-amber-400 w-10">${rankBadge}</span>
                     <span class="font-bold text-white">${r.username}</span>
                 </div>
                 <div class="text-cyan-400 font-bold">${r.points} Pts</div>
@@ -387,64 +545,99 @@ function switchAdminTab(type) {
     if (type === 'quests') renderAdminQuestsList();
     if (type === 'livechat') renderAdminLiveChatUsers();
     if (type === 'rewards') renderAdminRewardsList();
+    if (type === 'requests') renderCommunityRequests();
+    if (type === 'analytics') renderAdminAnalytics();
 }
 
-// 1. Kontrol Poin User di Dashboard Admin
+/* FITUR ADMIN: KELOLA POIN USER (TAMBAH & KURANG) */
 function renderAdminUsersList() {
     const list = document.getElementById('admin-users-list');
     if (!list) return;
     list.innerHTML = '';
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
-    users.forEach((u) => {
-        let pts = userPoints[u.username] || 0;
+    if (users.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada user terdaftar.</p>`;
+        return;
+    }
+    users.forEach((u, idx) => {
+        let isVip = userVipSubscriptions[u.username] || false;
+        let unlockedArr = userUnlockedPosts[u.username] || [];
+        let uPts = userPoints[u.username] || 0;
+
+        let postCheckboxes = resources.map(res => {
+            let isUnlocked = unlockedArr.includes(res.id);
+            return `<label class="flex items-center gap-1.5 text-[10px] text-slate-300"><input type="checkbox" ${isUnlocked ? 'checked' : ''} onchange="toggleAdminUserPostAccess('${u.username}', ${res.id})" class="accent-cyan-500"> ${res.name}</label>`;
+        }).join('');
+
         list.innerHTML += `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
-                <div>
-                    <span class="font-bold text-white text-sm block">${u.username}</span>
-                    <span class="text-[10px] text-amber-400 font-bold">Total Poin: ${pts} Pts</span>
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <span class="font-bold text-white text-sm block">${u.username}</span>
+                        <span class="text-[10px] text-slate-400">Status: ${u.banned ? '<span class="text-rose-400">Diblokir</span>' : '<span class="text-emerald-400">Aktif</span>'} | Poin: <span class="text-amber-400 font-bold">${uPts} Pts</span> | VIP: <span class="${isVip ? 'text-amber-400 font-bold' : 'text-slate-400'}">${isVip ? 'Aktif' : 'Non-VIP'}</span></span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+                            <input type="number" id="point-input-${u.username}" placeholder="Jumlah" class="w-16 bg-slate-950 px-2 py-1 text-[11px] text-white rounded focus:outline-none">
+                            <button onclick="modifyUserPoints('${u.username}', 'add')" class="px-2 py-1 bg-emerald-500 text-slate-950 font-bold rounded text-[10px]" title="Tambah Poin">+ Poin</button>
+                            <button onclick="modifyUserPoints('${u.username}', 'sub')" class="px-2 py-1 bg-rose-500 text-slate-950 font-bold rounded text-[10px]" title="Kurangi Poin">- Poin</button>
+                        </div>
+                        <button onclick="toggleVipSubscription('${u.username}')" class="px-3 py-1.5 ${isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'} font-bold rounded-lg cursor-pointer">${isVip ? 'Cabut VIP' : 'Beri VIP'}</button>
+                        <button onclick="toggleUserBan(${idx})" class="px-3 py-1.5 ${u.banned ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'} font-bold rounded-lg cursor-pointer">${u.banned ? 'Pulihkan' : 'Blokir'}</button>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input type="number" id="admin-pts-${u.username}" placeholder="Jumlah Pts" class="w-24 bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white">
-                    <button onclick="adjustUserPoints('${u.username}', 'add')" class="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded font-bold cursor-pointer">+ Tambah</button>
-                    <button onclick="adjustUserPoints('${u.username}', 'sub')" class="px-3 py-1.5 bg-rose-500/20 text-rose-400 rounded font-bold cursor-pointer">- Kurang</button>
-                    <button onclick="adjustUserPoints('${u.username}', 'set')" class="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 rounded font-bold cursor-pointer">Set Nilai</button>
+                <div class="border-t border-slate-900 pt-2">
+                    <span class="text-[11px] font-semibold text-cyan-400 block mb-1">Akses Postingan Khusus Satuan:</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${postCheckboxes || '<span class="text-slate-500 text-[10px]">Belum ada post</span>'}</div>
                 </div>
             </div>
         `;
     });
 }
 
-function adjustUserPoints(username, action) {
-    const input = document.getElementById(`admin-pts-${username}`);
-    const val = parseInt(input.value) || 0;
+function modifyUserPoints(username, action) {
+    const inputEl = document.getElementById(`point-input-${username}`);
+    if (!inputEl) return;
+    let val = parseInt(inputEl.value);
+    if (isNaN(val) || val <= 0) {
+        alert('Masukkan jumlah poin yang valid.');
+        return;
+    }
     if (!userPoints[username]) userPoints[username] = 0;
-    
     if (action === 'add') {
         userPoints[username] += val;
-    } else if (action === 'sub') {
+        addNotification(`Admin menambahkan ${val} poin ke akun Anda.`, 'admin');
+        alert(`Berhasil menambahkan ${val} poin ke @${username}.`);
+    } else {
         userPoints[username] = Math.max(0, userPoints[username] - val);
-    } else if (action === 'set') {
-        userPoints[username] = Math.max(0, val);
+        addNotification(`Admin mengurangi ${val} poin dari akun Anda.`, 'danger');
+        alert(`Berhasil mengurangi ${val} poin dari @${username}.`);
     }
-    
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+    inputEl.value = '';
     renderAdminUsersList();
-    alert(`Poin user @${username} berhasil diperbarui.`);
 }
 
-// 3. Kelola Quest Poin di Dashboard Admin
+/* FITUR ADMIN: KELOLA QUEST (TAMBAH, EDIT, HAPUS) */
 function renderAdminQuestsList() {
     const list = document.getElementById('admin-quests-list');
     if (!list) return;
     list.innerHTML = '';
-    adminQuests.forEach((q, idx) => {
+    if (quests.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada quest yang dibuat.</p>`;
+        return;
+    }
+    quests.forEach(q => {
         list.innerHTML += `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                 <div>
                     <span class="font-bold text-white">${q.title}</span>
-                    <span class="text-amber-400 block">+${q.points} Pts</span>
+                    <span class="text-amber-400 block"><i class="fa-solid fa-coins"></i> Reward: +${q.reward} Poin</span>
                 </div>
-                <button onclick="deleteAdminQuest(${idx})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">Hapus</button>
+                <div class="flex gap-2">
+                    <button onclick="editQuest(${q.id})" class="px-3 py-1 bg-amber-500/20 text-amber-400 font-bold rounded cursor-pointer">Edit</button>
+                    <button onclick="deleteQuest(${q.id})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">Hapus</button>
+                </div>
             </div>
         `;
     });
@@ -452,19 +645,82 @@ function renderAdminQuestsList() {
 
 function handleSaveQuest(e) {
     e.preventDefault();
+    const editId = document.getElementById('edit-quest-id').value;
     const title = document.getElementById('quest-title').value.trim();
-    const points = parseInt(document.getElementById('quest-points').value);
-    adminQuests.push({ id: Date.now(), title, points });
-    localStorage.setItem('frh_admin_quests', JSON.stringify(adminQuests));
-    e.target.reset();
+    const reward = parseInt(document.getElementById('quest-reward').value);
+
+    if (editId) {
+        let q = quests.find(item => item.id == editId);
+        if (q) {
+            q.title = title;
+            q.reward = reward;
+        }
+        alert('Quest berhasil diperbarui!');
+        resetQuestForm();
+    } else {
+        quests.push({ id: Date.now(), title, reward });
+        alert('Quest baru berhasil ditambahkan!');
+        e.target.reset();
+    }
+    localStorage.setItem('frh_quests', JSON.stringify(quests));
     renderAdminQuestsList();
-    alert('Quest komunitas baru berhasil ditambahkan!');
 }
 
-function deleteAdminQuest(idx) {
-    adminQuests.splice(idx, 1);
-    localStorage.setItem('frh_admin_quests', JSON.stringify(adminQuests));
+function editQuest(id) {
+    let q = quests.find(item => item.id === id);
+    if (!q) return;
+    document.getElementById('edit-quest-id').value = q.id;
+    document.getElementById('quest-title').value = q.title;
+    document.getElementById('quest-reward').value = q.reward;
+    document.getElementById('form-quest-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Quest: ${q.title}`;
+    document.getElementById('btn-submit-quest').textContent = 'Simpan Perubahan';
+    document.getElementById('btn-cancel-edit-quest').classList.remove('hidden');
+}
+
+function resetQuestForm() {
+    document.getElementById('edit-quest-id').value = '';
+    document.getElementById('quest-title').value = '';
+    document.getElementById('quest-reward').value = '';
+    document.getElementById('form-quest-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Manajemen Quest Berhadiah Poin`;
+    document.getElementById('btn-submit-quest').textContent = 'Simpan Quest';
+    document.getElementById('btn-cancel-edit-quest').classList.add('hidden');
+}
+
+function deleteQuest(id) {
+    quests = quests.filter(q => q.id !== id);
+    localStorage.setItem('frh_quests', JSON.stringify(quests));
     renderAdminQuestsList();
+    alert('Quest berhasil dihapus.');
+}
+
+function toggleAdminUserPostAccess(username, resId) {
+    if (!userUnlockedPosts[username]) userUnlockedPosts[username] = [];
+    let idx = userUnlockedPosts[username].indexOf(resId);
+    if (idx > -1) {
+        userUnlockedPosts[username].splice(idx, 1);
+    } else {
+        userUnlockedPosts[username].push(resId);
+    }
+    localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
+    alert(`Akses postingan untuk @${username} diperbarui.`);
+}
+
+function toggleVipSubscription(username) {
+    let currentVip = userVipSubscriptions[username] || false;
+    userVipSubscriptions[username] = !currentVip;
+    localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
+    renderAdminUsersList();
+    alert(`Status VIP Tanpa Iklan untuk @${username} berhasil diperbarui.`);
+}
+
+function toggleUserBan(idx) {
+    let users = JSON.parse(localStorage.getItem('frh_users')) || [];
+    if (users[idx]) {
+        users[idx].banned = !users[idx].banned;
+        localStorage.setItem('frh_users', JSON.stringify(users));
+        renderAdminUsersList();
+        alert('Status akun berhasil diperbarui.');
+    }
 }
 
 function renderAdminLiveChatUsers() {
@@ -472,9 +728,11 @@ function renderAdminLiveChatUsers() {
     if (!list) return;
     list.innerHTML = '';
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
+    
     users.forEach(u => {
+        let isSel = activeChatUser === u.username;
         list.innerHTML += `
-            <div onclick="selectActiveChatUser('${u.username}')" class="p-2.5 rounded-xl cursor-pointer text-xs font-semibold ${activeChatUser === u.username ? 'bg-cyan-500 text-slate-950' : 'bg-slate-900 text-slate-300'}">
+            <div onclick="selectActiveChatUser('${u.username}')" class="p-2.5 rounded-xl cursor-pointer text-xs font-semibold flex justify-between items-center ${isSel ? 'bg-cyan-500 text-slate-950' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}">
                 <span>${u.username}</span>
             </div>
         `;
@@ -489,18 +747,34 @@ function selectActiveChatUser(username) {
 
 function renderAdminChatMessages() {
     const box = document.getElementById('admin-chat-messages');
-    if (!box || !activeChatUser) return;
+    const header = document.getElementById('admin-active-chat-header');
+    if (!box || !header) return;
+    if (!activeChatUser) {
+        header.textContent = "Pilih user untuk memulai chat";
+        box.innerHTML = '';
+        return;
+    }
+    header.textContent = `Chat Real-Time dengan: @${activeChatUser}`;
     box.innerHTML = '';
     let msgs = liveChatConversations[activeChatUser] || [];
+    if (msgs.length === 0) {
+        box.innerHTML = `<p class="text-slate-500 text-center">Belum ada pesan dengan user ini.</p>`;
+        return;
+    }
     msgs.forEach(m => {
+        let isMe = m.sender === 'superadmin';
         box.innerHTML += `
-            <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                <span class="font-bold text-cyan-400">${m.sender}</span>
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1 ${isMe ? 'border-cyan-500/30' : ''}">
+                <div class="flex justify-between text-[10px] text-slate-400">
+                    <span class="font-bold text-cyan-400">${m.sender}</span>
+                    <span>${m.time}</span>
+                </div>
                 <p class="text-slate-200">${m.text}</p>
-                ${m.img ? `<img src="${m.img}" class="max-h-32 rounded-lg mt-1">` : ''}
+                ${m.img ? `<img src="${m.img}" class="max-h-32 rounded-lg mt-1 border border-slate-800">` : ''}
             </div>
         `;
     });
+    box.scrollTop = box.scrollHeight;
 }
 
 function handleAdminSendChat(e) {
@@ -522,7 +796,7 @@ function handleAdminUploadImage(e) {
     const reader = new FileReader();
     reader.onload = function(event) {
         if (!liveChatConversations[activeChatUser]) liveChatConversations[activeChatUser] = [];
-        liveChatConversations[activeChatUser].push({ sender: 'superadmin', text: '[Foto]', img: event.target.result, time: new Date().toLocaleTimeString('id-ID') });
+        liveChatConversations[activeChatUser].push({ sender: 'superadmin', text: '[Mengirim Foto]', img: event.target.result, time: new Date().toLocaleTimeString('id-ID') });
         localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
         renderAdminChatMessages();
     };
@@ -531,18 +805,28 @@ function handleAdminUploadImage(e) {
 
 function renderUserLiveChatMessages() {
     const box = document.getElementById('user-livechat-messages');
-    if (!box || !currentUser) return;
+    if (!box) return;
     box.innerHTML = '';
+    if (!currentUser) return;
     let msgs = liveChatConversations[currentUser.username] || [];
+    if (msgs.length === 0) {
+        box.innerHTML = `<p class="text-slate-500 text-center">Mulai percobaan chat dengan admin...</p>`;
+        return;
+    }
     msgs.forEach(m => {
+        let isMe = m.sender === currentUser.username;
         box.innerHTML += `
-            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                <span class="font-bold text-cyan-400">${m.sender}</span>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1 ${isMe ? 'border-cyan-500/30' : ''}">
+                <div class="flex justify-between text-[10px] text-slate-400">
+                    <span class="font-bold text-cyan-400">${m.sender}</span>
+                    <span>${m.time}</span>
+                </div>
                 <p class="text-slate-200">${m.text}</p>
-                ${m.img ? `<img src="${m.img}" class="max-h-32 rounded-lg mt-1">` : ''}
+                ${m.img ? `<img src="${m.img}" class="max-h-32 rounded-lg mt-1 border border-slate-800">` : ''}
             </div>
         `;
     });
+    box.scrollTop = box.scrollHeight;
 }
 
 function handleUserSendChat(e) {
@@ -563,7 +847,7 @@ function handleUserUploadImage(e) {
     const reader = new FileReader();
     reader.onload = function(event) {
         if (!liveChatConversations[currentUser.username]) liveChatConversations[currentUser.username] = [];
-        liveChatConversations[currentUser.username].push({ sender: currentUser.username, text: '[Foto]', img: event.target.result, time: new Date().toLocaleTimeString('id-ID') });
+        liveChatConversations[currentUser.username].push({ sender: currentUser.username, text: '[Mengirim Foto]', img: event.target.result, time: new Date().toLocaleTimeString('id-ID') });
         localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
         renderUserLiveChatMessages();
     };
@@ -577,8 +861,11 @@ function renderAdminRewardsList() {
     redeemRewards.forEach((rew, idx) => {
         list.innerHTML += `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                <span class="font-bold text-white">${rew.name} (${rew.cost} Pts)</span>
-                <button onclick="deleteReward(${idx})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded">Hapus</button>
+                <div>
+                    <span class="font-bold text-white">${rew.name}</span>
+                    <span class="text-amber-400 block">${rew.cost} Poin (${rew.type})</span>
+                </div>
+                <button onclick="deleteReward(${idx})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">Hapus</button>
             </div>
         `;
     });
@@ -592,6 +879,7 @@ function handleSaveReward(e) {
     localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
     e.target.reset();
     renderAdminRewardsList();
+    alert('Reward redeem baru berhasil ditambahkan!');
 }
 
 function deleteReward(idx) {
@@ -605,14 +893,16 @@ function renderUserRedeemRewardsList() {
     if (!list) return;
     list.innerHTML = '';
     let myPts = userPoints[currentUser.username] || 0;
+
     redeemRewards.forEach(rew => {
+        let canAfford = myPts >= rew.cost;
         list.innerHTML += `
             <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col justify-between text-xs space-y-3">
                 <div>
                     <span class="font-bold text-white text-sm block">${rew.name}</span>
-                    <span class="text-amber-400 font-bold mt-1 inline-block">${rew.cost} Poin</span>
+                    <span class="text-amber-400 font-bold mt-1 inline-block"><i class="fa-solid fa-coins"></i> ${rew.cost} Poin</span>
                 </div>
-                <button onclick="redeemRewardItem(${rew.id})" class="w-full py-2.5 ${myPts >= rew.cost ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} rounded-xl">Tukar</button>
+                <button onclick="redeemRewardItem(${rew.id})" class="w-full py-2.5 ${canAfford ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} rounded-xl transition-all cursor-pointer">Tukar Hadiah</button>
             </div>
         `;
     });
@@ -622,306 +912,222 @@ function redeemRewardItem(id) {
     let rew = redeemRewards.find(r => r.id === id);
     let myPts = userPoints[currentUser.username] || 0;
     if (myPts < rew.cost) {
-        alert('Poin tidak mencukupi.');
+        alert('Poin Anda tidak mencukupi untuk menukar hadiah ini.');
         return;
     }
     userPoints[currentUser.username] -= rew.cost;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+
     if (rew.type === 'vip') {
         userVipSubscriptions[currentUser.username] = true;
         localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
     }
-    alert(`Berhasil menukar ${rew.name}!`);
+
+    addNotification(`Berhasil menukar redeem: ${rew.name}`, 'admin');
+    alert(`Berhasil menukar poin dengan "${rew.name}"! Silakan cek profil atau hubungi admin.`);
     renderProfilePage();
 }
 
 function handleSaveResource(e) {
     e.preventDefault();
+    const editId = document.getElementById('edit-resource-id').value;
     const name = document.getElementById('up-name').value;
     const category = document.getElementById('up-category').value;
+    const subcategory = document.getElementById('up-subcategory').value.trim();
     const version = document.getElementById('up-version').value.trim();
     const linkAd = document.getElementById('up-link-ad').value.trim();
     const linkNoAd = document.getElementById('up-link-noad').value.trim();
     const description = document.getElementById('up-desc').value;
     const fileSize = document.getElementById('up-link-size').value;
+    const screenshot = document.getElementById('up-screenshot').value.trim();
     const verified = document.getElementById('up-verified').checked;
 
-    resources.unshift({
-        id: Date.now(), name, category, version, linkAd, linkNoAd, description, fileSize, verified,
-        likes: 0, views: 0, likedBy: [], savedBy: [], ratings: {}, ratedUsers: {}, comments: []
-    });
+    if (editId) {
+        let res = resources.find(r => r.id == editId);
+        if (res) {
+            res.name = name;
+            res.category = category;
+            res.subcategory = subcategory;
+            res.version = version;
+            res.linkAd = linkAd;
+            res.linkNoAd = linkNoAd;
+            res.description = description;
+            res.fileSize = fileSize;
+            res.screenshot = screenshot;
+            res.verified = verified;
+        }
+        alert('Tautan resource berhasil diperbarui!');
+        resetUploadForm();
+    } else {
+        const newRes = {
+            id: Date.now(),
+            name, category, subcategory, version,
+            linkAd, linkNoAd, paidUnlockedUsers: [],
+            description, fileSize, screenshot, verified,
+            uploader: currentUser.username,
+            likes: 0, views: 0,
+            likedBy: [], savedBy: [],
+            ratings: {}, ratedUsers: {},
+            reviews: [], comments: []
+        };
+        resources.unshift(newRes);
+        addNotification(`Resource baru dipublikasikan: ${name}`, 'admin');
+        alert('Tautan resource berhasil dipublikasikan!');
+        e.target.reset();
+    }
+
     localStorage.setItem('frh_resources', JSON.stringify(resources));
-    e.target.reset();
-    alert('Resource berhasil dipublikasikan!');
+    renderAdminManageList();
+}
+
+function editResource(id) {
+    const res = resources.find(r => r.id === id);
+    if (!res) return;
+    switchAdminTab('upload');
+    document.getElementById('form-upload-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Resource: ${res.name}`;
+    document.getElementById('edit-resource-id').value = res.id;
+    document.getElementById('up-name').value = res.name;
+    document.getElementById('up-category').value = res.category;
+    document.getElementById('up-subcategory').value = res.subcategory;
+    document.getElementById('up-version').value = res.version || 'v1.0';
+    document.getElementById('up-link-ad').value = res.linkAd || '';
+    document.getElementById('up-link-noad').value = res.linkNoAd || '';
+    document.getElementById('up-link-size').value = res.fileSize;
+    document.getElementById('up-screenshot').value = res.screenshot || '';
+    document.getElementById('up-desc').value = res.description;
+    document.getElementById('up-verified').checked = res.verified || false;
+    document.getElementById('btn-submit-resource').textContent = 'Simpan Perubahan';
+    document.getElementById('btn-cancel-edit').classList.remove('hidden');
+}
+
+function resetUploadForm() {
+    document.getElementById('edit-resource-id').value = '';
+    document.getElementById('form-upload-title').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Tambah Link File / Aplikasi Baru`;
+    document.getElementById('btn-submit-resource').innerHTML = `<i class="fa-solid fa-upload"></i> Publikasikan Tautan Resource`;
+    document.getElementById('btn-cancel-edit').classList.add('hidden');
+    document.querySelector('form').reset();
+}
+
+let pendingDeleteId = null;
+function deleteResource(id) {
+    pendingDeleteId = id;
+    const res = resources.find(r => r.id === id);
+    document.getElementById('confirm-msg').textContent = `Apakah Anda yakin ingin menghapus "${res ? res.name : 'resource ini'}"?`;
+    document.getElementById('custom-confirm-modal').classList.remove('hidden');
+    document.getElementById('confirm-btn-yes').onclick = executeDeleteResource;
+}
+
+function executeDeleteResource() {
+    if (pendingDeleteId) {
+        resources = resources.filter(r => r.id !== pendingDeleteId);
+        localStorage.setItem('frh_resources', JSON.stringify(resources));
+        renderAdminManageList();
+        closeCustomConfirm();
+    }
+}
+
+function closeCustomConfirm() {
+    document.getElementById('custom-confirm-modal').classList.add('hidden');
+    pendingDeleteId = null;
+}
+
+function openReaderMode() {
+    const res = resources.find(r => r.id === activeResourceId);
+    if (!res) return;
+    document.getElementById('reader-content').textContent = res.description;
+    document.getElementById('reader-mode-modal').classList.remove('hidden');
+}
+
+function openVersionComparison() {
+    const res = resources.find(r => r.id === activeResourceId);
+    if (!res) return;
+    document.getElementById('reader-content').textContent = `=== KOMPARASI & CATATAN RILIS VERSI ===\nVersi Saat Ini: ${res.version || 'v1.0'}\n\n${res.description}`;
+    document.getElementById('reader-mode-modal').classList.remove('hidden');
+}
+
+function closeReaderMode() {
+    document.getElementById('reader-mode-modal').classList.add('hidden');
 }
 
 function renderAdminManageList() {
     const list = document.getElementById('admin-manage-list');
     if (!list) return;
     list.innerHTML = '';
+    if (resources.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500 col-span-full">Belum ada resource.</p>`;
+        return;
+    }
     resources.forEach(res => {
         list.innerHTML += `
-            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex justify-between text-xs">
-                <span>${res.name}</span>
-                <button onclick="deleteResource(${res.id})" class="text-rose-400 font-bold">Hapus</button>
-            </div>
-        `;
-    });
-}
-
-function deleteResource(id) {
-    resources = resources.filter(r => r.id !== id);
-    localStorage.setItem('frh_resources', JSON.stringify(resources));
-    renderAdminManageList();
-}
-
-function filterCategory(cat) {
-    currentFilter = cat;
-    ['All', 'File', 'Aplikasi', 'Saved'].forEach(c => {
-        const btn = document.getElementById(`cat-btn-${c}`);
-        if(btn) btn.className = c === cat ? "px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md" : "px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer";
-    });
-    renderResources();
-}
-
-function filterSaved() { filterCategory('Saved'); }
-
-function renderResources() {
-    const grid = document.getElementById('resource-grid');
-    if (!grid) return;
-    const searchKeyword = document.getElementById('search-input').value.toLowerCase();
-    grid.innerHTML = '';
-
-    let filtered = resources.filter(res => {
-        let matchCat = true;
-        if (currentFilter === 'File') matchCat = res.category === 'File';
-        if (currentFilter === 'Aplikasi') matchCat = res.category === 'Aplikasi';
-        if (currentFilter === 'Saved') matchCat = res.savedBy && res.savedBy.includes(currentUser.username);
-        let matchSearch = res.name.toLowerCase().includes(searchKeyword);
-        return matchCat && matchSearch;
-    });
-
-    filtered.forEach(res => {
-        let avg = calculateAverageRating(res);
-        grid.innerHTML += `
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col justify-between text-xs space-y-3">
                 <div>
-                    <h3 onclick="openDetail(${res.id})" class="font-bold text-base text-white hover:text-cyan-400 cursor-pointer">${res.name}</h3>
-                    <p class="text-xs text-slate-300 mt-2 line-clamp-2">${res.description}</p>
+                    <span class="font-bold text-white text-sm block">${res.name} (${res.version || 'v1.0'})</span>
+                    <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 inline-block mt-1">${res.category}</span>
                 </div>
-                <div class="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
-                    <span class="text-amber-400 font-bold"><i class="fa-solid fa-star"></i> ${avg}</span>
-                    <button onclick="openDetail(${res.id})" class="px-3 py-2 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Detail</button>
+                <div class="flex gap-2 pt-2 border-t border-slate-900">
+                    <button onclick="editResource(${res.id})" class="flex-1 py-1.5 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-slate-950 font-bold rounded-lg transition-all cursor-pointer">Edit</button>
+                    <button onclick="deleteResource(${res.id})" class="flex-1 py-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-slate-950 font-bold rounded-lg transition-all cursor-pointer">Hapus</button>
                 </div>
             </div>
         `;
     });
 }
 
-function calculateAverageRating(res) {
-    if (!res.ratings || Object.keys(res.ratings).length === 0) return '0.0';
-    let totalScore = 0, totalVotes = 0;
-    for (let star in res.ratings) {
-        totalScore += star * res.ratings[star];
-        totalVotes += res.ratings[star];
-    }
-    return (totalScore / totalVotes).toFixed(1);
-}
-
-function openDetail(id) {
-    activeResourceId = id;
-    const res = resources.find(r => r.id === id);
-    if (!res) return;
-    document.getElementById('detail-modal').classList.remove('hidden');
-    document.getElementById('modal-title').textContent = res.name;
-    document.getElementById('modal-version-badge').textContent = res.version || 'v1.0';
-    document.getElementById('modal-badge').textContent = res.category;
-    document.getElementById('modal-desc').textContent = res.description;
-    document.getElementById('modal-avg-rating').innerHTML = `<i class="fa-solid fa-star"></i> ${calculateAverageRating(res)}`;
-    
-    document.getElementById('modal-download-ad-btn').href = res.linkAd;
-    let isVip = userVipSubscriptions[currentUser.username] || false;
-    document.getElementById('modal-download-noad-btn').href = isVip || currentUser.role === 'admin' ? res.linkNoAd : "#";
-
-    renderComments(res);
-}
-
-// 4. Rating Bintang & Ulasan 1x Saja Setiap Postingan per User
-function rateResource(star) {
-    if (!activeResourceId) return;
-    let res = resources.find(r => r.id === activeResourceId);
-    if (!res.ratings) res.ratings = {};
-    if (!res.ratedUsers) res.ratedUsers = {};
-
-    if (res.ratedUsers[currentUser.username]) {
-        alert('Anda sudah memberikan rating bintang pada postingan ini sebelumnya! Rating hanya dapat diberikan 1x per postingan.');
-        return;
-    }
-
-    res.ratedUsers[currentUser.username] = star;
-    res.ratings[star] = (res.ratings[star] || 0) + 1;
-    addPoints(currentUser.username, 10);
-    localStorage.setItem('frh_resources', JSON.stringify(resources));
-    alert(`Rating bintang ${star} berhasil disimpan (+10 Poin)!`);
-    openDetail(activeResourceId);
-}
-
-function closeModal() {
-    document.getElementById('detail-modal').classList.add('hidden');
-    activeResourceId = null;
-}
-
-// 4. Komentar Mendapatkan Poin Hanya 3x Setiap Minggu
-function handlePostComment(e) {
-    e.preventDefault();
-    if (!activeResourceId) return;
-    const input = document.getElementById('comment-input');
-    const text = input.value.trim();
-    if (!text) return;
-
-    let res = resources.find(r => r.id === activeResourceId);
-    if (!res.comments) res.comments = [];
-    res.comments.push({ user: currentUser.username, text });
-
-    let now = Date.now();
-    let oneWeek = 7 * 24 * 60 * 60 * 1000;
-    if (!userCommentWeeklyData[currentUser.username]) {
-        userCommentWeeklyData[currentUser.username] = { timestamp: now, count: 0 };
-    }
-    let data = userCommentWeeklyData[currentUser.username];
-    if (now - data.timestamp > oneWeek) {
-        data.timestamp = now;
-        data.count = 0;
-    }
-
-    if (data.count < 3) {
-        data.count++;
-        addPoints(currentUser.username, 5);
-        alert('Komentar terkirim (+5 Poin)! Kuota mingguan komentar berpoin tersisa: ' + (3 - data.count));
-    } else {
-        alert('Komentar terkirim. Kuota poin mingguan Anda dari komentar (3x) telah habis minggu ini.');
-    }
-
-    localStorage.setItem('frh_user_comment_weekly', JSON.stringify(userCommentWeeklyData));
-    localStorage.setItem('frh_resources', JSON.stringify(resources));
-    input.value = '';
-    renderComments(res);
-}
-
-function renderComments(res) {
-    const list = document.getElementById('comment-list');
-    document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
-    list.innerHTML = '';
-    if (!res.comments || res.comments.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada komentar.</p>`;
-        return;
-    }
-    res.comments.forEach(c => {
-        list.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs space-y-1"><span class="font-bold text-cyan-400">${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
-    });
-}
-
-// 2. Daily Point Reward 1-500 dengan Probabilitas Sangat Tinggi untuk 200-500 Point
-function claimDailyReward() {
-    let todayStr = new Date().toDateString();
-    if (userDailyClaimData[currentUser.username] === todayStr) {
-        alert('Anda sudah mengklaim Daily Reward hari ini! Silakan kembali besok setelah pukul 00.00 WIB.');
-        return;
-    }
-
-    // Probabilitas sangat tinggi mendapatkan 200-500 poin (85% peluang poin besar 200-500)
-    let rand = Math.random() * 100;
-    let rewardPts = 0;
-    if (rand < 15) {
-        rewardPts = Math.floor(Math.random() * 100) + 1; // 1-100 (15%)
-    } else if (rand < 40) {
-        rewardPts = Math.floor(Math.random() * 99) + 101; // 101-199 (25%)
-    } else {
-        rewardPts = Math.floor(Math.random() * 301) + 200; // 200-500 (60%)
-    }
-
-    userDailyClaimData[currentUser.username] = todayStr;
-    localStorage.setItem('frh_user_daily_claim', JSON.stringify(userDailyClaimData));
-    addPoints(currentUser.username, rewardPts);
-    alert(`Selamat! Anda berhasil mengklaim Daily Reward hari ini sebesar +${rewardPts} Poin!`);
-    renderProfilePage();
-}
-
-function renderProfilePage() {
-    document.getElementById('profile-username').textContent = currentUser.username;
-    document.getElementById('profile-badge-label').textContent = getUserBadge(currentUser.username);
-    document.getElementById('profile-points-label').textContent = `Poin Reward Kontributor: ${userPoints[currentUser.username] || 0} Pts`;
-    
-    let isVip = userVipSubscriptions[currentUser.username] || false;
-    document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 rounded-lg">VIP Tanpa Iklan Aktif</span>` : `<span class="text-slate-400">Status: Member Free</span>`;
-
-    renderUserQuestsList();
-    renderUserRedeemRewardsList();
-}
-
-function renderUserQuestsList() {
-    const list = document.getElementById('user-quests-list');
-    if (!list) return;
-    list.innerHTML = '';
-    if (!userCompletedQuests[currentUser.username]) userCompletedQuests[currentUser.username] = [];
-    
-    adminQuests.forEach(q => {
-        let isDone = userCompletedQuests[currentUser.username].includes(q.id);
-        list.innerHTML += `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                <div>
-                    <span class="font-bold text-white block">${q.title}</span>
-                    <span class="text-amber-400">+${q.points} Pts</span>
-                </div>
-                <button onclick="completeUserQuest(${q.id}, ${q.points})" class="px-4 py-2 ${isDone ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-cyan-500 text-slate-950 font-bold cursor-pointer'} rounded-xl">${isDone ? 'Selesai' : 'Klaim Quest'}</button>
-            </div>
-        `;
-    });
-}
-
-function completeUserQuest(id, pts) {
-    if (!userCompletedQuests[currentUser.username]) userCompletedQuests[currentUser.username] = [];
-    if (userCompletedQuests[currentUser.username].includes(id)) {
-        alert('Quest ini sudah Anda selesaikan sebelumnya.');
-        return;
-    }
-    userCompletedQuests[currentUser.username].push(id);
-    localStorage.setItem('frh_user_completed_quests', JSON.stringify(userCompletedQuests));
-    addPoints(currentUser.username, pts);
-    alert(`Quest berhasil diselesaikan! +${pts} Pts ditambahkan.`);
-    renderProfilePage();
-}
-
-function togglePasswordForm() {
-    document.getElementById('profile-password-box').classList.toggle('hidden');
-}
-
-function handleChangeUserPassword(e) {
-    e.preventDefault();
-    const newPass = document.getElementById('new-user-pass').value;
+function renderAdminAnalytics() {
+    const statRes = document.getElementById('stat-total-res');
+    const statUsers = document.getElementById('stat-total-users');
+    if (statRes) statRes.textContent = resources.length;
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
-    let u = users.find(x => x.username === currentUser.username);
-    if (u) {
-        u.password = newPass;
-        localStorage.setItem('frh_users', JSON.stringify(users));
-        alert('Password berhasil diubah!');
-        document.getElementById('new-user-pass').value = '';
-        togglePasswordForm();
+    if (statUsers) statUsers.textContent = users.length;
+
+    const repList = document.getElementById('admin-reports-list');
+    if (!repList) return;
+    repList.innerHTML = '';
+    if (brokenReports.length === 0) {
+        repList.innerHTML = `<p class="text-xs text-slate-500">Belum ada laporan link rusak.</p>`;
+        return;
     }
+
+    let reportCounts = {};
+    brokenReports.forEach(r => {
+        reportCounts[r.resName] = (reportCounts[r.resName] || 0) + 1;
+    });
+
+    let sortedReports = Object.keys(reportCounts).sort((a, b) => reportCounts[b] - reportCounts[a]);
+
+    sortedReports.forEach(resName => {
+        repList.innerHTML += `
+            <div class="bg-slate-950 border border-rose-500/30 p-3 rounded-xl text-xs flex justify-between items-center">
+                <div>
+                    <span class="font-bold text-rose-400">${resName}</span> mendapati <span class="text-amber-400 font-bold">${reportCounts[resName]} laporan</span> link rusak.
+                </div>
+                <button onclick="resolveAllReportsFor('${resName}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg cursor-pointer">Selesaikan</button>
+            </div>
+        `;
+    });
+}
+
+function resolveAllReportsFor(resName) {
+    brokenReports = brokenReports.filter(rep => rep.resName !== resName);
+    localStorage.setItem('frh_broken_reports', JSON.stringify(brokenReports));
+    renderAdminAnalytics();
 }
 
 function exportDataBackup() {
     const backupData = {
         resources,
+        announcements,
         users: JSON.parse(localStorage.getItem('frh_users')) || [],
+        brokenReports,
         userPoints,
-        adminQuests,
+        userVipSubscriptions,
+        quests,
         exportDate: new Date().toISOString()
     };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "filehub_v10_backup.json");
+    dlAnchor.setAttribute("download", "filehub_ultimatesuite_v9_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -938,6 +1144,523 @@ function handleUpdateAdminCredentials(e) {
 
 function renderAdminDashboard() {
     renderAdminManageList();
+    renderAdminAnalytics();
     renderAdminUsersList();
-    renderAdminQuestsList();
+}
+
+function filterCategory(cat) {
+    currentFilter = cat;
+    ['All', 'File', 'Aplikasi', 'Saved'].forEach(c => {
+        const btn = document.getElementById(`cat-btn-${c}`);
+        if(btn) {
+            btn.className = c === cat 
+                ? "px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md"
+                : "px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer";
+        }
+    });
+    renderResources();
+}
+
+function filterSaved() { filterCategory('Saved'); }
+
+function handleSearchInput() {
+    const keyword = document.getElementById('search-input').value.trim();
+    if (keyword.length > 0) {
+        if (!userRecentSearches.includes(keyword)) {
+            userRecentSearches.unshift(keyword);
+            if (userRecentSearches.length > 5) userRecentSearches.pop();
+            localStorage.setItem('frh_recent_searches', JSON.stringify(userRecentSearches));
+        }
+    }
+    renderResources();
+    renderRecentSearchDropdown();
+}
+
+function renderRecentSearchDropdown() {
+    const box = document.getElementById('recent-search-box');
+    if (!box) return;
+    box.innerHTML = '';
+    const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+    
+    let matchedFiles = [];
+    if (keyword.length > 0) {
+        matchedFiles = resources.filter(r => r.name.toLowerCase().includes(keyword)).slice(0, 3);
+    }
+
+    if (userRecentSearches.length === 0 && matchedFiles.length === 0) {
+        box.classList.add('hidden');
+        return;
+    }
+    box.classList.remove('hidden');
+
+    if (matchedFiles.length > 0) {
+        box.innerHTML += `<div class="text-[10px] text-cyan-400 px-2 py-1 uppercase">Live Search Match</div>`;
+        matchedFiles.forEach(f => {
+            box.innerHTML += `<div onclick="openDetail(${f.id})" class="px-2 py-1.5 hover:bg-slate-800 rounded-lg text-xs text-slate-200 cursor-pointer flex items-center justify-between"><span class="font-bold">${f.name}</span> <span class="text-[10px] text-slate-500">${f.category}</span></div>`;
+        });
+    }
+
+    if (userRecentSearches.length > 0) {
+        box.innerHTML += `<div class="text-[10px] text-slate-500 px-2.5 py-1 uppercase border-t border-slate-800 mt-1 flex justify-between items-center"><span>Pencarian Terakhir</span></div>`;
+        userRecentSearches.forEach((term, index) => {
+            box.innerHTML += `<div class="px-2 py-1.5 hover:bg-slate-800 rounded-lg text-xs text-slate-300 flex items-center justify-between"><span onclick="selectRecentSearch('${term}')" class="cursor-pointer flex-1"><i class="fa-solid fa-clock-rotate-left text-slate-500 mr-2"></i> ${term}</span><button onclick="removeSearchItem(event, ${index})" class="text-rose-400 hover:text-rose-300 px-1"><i class="fa-solid fa-xmark"></i></button></div>`;
+        });
+    }
+}
+
+function removeSearchItem(e, index) {
+    e.stopPropagation();
+    userRecentSearches.splice(index, 1);
+    localStorage.setItem('frh_recent_searches', JSON.stringify(userRecentSearches));
+    renderRecentSearchDropdown();
+}
+
+function selectRecentSearch(term) {
+    document.getElementById('search-input').value = term;
+    document.getElementById('recent-search-box').classList.add('hidden');
+    renderResources();
+}
+
+function parseFileSize(sizeStr) {
+    if (!sizeStr) return 0;
+    let num = parseFloat(sizeStr);
+    if (isNaN(num)) return 0;
+    if (sizeStr.toLowerCase().includes('kb')) return num / 1024;
+    if (sizeStr.toLowerCase().includes('gb')) return num * 1024;
+    return num;
+}
+
+function renderResources() {
+    const grid = document.getElementById('resource-grid');
+    if (!grid) return;
+    const searchKeyword = document.getElementById('search-input').value.toLowerCase();
+    const sortBy = document.getElementById('sort-select').value;
+    grid.innerHTML = '';
+
+    let filtered = resources.filter(res => {
+        let matchCat = true;
+        if (currentFilter === 'File') matchCat = res.category === 'File';
+        if (currentFilter === 'Aplikasi') matchCat = res.category === 'Aplikasi';
+        if (currentFilter === 'Saved') matchCat = res.savedBy && res.savedBy.includes(currentUser.username);
+
+        let matchSearch = res.name.toLowerCase().includes(searchKeyword) || res.description.toLowerCase().includes(searchKeyword);
+        return matchCat && matchSearch;
+    });
+
+    if (sortBy === 'popular') filtered.sort((a, b) => b.likes - a.likes);
+    if (sortBy === 'views') filtered.sort((a, b) => b.views - a.views);
+    if (sortBy === 'rating') filtered.sort((a, b) => parseFloat(calculateAverageRating(b)) - parseFloat(calculateAverageRating(a)));
+    if (sortBy === 'size') filtered.sort((a, b) => parseFileSize(a.fileSize) - parseFileSize(b.fileSize));
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-500"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p class="text-sm">Tidak ada resource yang ditemukan.</p></div>`;
+        return;
+    }
+
+    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+
+    filtered.forEach(res => {
+        const isLiked = res.likedBy && res.likedBy.includes(currentUser.username);
+        const isSaved = res.savedBy && res.savedBy.includes(currentUser.username);
+        const isBroken = brokenReports.some(rep => rep.resName === res.name);
+        const isCommunityChoice = (res.views >= 100 || parseFloat(calculateAverageRating(res)) >= 4.5) && res.id > oneWeekAgo;
+
+        const iconClass = res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400';
+        const avgRating = calculateAverageRating(res);
+
+        grid.innerHTML += `
+            <div class="bg-slate-900 border ${isBroken ? 'border-rose-500/50' : 'border-slate-800/80'} rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg group">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-lg ${iconClass}"></div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-cyan-400">${res.version || 'v1.0'}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${isCommunityChoice ? '<span class="text-[10px] text-amber-300 font-bold bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30">Favorit</span>' : ''}
+                            ${isBroken ? '<span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded">Rusak</span>' : ''}
+                            <span class="text-[10px] text-amber-400 font-bold"><i class="fa-solid fa-star"></i> ${avgRating}</span>
+                        </div>
+                    </div>
+                    <h3 onclick="openDetail(${res.id})" class="font-bold text-base text-white group-hover:text-cyan-400 transition-colors cursor-pointer line-clamp-1">${res.name}</h3>
+                    <p class="text-xs text-slate-300 mt-2 line-clamp-2 leading-relaxed">${res.description}</p>
+                </div>
+                
+                <div class="pt-4 mt-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-300">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleLike(${res.id})" class="flex items-center gap-1 hover:text-rose-400 transition-colors cursor-pointer ${isLiked ? 'text-rose-500' : ''}">
+                            <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> <span>${res.likes || 0}</span>
+                        </button>
+                        <span class="flex items-center gap-1" title="Jumlah Lihat Post"><i class="fa-solid fa-eye text-cyan-400"></i> ${res.views || 0}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleSave(${res.id})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer ${isSaved ? 'text-amber-400' : 'text-slate-300'}" title="Simpan">
+                            <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+                        </button>
+                        <button onclick="openDetail(${res.id})" class="px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg transition-all cursor-pointer">Detail</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function copyDirectLinkFromModal() {
+    if (!activeResourceId) return;
+    const res = resources.find(r => r.id === activeResourceId);
+    if (!res) return;
+    navigator.clipboard.writeText(res.linkNoAd || res.linkAd);
+    alert(`Tautan "${res.name}" berhasil disalin ke clipboard!`);
+}
+
+function calculateAverageRating(res) {
+    if (!res.ratings || Object.keys(res.ratings).length === 0) return '0.0';
+    let totalScore = 0;
+    let totalVotes = 0;
+    for (let star in res.ratings) {
+        totalScore += star * res.ratings[star];
+        totalVotes += res.ratings[star];
+    }
+    return (totalScore / totalVotes).toFixed(1);
+}
+
+function toggleLike(id) {
+    let res = resources.find(r => r.id === id);
+    if (!res.likedBy) res.likedBy = [];
+    const index = res.likedBy.indexOf(currentUser.username);
+    if (index > -1) {
+        res.likedBy.splice(index, 1);
+        res.likes -= 1;
+    } else {
+        res.likedBy.push(currentUser.username);
+        res.likes += 1;
+        addPoints(currentUser.username, 2);
+        logUserAction(currentUser.username, `Menyukai resource: ${res.name}`);
+    }
+    localStorage.setItem('frh_resources', JSON.stringify(resources));
+    renderResources();
+    if(activeResourceId === id) openDetail(id, false);
+}
+
+function toggleSave(id) {
+    let res = resources.find(r => r.id === id);
+    if (!res.savedBy) res.savedBy = [];
+    const index = res.savedBy.indexOf(currentUser.username);
+    if (index > -1) {
+        res.savedBy.splice(index, 1);
+    } else {
+        res.savedBy.push(currentUser.username);
+        logUserAction(currentUser.username, `Menyimpan resource: ${res.name}`);
+    }
+    localStorage.setItem('frh_resources', JSON.stringify(resources));
+    renderResources();
+}
+
+function openDetail(id, openModalWindow = true) {
+    activeResourceId = id;
+    const res = resources.find(r => r.id === id);
+    if (!res) return;
+
+    res.views = (res.views || 0) + 1;
+    localStorage.setItem('frh_resources', JSON.stringify(resources));
+
+    if (currentUser && currentUser.role !== 'admin') {
+        if (!userViewHistory[currentUser.username]) userViewHistory[currentUser.username] = [];
+        userViewHistory[currentUser.username] = userViewHistory[currentUser.username].filter(item => item !== res.name);
+        userViewHistory[currentUser.username].unshift(res.name);
+        if (userViewHistory[currentUser.username].length > 15) userViewHistory[currentUser.username].pop();
+        localStorage.setItem('frh_user_view_history', JSON.stringify(userViewHistory));
+    }
+
+    if (openModalWindow) {
+        document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    document.getElementById('modal-title').textContent = res.name;
+    document.getElementById('modal-version-badge').textContent = res.version || 'v1.0';
+    document.getElementById('modal-badge').textContent = `${res.category} / ${res.subcategory}`;
+    document.getElementById('modal-desc').textContent = res.description;
+    document.getElementById('modal-avg-rating').innerHTML = `<i class="fa-solid fa-star"></i> ${calculateAverageRating(res)}`;
+    
+    const verifiedBadge = document.getElementById('modal-verified-badge');
+    if (res.verified) verifiedBadge.classList.remove('hidden');
+    else verifiedBadge.classList.add('hidden');
+
+    const screenshotBox = document.getElementById('modal-screenshot-container');
+    const screenshotImg = document.getElementById('modal-screenshot-img');
+    if (res.screenshot && res.screenshot.trim() !== '') {
+        screenshotImg.src = res.screenshot;
+        screenshotBox.classList.remove('hidden');
+    } else {
+        screenshotBox.classList.add('hidden');
+    }
+
+    const isBroken = brokenReports.some(rep => rep.resName === res.name);
+    const alertBox = document.getElementById('modal-broken-alert');
+    if (isBroken) alertBox.classList.remove('hidden');
+    else alertBox.classList.add('hidden');
+
+    const downloadAdBtn = document.getElementById('modal-download-ad-btn');
+    const downloadNoAdBtn = document.getElementById('modal-download-noad-btn');
+
+    downloadAdBtn.href = res.linkAd;
+
+    let isVip = userVipSubscriptions[currentUser.username] || false;
+    let unlockedArr = userUnlockedPosts[currentUser.username] || [];
+    let isUnlockedPost = unlockedArr.includes(res.id);
+
+    if (currentUser.role === 'admin' || isVip || isUnlockedPost) {
+        downloadNoAdBtn.href = res.linkNoAd;
+        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (${res.fileSize}) [Akses Aktif]`;
+    } else {
+        downloadNoAdBtn.href = "#";
+        downloadNoAdBtn.onclick = (e) => {
+            e.preventDefault();
+            alert('Link Tanpa Iklan memerlukan langganan VIP atau pembelian akses post ini via Redeem Poin / Live Chat.');
+            switchMainView('livechat');
+            closeModal();
+        };
+        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Link Tanpa Iklan (Terkunci)`;
+    }
+
+    const iconDiv = document.getElementById('modal-file-icon');
+    iconDiv.innerHTML = `<i class="${res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400'}"></i>`;
+
+    // Cek apakah user sudah pernah rating postingan ini
+    let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
+    const submitRatingBtn = document.getElementById('btn-submit-rating');
+    const reviewInput = document.getElementById('review-input');
+    if (hasRated) {
+        submitRatingBtn.disabled = true;
+        submitRatingBtn.textContent = 'Anda sudah memberi rating pada post ini';
+        submitRatingBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        reviewInput.disabled = true;
+    } else {
+        submitRatingBtn.disabled = false;
+        submitRatingBtn.textContent = 'Kirim Rating & Ulasan';
+        submitRatingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        reviewInput.disabled = false;
+    }
+
+    // Render Ulasan
+    const reviewList = document.getElementById('review-list');
+    document.getElementById('review-count').textContent = res.reviews ? res.reviews.length : 0;
+    reviewList.innerHTML = '';
+    if (!res.reviews || res.reviews.length === 0) {
+        reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-2">Belum ada ulasan.</p>`;
+    } else {
+        res.reviews.forEach(rv => {
+            let starsHtml = '<span class="text-amber-400">';
+            for(let i=0; i<rv.rating; i++) starsHtml += '<i class="fa-solid fa-star"></i>';
+            starsHtml += '</span>';
+            reviewList.innerHTML += `<div class="bg-slate-950 border border-slate-800/60 p-3 rounded-xl text-xs space-y-1"><div class="flex justify-between items-center"><span class="font-bold text-cyan-400">${rv.user}</span> ${starsHtml}</div><p class="text-slate-300">${rv.text}</p></div>`;
+        });
+    }
+
+    // Render Komentar
+    const commentList = document.getElementById('comment-list');
+    document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
+    commentList.innerHTML = '';
+    if (!res.comments || res.comments.length === 0) {
+        commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada komentar.</p>`;
+    } else {
+        res.comments.forEach(c => {
+            commentList.innerHTML += `<div class="bg-slate-950 border border-slate-800/60 p-3 rounded-xl text-xs space-y-1"><span class="font-bold text-cyan-400">${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
+        });
+    }
+}
+
+function selectRatingStar(star) {
+    currentSelectedStar = star;
+    document.getElementById('rating-selected-text').textContent = `${star} Bintang Dipilih`;
+    const starBtns = document.querySelectorAll('#star-container button');
+    starBtns.forEach((btn, idx) => {
+        if ((idx + 1) <= star) {
+            btn.className = "text-amber-400 cursor-pointer";
+        } else {
+            btn.className = "text-slate-600 hover:text-amber-400 cursor-pointer";
+        }
+    });
+}
+
+/* FITUR 1 & 2: RATING POSTINGAN DENGAN BINTANG & ULASAN, HANYA 1X PER POST PER USER */
+function handlePostRatingAndReview(e) {
+    e.preventDefault();
+    if (!activeResourceId) return;
+    let res = resources.find(r => r.id === activeResourceId);
+    if (!res.ratings) res.ratings = {};
+    if (!res.ratedUsers) res.ratedUsers = {};
+    if (!res.reviews) res.reviews = [];
+
+    if (res.ratedUsers[currentUser.username]) {
+        alert('Anda sudah memberikan rating pada postingan ini sebelumnya (Maksimal 1x per postingan).');
+        return;
+    }
+
+    const reviewText = document.getElementById('review-input').value.trim();
+    res.ratedUsers[currentUser.username] = currentSelectedStar;
+    res.ratings[currentSelectedStar] = (res.ratings[currentSelectedStar] || 0) + 1;
+    res.reviews.unshift({ user: currentUser.username, rating: currentSelectedStar, text: reviewText });
+
+    addPoints(currentUser.username, 10);
+    logUserAction(currentUser.username, `Memberi rating ${currentSelectedStar} bintang & ulasan pada ${res.name}`);
+    localStorage.setItem('frh_resources', JSON.stringify(resources));
+    
+    alert(`Terima kasih! Ulasan & rating berhasil dikirim (+10 Poin).`);
+    document.getElementById('review-input').value = '';
+    openDetail(activeResourceId, false);
+    renderResources();
+}
+
+function recordDownload(e, type) {
+    if (!currentUser) {
+        e.preventDefault();
+        alert('Anda wajib login atau daftar terlebih dahulu sebelum mengunduh file.');
+        document.getElementById('auth-modal').classList.remove('hidden');
+        return;
+    }
+
+    if (type === 'noad') {
+        let res = resources.find(r => r.id === activeResourceId);
+        let isVip = userVipSubscriptions[currentUser.username] || false;
+        let unlockedArr = userUnlockedPosts[currentUser.username] || [];
+        let isUnlocked = unlockedArr.includes(res.id);
+        if (currentUser.role !== 'admin' && !isVip && !isUnlocked) {
+            e.preventDefault();
+            alert('Akses Link Tanpa Iklan terkunci. Tukarkan poin redeem atau hubungi admin via Live Chat.');
+            switchMainView('livechat');
+            closeModal();
+            return;
+        }
+    }
+
+    addPoints(currentUser.username, 5);
+    logUserAction(currentUser.username, `Mengunduh resource (${type === 'ad' ? 'Dengan Iklan' : 'Tanpa Iklan'})`);
+}
+
+function reportBrokenLink() {
+    if (!activeResourceId) return;
+    let res = resources.find(r => r.id === activeResourceId);
+    if (!brokenReports.some(rep => rep.resName === res.name && rep.user === currentUser.username)) {
+        brokenReports.push({ resName: res.name, user: currentUser.username });
+        localStorage.setItem('frh_broken_reports', JSON.stringify(brokenReports));
+        addNotification(`Laporan link rusak diterima: ${res.name}`, 'danger');
+        addPoints(currentUser.username, 5);
+        logUserAction(currentUser.username, `Melaporkan link rusak: ${res.name}`);
+        alert('Laporan link rusak terkirim (+5 Poin).');
+        openDetail(activeResourceId, false);
+        renderResources();
+    } else {
+        alert('Anda sudah melaporkan link ini sebelumnya.');
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('detail-modal');
+    if (modal) modal.classList.add('hidden');
+    activeResourceId = null;
+}
+
+/* FITUR 3: KOMENTAR MENDAPATKAN POIN HANYA BISA 3X DALAM SEMINGGU */
+function handlePostComment(e) {
+    e.preventDefault();
+    if (!activeResourceId) return;
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    if (!text) return;
+    let res = resources.find(r => r.id === activeResourceId);
+    if (!res.comments) res.comments = [];
+    res.comments.push({ user: currentUser.username, text: text });
+
+    // Cek kuota poin komentar mingguan (maks 3x seminggu)
+    const nowWeek = getWeekNumber(new Date());
+    if (!userCommentWeeklyCount[currentUser.username]) {
+        userCommentWeeklyCount[currentUser.username] = { week: nowWeek, count: 0 };
+    }
+    if (userCommentWeeklyCount[currentUser.username].week !== nowWeek) {
+        userCommentWeeklyCount[currentUser.username] = { week: nowWeek, count: 0 };
+    }
+
+    let earnedPointsMsg = 'Komentar berhasil dikirim.';
+    if (userCommentWeeklyCount[currentUser.username].count < 3) {
+        userCommentWeeklyCount[currentUser.username].count += 1;
+        addPoints(currentUser.username, 5);
+        earnedPointsMsg = 'Komentar berhasil dikirim dan mendapatkan +5 Poin!';
+    } else {
+        earnedPointsMsg = 'Komentar berhasil dikirim. (Batas kuota poin komentar berhadiah 3x dalam seminggu telah tercapai).';
+    }
+    localStorage.setItem('frh_user_comment_weekly', JSON.stringify(userCommentWeeklyCount));
+
+    logUserAction(currentUser.username, `Mengomentari resource: ${res.name}`);
+    localStorage.setItem('frh_resources', JSON.stringify(resources));
+    input.value = '';
+    alert(earnedPointsMsg);
+    openDetail(activeResourceId, false);
+}
+
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    let yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    let weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    return d.getUTCFullYear() + '-' + weekNo;
+}
+
+function togglePasswordForm() {
+    const box = document.getElementById('profile-password-box');
+    if (box) box.classList.toggle('hidden');
+}
+
+function handleChangeUserPassword(e) {
+    e.preventDefault();
+    const newPass = document.getElementById('new-user-pass').value;
+    let users = JSON.parse(localStorage.getItem('frh_users')) || [];
+    let userObj = users.find(u => u.username === currentUser.username);
+    if (userObj) {
+        userObj.password = newPass;
+        localStorage.setItem('frh_users', JSON.stringify(users));
+        alert('Password akun berhasil diubah!');
+        document.getElementById('new-user-pass').value = '';
+        togglePasswordForm();
+    }
+}
+
+function renderProfilePage() {
+    document.getElementById('profile-username').textContent = currentUser.username;
+    document.getElementById('profile-badge-label').textContent = getUserBadge(currentUser.username);
+    document.getElementById('profile-points-label').textContent = `Poin Reward Kontributor: ${userPoints[currentUser.username] || 0} Pts`;
+    
+    let isVip = userVipSubscriptions[currentUser.username] || false;
+    document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg"><i class="fa-solid fa-shield-halved"></i> VIP Tanpa Iklan Aktif</span>` : `<span class="text-slate-400">Status: Member Free (Dengan Iklan)</span>`;
+
+    const trophyBox = document.getElementById('profile-trophies');
+    trophyBox.innerHTML = '';
+    let pts = userPoints[currentUser.username] || 0;
+    if (pts >= 20) trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold">Active Reviewer</span>`;
+    if (pts >= 50) trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full text-[10px] font-bold">Bug Hunter</span>`;
+
+    renderUserRedeemRewardsList();
+
+    const viewList = document.getElementById('profile-view-history-list');
+    viewList.innerHTML = '';
+    let myViews = userViewHistory[currentUser.username] || [];
+    if (myViews.length === 0) {
+        viewList.innerHTML = `<p class="text-xs text-slate-500">Belum ada riwayat melihat post.</p>`;
+    } else {
+        myViews.forEach(name => {
+            viewList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2"><i class="fa-solid fa-eye text-cyan-400"></i> ${name}</div>`;
+        });
+    }
+
+    const savedList = document.getElementById('profile-saved-list');
+    savedList.innerHTML = '';
+    let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(currentUser.username));
+    
+    if (mySaved.length === 0) {
+        savedList.innerHTML = `<p class="text-xs text-slate-500">Belum ada file disimpan.</p>`;
+    } else {
+        mySaved.forEach(res => {
+            savedList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between"><span>${res.name}</span><button onclick="openDetail(${res.id})" class="text-cyan-400 font-bold cursor-pointer">Buka</button></div>`;
+        });
+    }
 }

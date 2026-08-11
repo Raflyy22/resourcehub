@@ -1,15 +1,18 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Resource Hub Ultimate Suite - Enterprise v10</title>
+    <title>File Resource Hub Ultimate Suite - Enterprise v9</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans'] min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+<body class="bg-slate-950 dark:bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans'] min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white transition-colors duration-300">
 
     <!-- AUTH SECTION (UNIFIED LOGIN & REGISTER) -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all duration-300">
@@ -88,12 +91,15 @@
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
                         <i class="fa-solid fa-cube text-white"></i>
                     </div>
-                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v10</span>
+                    <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">FileHub Ultimate Suite v9</span>
                 </div>
                 
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button onclick="switchMainView('quests')" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-xs font-semibold transition-all cursor-pointer text-cyan-400 border border-cyan-500/30">
+                        <i class="fa-solid fa-flag-checkered"></i> Quest Harian
+                    </button>
                     <button onclick="switchMainView('livechat')" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-xs font-semibold transition-all cursor-pointer text-cyan-400 border border-cyan-500/30">
-                        <i class="fa-solid fa-headset"></i> Live Chat
+                        <i class="fa-solid fa-headset"></i> Live Chat Real-Time
                     </button>
                     <button onclick="switchMainView('requests')" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer text-cyan-400">
                         <i class="fa-solid fa-hands-holding-child"></i> Request File
@@ -101,8 +107,28 @@
                     <button onclick="switchMainView('leaderboard')" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer text-amber-400">
                         <i class="fa-solid fa-trophy"></i> Leaderboard
                     </button>
+                    <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 transition-all cursor-pointer" title="Ubah Tema Gelap/Terang">
+                        <i id="theme-icon" class="fa-solid fa-moon text-xs"></i>
+                    </button>
+                    <div class="relative">
+                        <button onclick="toggleNotificationDropdown()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer relative" title="Notifikasi">
+                            <i class="fa-regular fa-bell text-xs"></i>
+                            <span id="notif-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] flex items-center justify-center font-bold hidden">0</span>
+                        </button>
+                        <div id="notif-dropdown" class="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl hidden z-50 p-4 space-y-3">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <span class="font-bold text-xs text-white">Pusat Notifikasi</span>
+                                <button onclick="clearNotifications()" class="text-[10px] text-cyan-400 hover:underline">Tandai Dibaca</button>
+                            </div>
+                            <div id="notif-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+
                     <button onclick="switchMainView('faq')" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer text-amber-400">
                         <i class="fa-solid fa-circle-question"></i> Panduan
+                    </button>
+                    <button onclick="switchMainView('profile')" id="nav-profile-btn" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer">
+                        <i class="fa-regular fa-user-circle text-cyan-400"></i> Profil Saya
                     </button>
                     <div class="text-right hidden md:block border-l border-slate-800 pl-3">
                         <div id="user-display-name" class="text-xs font-bold text-cyan-400"></div>
@@ -115,22 +141,22 @@
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
             
             <!-- ADMIN PANEL VIEW -->
             <div id="admin-panel" class="hidden space-y-8 animate-fadeIn">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
                     <div>
                         <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Super Administrator</h2>
-                        <p class="text-slate-300 text-sm mt-1">Kelola file, kontrol poin user, quest poin, live chat, dan reward komunitas.</p>
+                        <p class="text-slate-300 text-sm mt-1">Kelola link, kontrol user & poin, quest harian, live chat real-time, dan manajemen reward redeem.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="switchAdminTab('upload')" id="btn-tab-upload" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md">Form Upload</button>
                         <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola File</button>
-                        <button onclick="switchAdminTab('users')" id="btn-tab-users" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kontrol Poin User</button>
-                        <button onclick="switchAdminTab('quests')" id="btn-tab-quests" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola Quest Poin</button>
-                        <button onclick="switchAdminTab('livechat')" id="btn-tab-livechat" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Live Chat</button>
-                        <button onclick="switchAdminTab('rewards')" id="btn-tab-rewards" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kustom Redeem</button>
+                        <button onclick="switchAdminTab('users')" id="btn-tab-users" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kontrol User & Poin</button>
+                        <button onclick="switchAdminTab('quests')" id="btn-tab-quests" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kelola Quest</button>
+                        <button onclick="switchAdminTab('livechat')" id="btn-tab-livechat" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Live Chat Masuk</button>
+                        <button onclick="switchAdminTab('rewards')" id="btn-tab-rewards" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Kustom Reward Redeem</button>
                         <button onclick="switchAdminTab('requests')" id="btn-tab-requests" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Request</button>
                         <button onclick="switchAdminTab('analytics')" id="btn-tab-analytics" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Statistik</button>
                         <button onclick="switchAdminTab('backup')" id="btn-tab-backup" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">Backup</button>
@@ -153,6 +179,10 @@
                                 <option value="File">File</option>
                                 <option value="Aplikasi">Aplikasi</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Sub Kategori</label>
+                            <input type="text" id="up-subcategory" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="Contoh: Android 64-bit / Web Universal">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Nomor Versi (Cth: v1.0)</label>
@@ -179,7 +209,7 @@
                             <input type="url" id="up-screenshot" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" placeholder="https://image-url.com/sample.png">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Deskripsi Lengkap / Catatan Rilis</label>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Deskripsi Lengkap / Catatan Rilis (Changelog)</label>
                             <textarea id="up-desc" rows="4" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:outline-none focus:border-cyan-500" placeholder="Detail fitur dan petunjuk..."></textarea>
                         </div>
                         <div class="md:col-span-2 flex gap-4">
@@ -197,20 +227,25 @@
                     <div id="admin-manage-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
 
-                <!-- 1. Kontrol Poin User di Dashboard Admin -->
+                <!-- Kontrol Akun User & Izin Akses Section (Termasuk Kelola Poin) -->
                 <div id="admin-users-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
-                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-coins"></i> Kontrol Poin & Manajemen User</h3>
-                    <p class="text-xs text-slate-400">Atur saldo poin reward, berikan bonus, atau kurangi poin masing-masing user secara langsung.</p>
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User, Kelola Poin & Akses Postingan</h3>
+                    <p class="text-xs text-slate-400">Atur saldo poin user (tambah/kurang), link tanpa iklan VIP, dan buka akses postingan spesifik secara real-time.</p>
                     <div id="admin-users-list" class="space-y-3"></div>
                 </div>
 
-                <!-- 3. Kelola Quest Poin oleh Admin -->
+                <!-- Admin Quest Management Section -->
                 <div id="admin-quests-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
-                    <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-list-check"></i> Tambah & Atur Quest Poin Komunitas</h3>
+                    <h3 id="form-quest-title" class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-flag-checkered"></i> Manajemen Quest Berhadiah Poin</h3>
+                    <p class="text-xs text-slate-400">Tambahkan, edit, atau hapus quest yang dapat diselesaikan oleh member untuk mendapatkan poin.</p>
                     <form onsubmit="handleSaveQuest(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <input type="text" id="quest-title" required placeholder="Judul Quest (Cth: Bagikan link ke Telegram)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <input type="number" id="quest-points" required placeholder="Hadiah Poin (Cth: 100)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <button type="submit" class="bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Quest Baru</button>
+                        <input type="hidden" id="edit-quest-id" value="">
+                        <input type="text" id="quest-title" required placeholder="Judul Quest (Cth: Beri 3 Komentar)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="number" id="quest-reward" required placeholder="Hadiah Poin (Cth: 15)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <div class="flex gap-2">
+                            <button type="submit" id="btn-submit-quest" class="flex-1 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Simpan Quest</button>
+                            <button type="button" id="btn-cancel-edit-quest" onclick="resetQuestForm()" class="hidden px-4 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Batal</button>
+                        </div>
                     </form>
                     <div id="admin-quests-list" class="space-y-2"></div>
                 </div>
@@ -241,10 +276,11 @@
                 <!-- Kustom Reward Redeem Section -->
                 <div id="admin-rewards-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
                     <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-gift"></i> Pengaturan Kustom Reward Redeem Poin</h3>
+                    <p class="text-xs text-slate-400">Tambahkan atau atur daftar hadiah yang dapat ditukar oleh user menggunakan Poin Reward.</p>
                     <form onsubmit="handleSaveReward(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <input type="text" id="rew-name" required placeholder="Nama Hadiah (Cth: Saldo DANA 50rb)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <input type="number" id="rew-cost" required placeholder="Poin yang Dibutuhkan..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <button type="submit" class="bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Hadiah</button>
+                        <input type="text" id="rew-name" required placeholder="Nama Hadiah (Cth: Saldo DANA 50rb / Akses VIP)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="number" id="rew-cost" required placeholder="Poin yang Dibutuhkan (Cth: 100)..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <button type="submit" class="bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer">Tambah Reward Baru</button>
                     </form>
                     <div id="admin-rewards-list" class="space-y-2"></div>
                 </div>
@@ -255,7 +291,7 @@
                     <div id="admin-requests-list" class="space-y-3"></div>
                 </div>
 
-                <!-- Admin Analytics Section -->
+                <!-- Admin Analytics & Link Health Monitor -->
                 <div id="admin-analytics-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
                     <h3 class="text-lg font-bold flex items-center gap-2 text-amber-400"><i class="fa-solid fa-chart-line"></i> Statistik & Monitor Kesehatan Link</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -267,6 +303,10 @@
                             <span class="text-xs text-slate-400">Total Akun Pengguna Terdaftar</span>
                             <h4 id="stat-total-users" class="text-2xl font-bold text-amber-400 mt-1">0</h4>
                         </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Prioritas Perbaikan Laporan Link Rusak</h4>
+                        <div id="admin-reports-list" class="space-y-2"></div>
                     </div>
                 </div>
 
@@ -291,10 +331,10 @@
                             <input type="password" id="set-admin-pass" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1.5">PIN Rahasia Baru</label>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">PIN Rahasia Khusus Baru</label>
                             <input type="password" id="set-admin-pin" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
                         </div>
-                        <button type="submit" class="py-3 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer">Simpan Kredensial</button>
+                        <button type="submit" class="py-3 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer">Simpan Kredensial Super Admin</button>
                     </form>
                 </div>
             </div>
@@ -308,7 +348,7 @@
                         </div>
                         <div>
                             <h2 class="text-base font-bold text-white">Live Chat Real-Time dengan Admin</h2>
-                            <p class="text-xs text-slate-400">Kirim pesan teks atau gambar/foto konsultasi langsung dengan admin.</p>
+                            <p class="text-xs text-slate-400">Kirim pesan teks atau gambar/foto bukti transaksi atau konsultasi langsung dengan admin.</p>
                         </div>
                     </div>
                     <div id="user-livechat-messages" class="flex-1 overflow-y-auto space-y-3 pr-2 font-mono text-xs"></div>
@@ -320,6 +360,22 @@
                         </label>
                         <button type="submit" class="px-6 py-3 bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer">Kirim</button>
                     </form>
+                </div>
+            </div>
+
+            <!-- QUEST HARIAN USER VIEW -->
+            <div id="quests-panel" class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto">
+                <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
+                    <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-flag-checkered"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-white">Daftar Quest Harian Komunitas</h2>
+                            <p class="text-xs text-slate-400">Selesaikan berbagai quest dan kumpulkan Poin Reward sebanyak-banyaknya.</p>
+                        </div>
+                    </div>
+                    <div id="user-quests-list" class="space-y-3"></div>
                 </div>
             </div>
 
@@ -344,19 +400,14 @@
 
             <!-- USER HOME VIEW -->
             <div id="user-panel" class="space-y-8 animate-fadeIn">
-                <!-- Navigasi Menu Bawah Kategori -->
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+                <div id="announcement-container" class="space-y-4"></div>
+
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl backdrop-blur-md">
                     <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                         <button onclick="filterCategory('All')" id="cat-btn-All" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md">Semua</button>
                         <button onclick="filterCategory('File')" id="cat-btn-File" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer">File</button>
                         <button onclick="filterCategory('Aplikasi')" id="cat-btn-Aplikasi" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer">Aplikasi</button>
                         <button onclick="filterSaved()" id="cat-btn-Saved" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-bookmark"></i> Disimpan</button>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                        <button onclick="switchMainView('home')" id="nav-menu-home" class="px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 transition-all cursor-pointer"><i class="fa-solid fa-folder-open"></i> File & Aplikasi</button>
-                        <button onclick="switchMainView('profile')" id="nav-menu-profile" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-400 transition-all cursor-pointer"><i class="fa-regular fa-user-circle"></i> Profil Saya</button>
-                        <button onclick="switchMainView('notifications')" id="nav-menu-notif" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer relative"><i class="fa-regular fa-bell"></i> Notifikasi <span id="notif-badge-nav" class="ml-1 px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] hidden">0</span></button>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -370,6 +421,7 @@
                         <div class="w-full md:w-52 relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" id="search-input" oninput="handleSearchInput()" placeholder="Cari file (Tekan /)..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:border-cyan-500">
+                            <div id="recent-search-box" class="absolute top-full left-0 right-0 bg-slate-900 border border-slate-800 rounded-xl mt-1 hidden shadow-2xl z-30 p-2 space-y-1"></div>
                         </div>
                     </div>
                 </div>
@@ -393,20 +445,9 @@
                 </div>
             </div>
 
-            <!-- NOTIFICATIONS VIEW -->
-            <div id="notifications-panel" class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto">
-                <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-regular fa-bell text-cyan-400"></i> Pusat Notifikasi Sistem</h2>
-                        <button onclick="clearNotifications()" class="text-xs text-cyan-400 hover:underline">Tandai Semua Dibaca</button>
-                    </div>
-                    <div id="notifications-full-list" class="space-y-3"></div>
-                </div>
-            </div>
-
-            <!-- USER PROFILE VIEW (DAILY REWARD PROBABILITAS TINGGI 200-500 & QUEST USER) -->
+            <!-- USER PROFILE VIEW -->
             <div id="profile-panel" class="hidden space-y-6 animate-fadeIn">
-                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-2xl font-bold">
                             <i class="fa-solid fa-user"></i>
@@ -418,24 +459,10 @@
                             </div>
                             <p id="profile-points-label" class="text-xs text-amber-400 font-semibold mt-0.5">Poin Reward Kontributor: 0 Pts</p>
                             <div id="profile-vip-status" class="text-xs text-emerald-400 font-bold mt-1"></div>
+                            <div id="profile-trophies" class="flex flex-wrap gap-1.5 mt-2"></div>
                         </div>
                     </div>
                     <button onclick="togglePasswordForm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer">Ubah Password</button>
-                </div>
-
-                <!-- 2. Daily Reward Harian (Probabilitas Sangat Tinggi untuk 200-500 Poin) -->
-                <div class="bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
-                    <div class="space-y-1">
-                        <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Daily Reward Harian (Bonus Tinggi)</h3>
-                        <p class="text-xs text-slate-300">Klaim hadiah harian Anda setiap hari (Reset pukul 00.00 WIB) dengan peluang sangat tinggi mendapatkan 200 - 500 Pts!</p>
-                    </div>
-                    <button id="claim-daily-btn" onclick="claimDailyReward()" class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg cursor-pointer">Klaim Daily Reward</button>
-                </div>
-
-                <!-- 3. Quest Komunitas User -->
-                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-lg">
-                    <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Quest & Misi Poin Komunitas</h3>
-                    <div id="user-quests-list" class="space-y-3"></div>
                 </div>
 
                 <div id="profile-password-box" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md hidden space-y-4">
@@ -446,16 +473,28 @@
                     </form>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-lg">
+                <!-- MENU REDEEM POIN -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-coins"></i> Redeem Poin Reward (Tukar Hadiah)</h3>
+                        <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Redeem Poin Reward (Tukar Hadiah)</h3>
                         <span class="text-xs text-slate-400">Tukarkan poin Anda dengan akses VIP atau saldo e-wallet</span>
                     </div>
                     <div id="user-redeem-rewards-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                        <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-eye"></i> Riwayat Lihat Post (Terbaru)</h3>
+                        <div id="profile-view-history-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                        <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> File Disimpan</h3>
+                        <div id="profile-saved-list" class="space-y-3 max-h-64 overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
             </div>
 
-            <!-- FAQ VIEW -->
+            <!-- FAQ / PANDUAN UNDUH VIEW -->
             <div id="faq-panel" class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto">
                 <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
                     <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
@@ -464,13 +503,18 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-white">Pusat Panduan & FAQ Unduhan</h2>
-                            <p class="text-xs text-slate-400">Panduan lengkap cara mengunduh file dan aplikasi.</p>
+                            <p class="text-xs text-slate-400">Panduan lengkap cara mengunduh file dan aplikasi dari berbagai platform.</p>
                         </div>
                     </div>
+
                     <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
                         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                            <h3 class="font-bold text-cyan-400 text-sm">1. Sistem Poin & Daily Reward</h3>
-                            <p>Kumpulkan poin dari daily reward (peluang besar 200-500 poin), quest admin, rating (1x per post), dan komentar (maks 3x/minggu).</p>
+                            <h3 class="font-bold text-cyan-400 text-sm"><i class="fa-solid fa-cloud-arrow-down"></i> 1. Link dengan Iklan (Gratis)</h3>
+                            <p>Anda dapat mengunduh file secara gratis melalui tautan iklan yang disediakan.</p>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                            <h3 class="font-bold text-cyan-400 text-sm"><i class="fa-solid fa-shield-halved"></i> 2. Link Tanpa Iklan & Redeem Poin</h3>
+                            <p>Nikmati akses link tanpa iklan dengan menukarkan poin di menu profil atau menghubungi admin via Live Chat.</p>
                         </div>
                     </div>
                 </div>
@@ -478,11 +522,11 @@
         </main>
 
         <footer class="border-t border-slate-800/80 bg-slate-900/30 py-6 mt-auto text-center text-xs text-slate-500">
-            <p>&copy; 2026 File Resource Hub Ultimate Suite v10. Secured & Powered by Netlify Static Hosting.</p>
+            <p>&copy; 2026 File Resource Hub Ultimate Suite v9. Secured & Powered by Netlify Static Hosting.</p>
         </footer>
     </div>
 
-    <!-- MODAL REQUEST -->
+    <!-- MODAL TAMBAH REQUEST FILE KOMUNITAS -->
     <div id="request-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
             <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-hands-holding-child"></i> Ajukan Request File Baru</h3>
@@ -497,7 +541,33 @@
         </div>
     </div>
 
-    <!-- DETAIL MODAL & RATING -->
+    <!-- CUSTOM MODAL KONFIRMASI HAPUS -->
+    <div id="custom-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center space-y-4">
+            <div class="w-12 h-12 bg-rose-500/10 text-rose-500 rounded-xl mx-auto flex items-center justify-center text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-bold text-base text-white">Konfirmasi Hapus</h3>
+            <p id="confirm-msg" class="text-xs text-slate-400">Apakah Anda yakin ingin menghapus resource ini?</p>
+            <div class="flex gap-2 pt-2">
+                <button id="confirm-btn-yes" class="flex-1 py-2.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Ya, Hapus</button>
+                <button onclick="closeCustomConfirm()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM MODAL READER MODE -->
+    <div id="reader-mode-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 hidden animate-fadeIn">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-code-compare"></i> Catatan Rilis & Detail Versi</h3>
+                <button onclick="closeReaderMode()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="reader-content" class="text-sm text-slate-300 leading-relaxed overflow-y-auto pr-2 whitespace-pre-line flex-1 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono"></div>
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL & RATING (DENGAN ULASAN & BATAS 1X RATING) -->
     <div id="detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
             <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
@@ -507,7 +577,7 @@
                         <div class="flex items-center gap-2">
                             <h3 id="modal-title" class="font-bold text-base text-white"></h3>
                             <span id="modal-version-badge" class="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-cyan-400 font-bold"></span>
-                            <span id="modal-verified-badge" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/35"><i class="fa-solid fa-shield-check"></i> Aman</span>
+                            <span id="modal-verified-badge" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/35"><i class="fa-solid fa-shield-check"></i> Aman & Teruji</span>
                         </div>
                         <div class="flex items-center gap-2 mt-0.5">
                             <span id="modal-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold"></span>
@@ -519,35 +589,71 @@
             </div>
             
             <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <div id="modal-broken-alert" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Perhatian: File ini telah dilaporkan mengalami link rusak oleh pengguna.</span>
+                </div>
+
+                <div id="modal-screenshot-container" class="hidden">
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Tangkapan Layar (Screenshot)</h4>
+                    <img id="modal-screenshot-img" src="" alt="Screenshot" class="w-full max-h-52 object-cover rounded-xl border border-slate-800 shadow-md">
+                </div>
+
                 <div>
-                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Deskripsi & Catatan Rilis</h4>
-                    <p id="modal-desc" class="text-sm text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800/60 p-4 rounded-xl whitespace-pre-line"></p>
-                </div>
-
-                <!-- 4. Rating Bintang 5 & Ulasan (1x saja per postingan per user) -->
-                <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <span id="rating-label-text" class="text-xs font-semibold text-slate-300">Beri Rating Bintang 5 & Ulasan (+10 Poin):</span>
-                    <div class="flex gap-1 text-lg text-slate-600" id="star-container">
-                        <button onclick="rateResource(1)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
-                        <button onclick="rateResource(2)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
-                        <button onclick="rateResource(3)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
-                        <button onclick="rateResource(4)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
-                        <button onclick="rateResource(5)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Deskripsi & Perbandingan Versi</h4>
+                        <div class="flex gap-3">
+                            <button onclick="openVersionComparison()" class="text-[11px] text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-code-compare"></i> Komparasi</button>
+                            <button onclick="openReaderMode()" class="text-[11px] text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-expand"></i> Mode Baca</button>
+                        </div>
                     </div>
+                    <p id="modal-desc" class="text-sm text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800/60 p-4 rounded-xl whitespace-pre-line line-clamp-4"></p>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <a id="modal-download-ad-btn" href="#" target="_blank" class="flex-1 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                <!-- Form Beri Rating & Ulasan (Hanya 1x per user per post) -->
+                <div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl space-y-3">
+                    <span class="text-xs font-semibold text-slate-300 block">Beri Rating & Ulasan Postingan Ini (+10 Poin):</span>
+                    <form onsubmit="handlePostRatingAndReview(event)" class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex gap-1 text-xl text-slate-600" id="star-container">
+                                <button type="button" onclick="selectRatingStar(1)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="selectRatingStar(2)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="selectRatingStar(3)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="selectRatingStar(4)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="selectRatingStar(5)" class="hover:text-amber-400 cursor-pointer"><i class="fa-solid fa-star"></i></button>
+                            </div>
+                            <span id="rating-selected-text" class="text-xs text-amber-400 font-bold">Pilih Bintang (1-5)</span>
+                        </div>
+                        <input type="text" id="review-input" required placeholder="Tulis ulasan Anda tentang file/aplikasi ini..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
+                        <button type="submit" id="btn-submit-rating" class="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all cursor-pointer">Kirim Rating & Ulasan</button>
+                    </form>
+                </div>
+
+                <!-- Daftar Ulasan Pengguna -->
+                <div class="space-y-3 pt-2">
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i> Ulasan Pengguna (<span id="review-count">0</span>)</h4>
+                    <div id="review-list" class="space-y-3 max-h-48 overflow-y-auto pr-2"></div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <a id="modal-download-ad-btn" href="#" onclick="recordDownload(event, 'ad')" target="_blank" class="flex-1 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-cloud-arrow-down"></i> Link dengan Iklan (Gratis)
                     </a>
-                    <a id="modal-download-noad-btn" href="#" target="_blank" class="flex-1 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (VIP)
+                    <a id="modal-download-noad-btn" href="#" onclick="recordDownload(event, 'noad')" target="_blank" class="flex-1 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (VIP / Beli Post)
                     </a>
                 </div>
+                <div class="flex gap-2">
+                    <button onclick="copyDirectLinkFromModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-semibold rounded-xl text-xs transition-all cursor-pointer border border-slate-700">
+                        <i class="fa-solid fa-copy"></i> Salin Link
+                    </button>
+                    <button onclick="reportBrokenLink()" class="flex-1 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold rounded-xl text-xs transition-all cursor-pointer border border-rose-500/20">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Lapor Link Rusak
+                    </button>
+                </div>
 
-                <!-- 4. Komentar (Maksimal hanya 3x setiap minggu dapat poin) -->
                 <div class="space-y-4 pt-4 border-t border-slate-800">
-                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-regular fa-comments text-cyan-400"></i> Diskusi & Komentar (Poin aktif max 3x/minggu) (<span id="comment-count">0</span>)</h4>
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-regular fa-comments text-cyan-400"></i> Diskusi & Komentar (+5 Poin / Maks 3x Seminggu) (<span id="comment-count">0</span>)</h4>
                     <div id="comment-list" class="space-y-3 max-h-48 overflow-y-auto pr-2"></div>
 
                     <form onsubmit="handlePostComment(event)" class="flex gap-2 pt-2">
