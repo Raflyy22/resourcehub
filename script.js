@@ -2,7 +2,6 @@ let currentUser = JSON.parse(localStorage.getItem('frh_current_user')) || null;
 let adminCreds = JSON.parse(localStorage.getItem('frh_admin_creds')) || { user: 'superadmin', pass: 'securepass99', pin: '8888' };
 let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0;
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
-let telegramConfig = JSON.parse(localStorage.getItem('frh_tg_config')) || { token: '', chatId: '' };
 
 let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
     {
@@ -31,17 +30,11 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v9!", content: "Fitur ulasan rating, batasan komen poin mingguan, kelola quest admin, dan manajemen poin user kini aktif.", date: "10 Agustus 2026" }
+    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v9!", content: "Quest profil lengkap dengan validasi otomatis dan sistem level akun 1-100 kini aktif.", date: "10 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [
     { id: 1, title: "Request Adobe Photoshop APK", desc: "Mohon sediakan versi modifikasinya.", user: "Budi", status: "Pending" }
-];
-
-let quests = JSON.parse(localStorage.getItem('frh_quests')) || [
-    { id: 1, title: "Unduh 3 File/Aplikasi Berbeda", reward: 15 },
-    { id: 2, title: "Berikan 1 Ulasan & Rating Postingan", reward: 10 },
-    { id: 3, title: "Kirim 1 Pesan di Live Chat Admin", reward: 5 }
 ];
 
 let liveChatConversations = JSON.parse(localStorage.getItem('frh_livechat_conversations')) || {
@@ -61,10 +54,11 @@ let redeemRewards = JSON.parse(localStorage.getItem('frh_redeem_rewards')) || [
 
 let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) || {};
 let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
+let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {};
+let userQuestClaims = JSON.parse(localStorage.getItem('frh_user_quest_claims')) || {}; // Menyimpan status klaim quest per user
 let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {};
 let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {};
 let userAuditLogs = JSON.parse(localStorage.getItem('frh_user_audit_logs')) || {};
-let userCommentWeeklyCount = JSON.parse(localStorage.getItem('frh_user_comment_weekly')) || {}; // Menyimpan data hitungan komen berpoin per minggu
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
@@ -367,7 +361,6 @@ function checkAuthState() {
             document.getElementById('leaderboard-panel').classList.add('hidden');
             document.getElementById('requests-panel').classList.add('hidden');
             document.getElementById('livechat-panel').classList.add('hidden');
-            document.getElementById('quests-panel').classList.add('hidden');
             document.getElementById('nav-profile-btn').classList.add('hidden');
             renderAdminDashboard();
         } else {
@@ -389,7 +382,7 @@ function getUserBadge(username) {
 }
 
 function switchMainView(view) {
-    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel', 'quests-panel'].forEach(id => {
+    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
@@ -411,9 +404,6 @@ function switchMainView(view) {
     } else if (view === 'livechat') {
         document.getElementById('livechat-panel').classList.remove('hidden');
         renderUserLiveChatMessages();
-    } else if (view === 'quests') {
-        document.getElementById('quests-panel').classList.remove('hidden');
-        renderUserQuestsPage();
     }
 }
 
@@ -471,34 +461,6 @@ function fulfillRequest(id) {
     }
 }
 
-function renderUserQuestsPage() {
-    const list = document.getElementById('user-quests-list');
-    if (!list) return;
-    list.innerHTML = '';
-    if (quests.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada quest tersedia saat ini.</p>`;
-        return;
-    }
-    quests.forEach(q => {
-        list.innerHTML += `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                <div>
-                    <span class="font-bold text-white text-sm block"><i class="fa-solid fa-circle-check text-cyan-400 mr-2"></i>${q.title}</span>
-                    <span class="text-[10px] text-amber-400 mt-1 inline-block"><i class="fa-solid fa-coins"></i> Hadiah: +${q.reward} Poin</span>
-                </div>
-                <button onclick="claimQuest(${q.reward}, '${q.title}')" class="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl cursor-pointer">Selesaikan</button>
-            </div>
-        `;
-    });
-}
-
-function claimQuest(reward, title) {
-    addPoints(currentUser.username, reward);
-    addNotification(`Berhasil menyelesaikan quest: "${title}" (+${reward} Poin)`, 'admin');
-    alert(`Selamat! Anda mendapatkan +${reward} Poin dari quest "${title}".`);
-    switchMainView('home');
-}
-
 function renderLeaderboardPage() {
     const list = document.getElementById('leaderboard-list');
     if (!list) return;
@@ -529,7 +491,7 @@ function renderLeaderboardPage() {
 }
 
 function switchAdminTab(type) {
-    ['upload', 'manage', 'users', 'quests', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
+    ['upload', 'manage', 'users', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
         if(sec) sec.classList.add('hidden');
@@ -542,14 +504,12 @@ function switchAdminTab(type) {
     
     if (type === 'manage') renderAdminManageList();
     if (type === 'users') renderAdminUsersList();
-    if (type === 'quests') renderAdminQuestsList();
     if (type === 'livechat') renderAdminLiveChatUsers();
     if (type === 'rewards') renderAdminRewardsList();
     if (type === 'requests') renderCommunityRequests();
     if (type === 'analytics') renderAdminAnalytics();
 }
 
-/* FITUR ADMIN: KELOLA POIN USER (TAMBAH & KURANG) */
 function renderAdminUsersList() {
     const list = document.getElementById('admin-users-list');
     if (!list) return;
@@ -616,81 +576,6 @@ function modifyUserPoints(username, action) {
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
     inputEl.value = '';
     renderAdminUsersList();
-}
-
-/* FITUR ADMIN: KELOLA QUEST (TAMBAH, EDIT, HAPUS) */
-function renderAdminQuestsList() {
-    const list = document.getElementById('admin-quests-list');
-    if (!list) return;
-    list.innerHTML = '';
-    if (quests.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada quest yang dibuat.</p>`;
-        return;
-    }
-    quests.forEach(q => {
-        list.innerHTML += `
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                <div>
-                    <span class="font-bold text-white">${q.title}</span>
-                    <span class="text-amber-400 block"><i class="fa-solid fa-coins"></i> Reward: +${q.reward} Poin</span>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="editQuest(${q.id})" class="px-3 py-1 bg-amber-500/20 text-amber-400 font-bold rounded cursor-pointer">Edit</button>
-                    <button onclick="deleteQuest(${q.id})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">Hapus</button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-function handleSaveQuest(e) {
-    e.preventDefault();
-    const editId = document.getElementById('edit-quest-id').value;
-    const title = document.getElementById('quest-title').value.trim();
-    const reward = parseInt(document.getElementById('quest-reward').value);
-
-    if (editId) {
-        let q = quests.find(item => item.id == editId);
-        if (q) {
-            q.title = title;
-            q.reward = reward;
-        }
-        alert('Quest berhasil diperbarui!');
-        resetQuestForm();
-    } else {
-        quests.push({ id: Date.now(), title, reward });
-        alert('Quest baru berhasil ditambahkan!');
-        e.target.reset();
-    }
-    localStorage.setItem('frh_quests', JSON.stringify(quests));
-    renderAdminQuestsList();
-}
-
-function editQuest(id) {
-    let q = quests.find(item => item.id === id);
-    if (!q) return;
-    document.getElementById('edit-quest-id').value = q.id;
-    document.getElementById('quest-title').value = q.title;
-    document.getElementById('quest-reward').value = q.reward;
-    document.getElementById('form-quest-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Quest: ${q.title}`;
-    document.getElementById('btn-submit-quest').textContent = 'Simpan Perubahan';
-    document.getElementById('btn-cancel-edit-quest').classList.remove('hidden');
-}
-
-function resetQuestForm() {
-    document.getElementById('edit-quest-id').value = '';
-    document.getElementById('quest-title').value = '';
-    document.getElementById('quest-reward').value = '';
-    document.getElementById('form-quest-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Manajemen Quest Berhadiah Poin`;
-    document.getElementById('btn-submit-quest').textContent = 'Simpan Quest';
-    document.getElementById('btn-cancel-edit-quest').classList.add('hidden');
-}
-
-function deleteQuest(id) {
-    quests = quests.filter(q => q.id !== id);
-    localStorage.setItem('frh_quests', JSON.stringify(quests));
-    renderAdminQuestsList();
-    alert('Quest berhasil dihapus.');
 }
 
 function toggleAdminUserPostAccess(username, resId) {
@@ -1121,7 +1006,6 @@ function exportDataBackup() {
         brokenReports,
         userPoints,
         userVipSubscriptions,
-        quests,
         exportDate: new Date().toISOString()
     };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
@@ -1426,7 +1310,6 @@ function openDetail(id, openModalWindow = true) {
     const iconDiv = document.getElementById('modal-file-icon');
     iconDiv.innerHTML = `<i class="${res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400'}"></i>`;
 
-    // Cek apakah user sudah pernah rating postingan ini
     let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
     const submitRatingBtn = document.getElementById('btn-submit-rating');
     const reviewInput = document.getElementById('review-input');
@@ -1442,7 +1325,6 @@ function openDetail(id, openModalWindow = true) {
         reviewInput.disabled = false;
     }
 
-    // Render Ulasan
     const reviewList = document.getElementById('review-list');
     document.getElementById('review-count').textContent = res.reviews ? res.reviews.length : 0;
     reviewList.innerHTML = '';
@@ -1457,7 +1339,6 @@ function openDetail(id, openModalWindow = true) {
         });
     }
 
-    // Render Komentar
     const commentList = document.getElementById('comment-list');
     document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
     commentList.innerHTML = '';
@@ -1483,7 +1364,6 @@ function selectRatingStar(star) {
     });
 }
 
-/* FITUR 1 & 2: RATING POSTINGAN DENGAN BINTANG & ULASAN, HANYA 1X PER POST PER USER */
 function handlePostRatingAndReview(e) {
     e.preventDefault();
     if (!activeResourceId) return;
@@ -1493,7 +1373,7 @@ function handlePostRatingAndReview(e) {
     if (!res.reviews) res.reviews = [];
 
     if (res.ratedUsers[currentUser.username]) {
-        alert('Anda sudah memberikan rating pada postingan ini sebelumnya (Maksimal 1x per postingan).');
+        alert('Anda sudah memberikan rating pada postingan ini sebelumnya.');
         return;
     }
 
@@ -1561,7 +1441,6 @@ function closeModal() {
     activeResourceId = null;
 }
 
-/* FITUR 3: KOMENTAR MENDAPATKAN POIN HANYA BISA 3X DALAM SEMINGGU */
 function handlePostComment(e) {
     e.preventDefault();
     if (!activeResourceId) return;
@@ -1571,39 +1450,13 @@ function handlePostComment(e) {
     let res = resources.find(r => r.id === activeResourceId);
     if (!res.comments) res.comments = [];
     res.comments.push({ user: currentUser.username, text: text });
-
-    // Cek kuota poin komentar mingguan (maks 3x seminggu)
-    const nowWeek = getWeekNumber(new Date());
-    if (!userCommentWeeklyCount[currentUser.username]) {
-        userCommentWeeklyCount[currentUser.username] = { week: nowWeek, count: 0 };
-    }
-    if (userCommentWeeklyCount[currentUser.username].week !== nowWeek) {
-        userCommentWeeklyCount[currentUser.username] = { week: nowWeek, count: 0 };
-    }
-
-    let earnedPointsMsg = 'Komentar berhasil dikirim.';
-    if (userCommentWeeklyCount[currentUser.username].count < 3) {
-        userCommentWeeklyCount[currentUser.username].count += 1;
-        addPoints(currentUser.username, 5);
-        earnedPointsMsg = 'Komentar berhasil dikirim dan mendapatkan +5 Poin!';
-    } else {
-        earnedPointsMsg = 'Komentar berhasil dikirim. (Batas kuota poin komentar berhadiah 3x dalam seminggu telah tercapai).';
-    }
-    localStorage.setItem('frh_user_comment_weekly', JSON.stringify(userCommentWeeklyCount));
-
+    
+    addPoints(currentUser.username, 5);
     logUserAction(currentUser.username, `Mengomentari resource: ${res.name}`);
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     input.value = '';
-    alert(earnedPointsMsg);
+    alert('Komentar berhasil dikirim (+5 Poin).');
     openDetail(activeResourceId, false);
-}
-
-function getWeekNumber(d) {
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-    let yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    let weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
-    return d.getUTCFullYear() + '-' + weekNo;
 }
 
 function togglePasswordForm() {
@@ -1625,11 +1478,119 @@ function handleChangeUserPassword(e) {
     }
 }
 
+/* ========================================================
+   FITUR BARU: QUEST PROFIL DENGAN VALIDASI OTOMATIS & KLAIM POIN
+   ======================================================== */
+const profileQuestsDefinition = [
+    { id: 'like_1', title: 'Sukai 1 postingan', reward: 10, target: 1, type: 'like' },
+    { id: 'like_5', title: 'Sukai 5 Postingan', reward: 30, target: 5, type: 'like' },
+    { id: 'rate_star5_1', title: 'Lakukan Rating Bintang 5 Untuk 1 Postingan', reward: 15, target: 1, type: 'rate5' },
+    { id: 'rate_star5_3', title: 'Lakukan Rating Bintang 5 Untuk 3 Postingan', reward: 45, target: 3, type: 'rate5' },
+    { id: 'comment_10', title: 'Lakukan 10 Komentar Pada Postingan', reward: 50, target: 10, type: 'comment' },
+    { id: 'comment_50', title: 'Lakukan 50 Komentat Pada Postingan', reward: 200, target: 50, type: 'comment' },
+    { id: 'comment_100', title: 'Lakukan 100 Komentat Pada Postingan', reward: 400, target: 100, type: 'comment' },
+    { id: 'view_100', title: 'Lihat 100 Postingan', reward: 75, target: 100, type: 'view' },
+    { id: 'get_badge', title: 'Dapatkan Badge Di Profile Kamu', reward: 50, target: 1, type: 'badge' }
+];
+
+function checkQuestRealProgress(type) {
+    let uname = currentUser.username;
+    if (type === 'like') {
+        let count = 0;
+        resources.forEach(r => { if (r.likedBy && r.likedBy.includes(uname)) count++; });
+        return count;
+    }
+    if (type === 'rate5') {
+        let count = 0;
+        resources.forEach(r => { if (r.ratedUsers && r.ratedUsers[uname] === 5) count++; });
+        return count;
+    }
+    if (type === 'comment') {
+        let count = 0;
+        resources.forEach(r => {
+            if (r.comments) {
+                r.comments.forEach(c => { if (c.user === uname) count++; });
+            }
+        });
+        return count;
+    }
+    if (type === 'view') {
+        let myViews = userViewHistory[uname] || [];
+        return myViews.length;
+    }
+    if (type === 'badge') {
+        let badge = getUserBadge(uname);
+        return badge.includes('Member Baru') ? 0 : 1;
+    }
+    return 0;
+}
+
+function claimProfileQuest(questId, target, type, reward) {
+    let uname = currentUser.username;
+    if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
+    if (userQuestClaims[uname][questId]) {
+        alert('Quest ini sudah pernah diklaim sebelumnya!');
+        return;
+    }
+
+    // Validasi sistem apakah user benar-benar telah melaksanakan quest
+    let currentProgress = checkQuestRealProgress(type);
+    if (currentProgress >= target) {
+        userQuestClaims[uname][questId] = true;
+        localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
+        addPoints(uname, reward);
+        addNotification(`Quest "${questId}" berhasil diklaim! (+${reward} Poin)`, 'admin');
+        alert(`Validasi Berhasil! Quest selesai. Anda mendapatkan +${reward} Poin.`);
+        renderProfilePage();
+    } else {
+        alert(`Validasi Gagal! Anda belum memenuhi syarat (Progress saat ini: ${currentProgress}/${target}). Selesaikan dulu quest tersebut!`);
+    }
+}
+
+/* ========================================================
+   FITUR BARU: LEVEL AKUN 1 HINGGA 100 DENGAN PROBABILITAS TINGGI
+   ======================================================== */
+function upgradeAccountLevel() {
+    let uname = currentUser.username;
+    if (!userLevels[uname]) userLevels[uname] = 1;
+    let currentLevel = userLevels[uname];
+
+    if (currentLevel >= 100) {
+        alert('Akun Anda sudah mencapai Level Max (100)!');
+        return;
+    }
+
+    // Biaya upgrade per level (misal 20 poin)
+    let cost = 20;
+    let myPts = userPoints[uname] || 0;
+    if (myPts < cost) {
+        alert(`Poin tidak cukup! Butuh ${cost} Poin untuk mencoba menaikkan level.`);
+        return;
+    }
+
+    userPoints[uname] -= cost;
+    localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+
+    // Probabilitas tinggi untuk naik level (85% sukses)
+    let roll = Math.random();
+    if (roll < 0.85) {
+        userLevels[uname] += 1;
+        localStorage.setItem('frh_user_levels', JSON.stringify(userLevels));
+        alert(`SELAMAT! Upgrage Level BERHASIL. Level akun Anda naik ke Level ${userLevels[uname]}! 🎉`);
+    } else {
+        alert(`Sayang sekali, percobaan upgrade level kali ini gagal. Coba lagi!`);
+    }
+    renderProfilePage();
+}
+
 function renderProfilePage() {
     document.getElementById('profile-username').textContent = currentUser.username;
     document.getElementById('profile-badge-label').textContent = getUserBadge(currentUser.username);
-    document.getElementById('profile-points-label').textContent = `Poin Reward Kontributor: ${userPoints[currentUser.username] || 0} Pts`;
+    document.getElementById('profile-points-label').textContent = `Poin Reward: ${userPoints[currentUser.username] || 0} Pts`;
     
+    let currentLvl = userLevels[currentUser.username] || 1;
+    document.getElementById('profile-level-label').textContent = `Level: ${currentLvl} / 100`;
+
     let isVip = userVipSubscriptions[currentUser.username] || false;
     document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg"><i class="fa-solid fa-shield-halved"></i> VIP Tanpa Iklan Aktif</span>` : `<span class="text-slate-400">Status: Member Free (Dengan Iklan)</span>`;
 
@@ -1638,6 +1599,39 @@ function renderProfilePage() {
     let pts = userPoints[currentUser.username] || 0;
     if (pts >= 20) trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold">Active Reviewer</span>`;
     if (pts >= 50) trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full text-[10px] font-bold">Bug Hunter</span>`;
+
+    // Render Quest Profil Sesuai Permintaan
+    const questList = document.getElementById('profile-quests-list');
+    if (questList) {
+        questList.innerHTML = '';
+        let uname = currentUser.username;
+        if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
+
+        profileQuestsDefinition.forEach(q => {
+            let isClaimed = userQuestClaims[uname][q.id] || false;
+            let currentProg = checkQuestRealProgress(q.type);
+            let canClaim = currentProg >= q.target && !isClaimed;
+
+            let btnHtml = '';
+            if (isClaimed) {
+                btnHtml = `<span class="text-emerald-400 font-bold text-[11px]"><i class="fa-solid fa-check"></i> Selesai & Diklaim</span>`;
+            } else if (canClaim) {
+                btnHtml = `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl cursor-pointer">Klaim Poin (+${q.reward})</button>`;
+            } else {
+                btnHtml = `<span class="text-slate-500 text-[10px]">Progress: ${currentProg}/${q.target}</span>`;
+            }
+
+            questList.innerHTML += `
+                <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-white block">${q.title}</span>
+                        <span class="text-amber-400 text-[10px]">Hadiah: +${q.reward} Poin</span>
+                    </div>
+                    <div>${btnHtml}</div>
+                </div>
+            `;
+        });
+    }
 
     renderUserRedeemRewardsList();
 
