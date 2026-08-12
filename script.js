@@ -4,7 +4,7 @@ let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
 let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
-let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v17. Dilengkapi Toast Notifikasi Modern & Smart Search!" };
+let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v18. Pembaruan kustomisasi link, pembersihan tombol redundan, dan riwayat profil lengkap!" };
 
 let categoryConfig = JSON.parse(localStorage.getItem('frh_category_config')) || {
     "Script Mobile Legends": ["Script Skin", "Script Anti Lag", "Script Booster", "Game Booster"],
@@ -44,7 +44,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Pembaruan RapzResource HUB v17", content: "Pembaruan Toast Notification, Fuzzy Search, dan Skeleton Loader.", date: "12 Agustus 2026" }
+    { id: 1, title: "Pembaruan RapzResource HUB v18", content: "Kustomisasi Nama Link, Pembersihan Fitur Redundan, dan Riwayat Profil Komprehensif.", date: "12 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
@@ -74,10 +74,17 @@ let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || [];
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di RapzResource HUB v17!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di RapzResource HUB v18!", type: 'info', read: false, time: "Baru saja" }
 ];
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
+
+// Riwayat Profil Tambahan
+let userLoginHistory = JSON.parse(localStorage.getItem('frh_user_login_history')) || {};
+let userQuestHistory = JSON.parse(localStorage.getItem('frh_user_quest_history')) || {};
+let userRedeemLogHistory = JSON.parse(localStorage.getItem('frh_user_redeem_log_history')) || {};
+let userReportHistory = JSON.parse(localStorage.getItem('frh_user_report_history')) || {};
+let userPasswordHistory = JSON.parse(localStorage.getItem('frh_user_password_history')) || {};
 
 let currentMainCategory = 'All';
 let currentSubCategory = 'All';
@@ -114,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             closeModal();
             closeCustomConfirm();
-            closeReaderMode();
             closeRequestModal();
             closeRedeemPostModal();
             toggleSupportChatModal();
@@ -127,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ========================================================
-   SISTEM TOAST NOTIFIKASI MELAYANG (Pengganti Alert Standar)
+   SISTEM TOAST NOTIFIKASI MELAYANG
    ======================================================== */
 function ensureToastContainerExists() {
     if (!document.getElementById('toast-container-hub')) {
@@ -235,7 +241,10 @@ function removeSubCategory(mainCat, idx) {
     }
 }
 
-function addCustomLinkRow(nameVal = '', urlVal = '') {
+/* ========================================================
+   POIN 1: FITUR KUSTOMISASI NAMA LINK BEBAS
+   ======================================================== */
+function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '') {
     const container = document.getElementById('dynamic-links-container');
     if (!container) return;
     const rowId = Date.now() + Math.random();
@@ -244,11 +253,7 @@ function addCustomLinkRow(nameVal = '', urlVal = '') {
     div.className = "flex flex-col sm:flex-row items-center gap-3 bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-lg animate-fadeIn";
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
-        <select class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
-            <option value="Link Iklan (Free)" ${nameVal === 'Link Iklan (Free)' ? 'selected' : ''}>Link Iklan (Free)</option>
-            <option value="Link Tanpa Iklan (VVIP)" ${nameVal === 'Link Tanpa Iklan (VVIP)' ? 'selected' : ''}>Link Tanpa Iklan (VVIP)</option>
-            <option value="Direct File (VVIP)" ${nameVal === 'Direct File (VVIP)' ? 'selected' : ''}>Direct File (VVIP)</option>
-        </select>
+        <input type="text" placeholder="Nama Link (Cth: VVIP Server 1)..." value="${nameVal}" class="w-full sm:w-52 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
         <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
         <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl transition-all text-xs cursor-pointer shadow-md"><i class="fa-solid fa-trash"></i></button>
     `;
@@ -311,7 +316,7 @@ function sendTelegramNotification(text) {
     let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
     let data = {
         chat_id: telegramConfig.chatId,
-        text: `🤖 [RapzResource HUB v17]\n${text}`,
+        text: `🤖 [RapzResource HUB v18]\n${text}`,
         parse_mode: 'HTML'
     };
     fetch(url, {
@@ -555,6 +560,12 @@ function handleUnifiedLogin(e) {
         currentUser = { username: uVal, role: 'user' };
         logUserAction(uVal, 'Masuk ke sistem');
         recordSystemLog('akun_login', `User @${uVal} berhasil masuk ke akun.`, uVal);
+
+        // Poin 5: Rekam Riwayat Login User
+        if (!userLoginHistory[uVal]) userLoginHistory[uVal] = [];
+        userLoginHistory[uVal].unshift({ time: new Date().toLocaleString('id-ID'), status: 'Berhasil Masuk' });
+        if (userLoginHistory[uVal].length > 15) userLoginHistory[uVal].pop();
+        localStorage.setItem('frh_user_login_history', JSON.stringify(userLoginHistory));
     }
     localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
     checkAuthState();
@@ -1303,6 +1314,12 @@ function executeRedeemReward(rew) {
         localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
     }
 
+    // Poin 5: Rekam Riwayat Redeem Berhasil
+    if (!userRedeemLogHistory[uname]) userRedeemLogHistory[uname] = [];
+    userRedeemLogHistory[uname].unshift({ name: rew.name, cost: rew.cost, time: new Date().toLocaleString('id-ID') });
+    if (userRedeemLogHistory[uname].length > 15) userRedeemLogHistory[uname].pop();
+    localStorage.setItem('frh_user_redeem_log_history', JSON.stringify(userRedeemLogHistory));
+
     showToast(`Berhasil menukar "${rew.name}"!`, 'success');
     renderProfilePage();
 }
@@ -1441,34 +1458,31 @@ function deleteResource(id) {
     document.getElementById('confirm-btn-yes').onclick = executeDeleteResource;
 }
 
+// Poin 4: Sinkronisasi riwayat jika postingan dihapus oleh admin
 function executeDeleteResource() {
     if (pendingDeleteId) {
+        let deletedRes = resources.find(r => r.id === pendingDeleteId);
+        let deletedResName = deletedRes ? deletedRes.name : null;
+
         resources = resources.filter(r => r.id !== pendingDeleteId);
         localStorage.setItem('frh_resources', JSON.stringify(resources));
+
+        if (deletedResName) {
+            for (let uname in userViewHistory) {
+                userViewHistory[uname] = userViewHistory[uname].filter(name => name !== deletedResName);
+            }
+            localStorage.setItem('frh_user_view_history', JSON.stringify(userViewHistory));
+        }
+
         renderAdminManageList();
         closeCustomConfirm();
-        showToast('Script berhasil dihapus.', 'success');
+        showToast('Script berhasil dihapus & dibersihkan dari riwayat user.', 'success');
     }
 }
 
 function closeCustomConfirm() {
     document.getElementById('custom-confirm-modal').classList.add('hidden');
     pendingDeleteId = null;
-}
-
-function openReaderMode() {
-    const res = resources.find(r => r.id === activeResourceId);
-    if (!res) return;
-    document.getElementById('reader-content').textContent = `=== PETUNJUK PEMASANGAN & KOMPARASI VERSI ===\nVersi Saat Ini: ${res.version || 'v1.0'}\nKategori: ${res.category} (${res.subcategory})\n\n[Deskripsi & Petunjuk Lengkap]:\n${res.description}`;
-    document.getElementById('reader-mode-modal').classList.remove('hidden');
-}
-
-function openVersionComparison() {
-    openReaderMode();
-}
-
-function closeReaderMode() {
-    document.getElementById('reader-mode-modal').classList.add('hidden');
 }
 
 function renderAdminManageList() {
@@ -1532,7 +1546,7 @@ function exportDataBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "rapzresource_hub_v17_backup.json");
+    dlAnchor.setAttribute("download", "rapzresource_hub_v18_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -1686,9 +1700,6 @@ function parseFileSize(sizeStr) {
     return num;
 }
 
-/* ========================================================
-   SMART FUZZY SEARCH & SKELETON LOADER (Peningkatan UX)
-   ======================================================== */
 function computeLevenshteinDistance(a, b) {
     let matrix = [];
     for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
@@ -1723,7 +1734,6 @@ function renderResources() {
     const grid = document.getElementById('resource-grid');
     if (!grid) return;
 
-    // Tampilkan Skeleton Loader Animasi sebelum render data
     grid.innerHTML = `
         <div class="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 animate-pulse space-y-4">
             <div class="flex justify-between items-center"><div class="w-10 h-10 bg-slate-800 rounded-2xl"></div><div class="w-16 h-6 bg-slate-800 rounded-xl"></div></div>
@@ -1773,6 +1783,11 @@ function renderResources() {
 
             const iconClass = res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400';
             const avgRating = calculateAverageRating(res);
+
+            // Poin 4: Sinkronisasi pembersihan jika postingan yang disimpan dihapus admin
+            if (isSaved && !resources.some(r => r.id === res.id)) {
+                // handled by filtering
+            }
 
             grid.innerHTML += `
                 <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-xl border ${isBroken ? 'border-rose-500/50' : 'border-slate-800/80'} rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/50 transition-all duration-300 shadow-xl group hover:-translate-y-1">
@@ -1875,6 +1890,9 @@ function checkUserHasCleanLinkAccess(res) {
     return isVip || isUnlockedPost;
 }
 
+/* ========================================================
+   POIN 2 & 3: DETAIL POSTINGAN (Tanpa Tombol Salin/Lapor Utama & Tanpa Mode Baca)
+   ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
     if (!res) return;
@@ -1927,8 +1945,10 @@ function openDetail(id, openModalWindow = true) {
 
     const isBroken = brokenReports.some(rep => rep.resName.includes(res.name));
     const alertBox = document.getElementById('modal-broken-alert');
-    if (isBroken) alertBox.classList.remove('hidden');
-    else alertBox.classList.add('hidden');
+    if (alertBox) {
+        if (isBroken) alertBox.classList.remove('hidden');
+        else alertBox.classList.add('hidden');
+    }
 
     const dynamicLinksList = document.getElementById('modal-dynamic-links-list');
     dynamicLinksList.innerHTML = '';
@@ -1975,7 +1995,7 @@ function openDetail(id, openModalWindow = true) {
     }
 
     const iconDiv = document.getElementById('modal-file-icon');
-    iconDiv.innerHTML = `<i class="${res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400'}"></i>`;
+    if (iconDiv) iconDiv.innerHTML = `<i class="${res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400'}"></i>`;
 
     let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
     const ratingSectionBox = document.getElementById('modal-rating-form-container') || document.getElementById('btn-submit-rating')?.parentElement?.parentElement;
@@ -1987,28 +2007,32 @@ function openDetail(id, openModalWindow = true) {
     }
 
     const reviewList = document.getElementById('review-list');
-    document.getElementById('review-count').textContent = res.reviews ? res.reviews.length : 0;
-    reviewList.innerHTML = '';
-    if (!res.reviews || res.reviews.length === 0) {
-        reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comment-dots"></i> Belum ada ulasan.</p>`;
-    } else {
-        res.reviews.forEach(rv => {
-            let starsHtml = '<span class="text-amber-400">';
-            for(let i=0; i<rv.rating; i++) starsHtml += '<i class="fa-solid fa-star"></i>';
-            starsHtml += '</span>';
-            reviewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><div class="flex justify-between items-center"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${rv.user}</span> ${starsHtml}</div><p class="text-slate-300">${rv.text}</p></div>`;
-        });
+    if (reviewList) {
+        document.getElementById('review-count').textContent = res.reviews ? res.reviews.length : 0;
+        reviewList.innerHTML = '';
+        if (!res.reviews || res.reviews.length === 0) {
+            reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comment-dots"></i> Belum ada ulasan.</p>`;
+        } else {
+            res.reviews.forEach(rv => {
+                let starsHtml = '<span class="text-amber-400">';
+                for(let i=0; i<rv.rating; i++) starsHtml += '<i class="fa-solid fa-star"></i>';
+                starsHtml += '</span>';
+                reviewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><div class="flex justify-between items-center"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${rv.user}</span> ${starsHtml}</div><p class="text-slate-300">${rv.text}</p></div>`;
+            });
+        }
     }
 
     const commentList = document.getElementById('comment-list');
-    document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
-    commentList.innerHTML = '';
-    if (!res.comments || res.comments.length === 0) {
-        commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comments"></i> Belum ada komentar.</p>`;
-    } else {
-        res.comments.forEach(c => {
-            commentList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
-        });
+    if (commentList) {
+        document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
+        commentList.innerHTML = '';
+        if (!res.comments || res.comments.length === 0) {
+            commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comments"></i> Belum ada komentar.</p>`;
+        } else {
+            res.comments.forEach(c => {
+                commentList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
+            });
+        }
     }
 }
 
@@ -2033,6 +2057,14 @@ function reportSpecificLink(resName, linkName) {
         addNotification(`Laporan link rusak untuk ${reportText} diteruskan ke admin.`, 'danger');
         addPoints(currentUser.username, 5);
         logUserAction(currentUser.username, `Melaporkan link rusak: ${reportText}`);
+
+        // Poin 5: Rekam Riwayat Laporan Link Rusak
+        let uname = currentUser.username;
+        if (!userReportHistory[uname]) userReportHistory[uname] = [];
+        userReportHistory[uname].unshift({ reportText, time: new Date().toLocaleString('id-ID') });
+        if (userReportHistory[uname].length > 15) userReportHistory[uname].pop();
+        localStorage.setItem('frh_user_report_history', JSON.stringify(userReportHistory));
+
         showToast(`Laporan link rusak untuk "${linkName}" berhasil diteruskan (+5 Poin).`, 'success');
         renderResources();
     } else {
@@ -2099,12 +2131,6 @@ function recordDownload(e, linkName) {
     logUserAction(currentUser.username, `Mengunduh script via ${linkName}`);
 }
 
-function reportBrokenLink() {
-    if (!activeResourceId) return;
-    let res = resources.find(r => r.id === activeResourceId);
-    reportSpecificLink(res.name, 'Semua Tautan');
-}
-
 function closeModal() {
     const modal = document.getElementById('detail-modal');
     if (modal) modal.classList.add('hidden');
@@ -2145,6 +2171,14 @@ function handleChangeUserPassword(e) {
     if (userObj) {
         userObj.password = newPass;
         localStorage.setItem('frh_users', JSON.stringify(users));
+
+        // Poin 5: Rekam Riwayat Ubah Password
+        let uname = currentUser.username;
+        if (!userPasswordHistory[uname]) userPasswordHistory[uname] = [];
+        userPasswordHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: 'Password berhasil diubah' });
+        if (userPasswordHistory[uname].length > 10) userPasswordHistory[uname].pop();
+        localStorage.setItem('frh_user_password_history', JSON.stringify(userPasswordHistory));
+
         showToast('Password berhasil diubah!', 'success');
         document.getElementById('new-user-pass').value = '';
         togglePasswordForm();
@@ -2216,6 +2250,14 @@ function claimProfileQuest(questId, target, type, reward) {
         localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
         addPoints(uname, reward);
         addExpAndLevelProgress(uname, 25); 
+
+        // Poin 5: Rekam Riwayat Quest Selesai
+        if (!userQuestHistory[uname]) userQuestHistory[uname] = [];
+        let qDef = profileQuestsDefinition.find(q => q.id === questId);
+        userQuestHistory[uname].unshift({ title: qDef ? qDef.title : questId, reward, time: new Date().toLocaleString('id-ID') });
+        if (userQuestHistory[uname].length > 15) userQuestHistory[uname].pop();
+        localStorage.setItem('frh_user_quest_history', JSON.stringify(userQuestHistory));
+
         addNotification(`Quest "${questId}" selesai! (+${reward} Poin & EXP)`, 'admin');
         recordSystemLog('selesai_quest', `User @${uname} menyelesaikan quest "${questId}" (+${reward} Poin).`, uname);
         showToast(`Quest selesai! Anda mendapatkan +${reward} Poin & EXP.`, 'success');
@@ -2225,6 +2267,9 @@ function claimProfileQuest(questId, target, type, reward) {
     }
 }
 
+/* ========================================================
+   POIN 5: RENDER RIWAYAT LENGKAP DI PROFIL USER
+   ======================================================== */
 function renderProfilePage() {
     let uname = currentUser.username;
     document.getElementById('profile-username').textContent = uname;
@@ -2279,26 +2324,99 @@ function renderProfilePage() {
 
     renderUserRedeemRewardsList();
 
+    // Poin 4 & 5: Sinkronisasi Riwayat Lihat Post (hapus jika post aslinya dihapus admin)
     const viewList = document.getElementById('profile-view-history-list');
-    viewList.innerHTML = '';
-    let myViews = userViewHistory[uname] || [];
-    if (myViews.length === 0) {
-        viewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-clock"></i> Belum ada riwayat.</p>`;
-    } else {
-        myViews.forEach(name => {
-            viewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2.5 shadow-md"><i class="fa-solid fa-eye text-cyan-400"></i> <span class="font-bold">${name}</span></div>`;
-        });
+    if (viewList) {
+        viewList.innerHTML = '';
+        let myViews = userViewHistory[uname] || [];
+        let validViews = myViews.filter(vName => resources.some(r => r.name === vName));
+        userViewHistory[uname] = validViews;
+        localStorage.setItem('frh_user_view_history', JSON.stringify(userViewHistory));
+
+        if (validViews.length === 0) {
+            viewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-clock"></i> Belum ada riwayat lihat post.</p>`;
+        } else {
+            validViews.forEach(name => {
+                viewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2.5 shadow-md"><i class="fa-solid fa-eye text-cyan-400"></i> <span class="font-bold">${name}</span></div>`;
+            });
+        }
     }
 
+    // Poin 4 & 5: Sinkronisasi Riwayat Post Disimpan (hapus jika post aslinya dihapus admin)
     const savedList = document.getElementById('profile-saved-list');
-    savedList.innerHTML = '';
-    let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(uname));
-    
-    if (mySaved.length === 0) {
-        savedList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-bookmark"></i> Belum ada script disimpan.</p>`;
-    } else {
-        mySaved.forEach(res => {
-            savedList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between shadow-md"><span class="font-bold flex items-center gap-2"><i class="fa-solid fa-gamepad text-amber-400"></i> ${res.name}</span><button onclick="openDetail(${res.id})" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-arrow-right"></i> Buka</button></div>`;
-        });
+    if (savedList) {
+        savedList.innerHTML = '';
+        let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(uname));
+        
+        if (mySaved.length === 0) {
+            savedList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-bookmark"></i> Belum ada script disimpan.</p>`;
+        } else {
+            mySaved.forEach(res => {
+                savedList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between shadow-md"><span class="font-bold flex items-center gap-2"><i class="fa-solid fa-gamepad text-amber-400"></i> ${res.name}</span><button onclick="openDetail(${res.id})" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-arrow-right"></i> Buka</button></div>`;
+            });
+        }
     }
+
+    // Render Riwayat Tambahan Sesuai Poin 5 di Profil
+    renderAdditionalUserHistories(uname);
+}
+
+function renderAdditionalUserHistories(uname) {
+    // Buat container riwayat lengkap tambahan jika belum ada di DOM profile
+    let profileExtraContainer = document.getElementById('profile-extra-histories');
+    if (!profileExtraContainer) {
+        const parentProfile = document.getElementById('profile-panel');
+        if (parentProfile) {
+            let div = document.createElement('div');
+            div.id = 'profile-extra-histories';
+            div.className = "mt-6 grid grid-cols-1 md:grid-cols-2 gap-6";
+            parentProfile.appendChild(div);
+            profileExtraContainer = div;
+        }
+    }
+
+    if (!profileExtraContainer) return;
+
+    let logins = userLoginHistory[uname] || [];
+    let quests = userQuestHistory[uname] || [];
+    let redeems = userRedeemLogHistory[uname] || [];
+    let reports = userReportHistory[uname] || [];
+    let passwords = userPasswordHistory[uname] || [];
+
+    profileExtraContainer.innerHTML = `
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-right-to-bracket text-cyan-400"></i> Riwayat Login</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${logins.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat login.</p>' : logins.map(l => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${l.status}</span><span class="text-slate-500">${l.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-flag-checkered text-emerald-400"></i> Riwayat Quest Selesai</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${quests.length === 0 ? '<p class="text-xs text-slate-500">Belum ada quest selesai.</p>' : quests.map(q => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${q.title} (+${q.reward} Pts)</span><span class="text-slate-500">${q.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-gift text-amber-400"></i> Riwayat Redeem Poin Berhasil</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${redeems.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat redeem.</p>' : redeems.map(r => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${r.name} (-${r.cost} Pts)</span><span class="text-slate-500">${r.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Riwayat Laporan Link Rusak</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${reports.length === 0 ? '<p class="text-xs text-slate-500">Belum ada laporan link.</p>' : reports.map(rp => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${rp.reportText}</span><span class="text-slate-500">${rp.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl md:col-span-2">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-key text-blue-400"></i> Riwayat Ubah Password</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${passwords.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat ubah password.</p>' : passwords.map(p => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${p.info}</span><span class="text-slate-500">${p.time}</span></div>`).join('')}
+            </div>
+        </div>
+    `;
 }
