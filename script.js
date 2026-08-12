@@ -20,14 +20,14 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
         subcategory: "Script Skin",
         typeUpload: "file",
         version: "v1.0",
-        // Menyimpan array link manual dinamis
+        // Poin 1: Pemisahan kategori link manual (Free, VVIP Tanpa Iklan, Direct File)
         links: [
             { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1" },
             { name: "Link Tanpa Iklan (VVIP)", url: "https://drive.google.com/ml1-clean" },
             { name: "Direct File (VVIP)", url: "https://direct-download.com/ml1" }
         ],
         paidUnlockedUsers: [],
-        isSpecialAccess: true,
+        isSpecialAccess: true, // Poin 2: Proteksi Akses Khusus
         description: "Script skin epic permanen anti ban work 100% di mode ranked.\n\n[Petunjuk]: Salin folder art ke com.mobile.legends/files/dragon2017/assets.",
         fileSize: "25.4 MB",
         screenshot: "",
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderNotifications();
     renderBroadcastBanner();
     updateSubCategories();
-    addCustomLinkRow(); // Default 1 row link saat pertama load form upload
+    addCustomLinkRow(); 
 
     const userInp = document.getElementById('uni-user');
     const passInp = document.getElementById('uni-pass');
@@ -203,7 +203,7 @@ function removeSubCategory(mainCat, idx) {
 }
 
 /* ========================================================
-   MANAJEMEN LINK DINAMIS MANUAL (Upload File / Aplikasi)
+   POIN 1: MANAJEMEN LINK DINAMIS MANUAL TERSTRUKTUR (Free, VVIP Tanpa Iklan, Direct File/Upload)
    ======================================================== */
 function addCustomLinkRow(nameVal = '', urlVal = '') {
     const container = document.getElementById('dynamic-links-container');
@@ -214,7 +214,11 @@ function addCustomLinkRow(nameVal = '', urlVal = '') {
     div.className = "flex items-center gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800";
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
-        <input type="text" placeholder="Nama Link (Cth: Link Iklan Free / Direct File VVIP)" value="${nameVal}" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-name-input" required>
+        <select class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold" required>
+            <option value="Link Iklan (Free)" ${nameVal === 'Link Iklan (Free)' ? 'selected' : ''}>Link Iklan (Free)</option>
+            <option value="Link Tanpa Iklan (VVIP)" ${nameVal === 'Link Tanpa Iklan (VVIP)' ? 'selected' : ''}>Link Tanpa Iklan (VVIP)</option>
+            <option value="Direct File (VVIP)" ${nameVal === 'Direct File (VVIP)' ? 'selected' : ''}>Direct File (VVIP)</option>
+        </select>
         <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-url-input" required>
         <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-2.5 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-lg transition-all text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
     `;
@@ -1296,7 +1300,6 @@ function handleSaveResource(e) {
     const verified = document.getElementById('up-verified').checked;
     const isSpecialAccess = document.getElementById('up-special-access').checked;
 
-    // Ambil daftar link dinamis manual dari container
     let links = [];
     document.querySelectorAll('#dynamic-links-container > div').forEach(row => {
         let nInput = row.querySelector('.link-name-input');
@@ -1376,7 +1379,6 @@ function editResource(id) {
     document.getElementById('up-verified').checked = res.verified || false;
     document.getElementById('up-special-access').checked = res.isSpecialAccess || false;
 
-    // Load dynamic links manual
     const container = document.getElementById('dynamic-links-container');
     container.innerHTML = '';
     if (res.links && res.links.length > 0) {
@@ -1429,18 +1431,18 @@ function closeCustomConfirm() {
     pendingDeleteId = null;
 }
 
+/* ========================================================
+   POIN 4: FITUR KOMPARASI & PETUNJUK DIJADIKAN SATU KE MODE BACA SAJA
+   ======================================================== */
 function openReaderMode() {
     const res = resources.find(r => r.id === activeResourceId);
     if (!res) return;
-    document.getElementById('reader-content').textContent = res.description;
+    document.getElementById('reader-content').textContent = `=== PETUNJUK PEMASANGAN & KOMPARASI VERSI ===\nVersi Saat Ini: ${res.version || 'v1.0'}\nKategori: ${res.category} (${res.subcategory})\n\n[Deskripsi & Petunjuk Lengkap]:\n${res.description}`;
     document.getElementById('reader-mode-modal').classList.remove('hidden');
 }
 
 function openVersionComparison() {
-    const res = resources.find(r => r.id === activeResourceId);
-    if (!res) return;
-    document.getElementById('reader-content').textContent = `=== PETUNJUK PEMASANGAN & VERSI ===\nVersi: ${res.version || 'v1.0'}\n\n${res.description}`;
-    document.getElementById('reader-mode-modal').classList.remove('hidden');
+    openReaderMode(); // Diarahkan langsung ke mode baca tunggal terintegrasi
 }
 
 function closeReaderMode() {
@@ -1571,7 +1573,6 @@ function renderSubCategoryButtons(mainCat) {
 
     let subs = categoryConfig[mainCat] || [];
     
-    // Tombol "Semua" di sub kategori
     wrapper.innerHTML += `
         <button onclick="filterSubCategory('All')" id="sub-btn-All" class="px-3 py-1.5 rounded-lg text-xs font-bold ${currentSubCategory === 'All' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'} cursor-pointer">Semua</button>
     `;
@@ -1586,7 +1587,6 @@ function renderSubCategoryButtons(mainCat) {
 
 function filterSubCategory(sub) {
     currentSubCategory = sub;
-    // Update active style sub buttons
     let subs = categoryConfig[currentMainCategory] || [];
     ['All', ...subs].forEach(s => {
         let btn = document.getElementById(`sub-btn-${s}`);
@@ -1809,9 +1809,23 @@ function checkUserHasCleanLinkAccess(res) {
     return isVip || isUnlockedPost;
 }
 
+/* ========================================================
+   POIN 2: PROTEKSI AKSES POSTINGAN KHUSUS & DETAIL
+   ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
     if (!res) return;
+
+    // Validasi Akses Postingan Khusus
+    if (res.isSpecialAccess && currentUser && currentUser.role !== 'admin') {
+        let unlockedArr = userUnlockedPosts[currentUser.username] || [];
+        let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
+        if (!unlockedArr.includes(res.id) && !isVip) {
+            alert('Akses Ditolak! Postingan ini merupakan Postingan Khusus. Anda harus menukarkan poin di menu Redeem Points atau mengaktifkan VVIP untuk melihat detail dan cara mengaksesnya.');
+            switchMainView('profile');
+            return;
+        }
+    }
 
     activeResourceId = id;
     res.views = (res.views || 0) + 1;
@@ -1854,7 +1868,7 @@ function openDetail(id, openModalWindow = true) {
     if (isBroken) alertBox.classList.remove('hidden');
     else alertBox.classList.add('hidden');
 
-    // Render Tautan Dinamis di Modal Detail dengan Validasi VVIP jika link bertuliskan VVIP/Tanpa Iklan/Direct
+    // Render Tautan Sesuai Poin 1 (Free / VVIP Clean / Direct)
     const dynamicLinksList = document.getElementById('modal-dynamic-links-list');
     dynamicLinksList.innerHTML = '';
 
@@ -1887,19 +1901,16 @@ function openDetail(id, openModalWindow = true) {
     const iconDiv = document.getElementById('modal-file-icon');
     iconDiv.innerHTML = `<i class="${res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400'}"></i>`;
 
+    /* ========================================================
+       POIN 5: HILANGKAN FORM RATING JIKA USER SUDAH MEMBERIKAN RATING
+       ======================================================== */
     let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
-    const submitRatingBtn = document.getElementById('btn-submit-rating');
-    const reviewInput = document.getElementById('review-input');
+    const ratingSectionBox = document.getElementById('modal-rating-form-container') || document.getElementById('btn-submit-rating')?.parentElement?.parentElement;
+    
     if (hasRated) {
-        submitRatingBtn.disabled = true;
-        submitRatingBtn.textContent = 'Anda sudah memberi rating';
-        submitRatingBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        reviewInput.disabled = true;
-    } else {
-        submitRatingBtn.disabled = false;
-        submitRatingBtn.textContent = 'Kirim Rating & Ulasan';
-        submitRatingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        reviewInput.disabled = false;
+        if (ratingSectionBox) {
+            ratingSectionBox.innerHTML = `<div class="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center text-xs text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Anda sudah memberikan ulasan & rating untuk script ini. Terima kasih!</div>`;
+        }
     }
 
     const reviewList = document.getElementById('review-list');
@@ -1930,7 +1941,8 @@ function openDetail(id, openModalWindow = true) {
 
 function selectRatingStar(star) {
     currentSelectedStar = star;
-    document.getElementById('rating-selected-text').textContent = `${star} Bintang Dipilih`;
+    const ratingTextEl = document.getElementById('rating-selected-text');
+    if (ratingTextEl) ratingTextEl.textContent = `${star} Bintang Dipilih`;
     const starBtns = document.querySelectorAll('#star-container button');
     starBtns.forEach((btn, idx) => {
         if ((idx + 1) <= star) {
@@ -1954,7 +1966,9 @@ function handlePostRatingAndReview(e) {
         return;
     }
 
-    const reviewText = document.getElementById('review-input').value.trim();
+    const reviewInput = document.getElementById('review-input');
+    const reviewText = reviewInput ? reviewInput.value.trim() : '';
+    
     res.ratedUsers[currentUser.username] = currentSelectedStar;
     res.ratings[currentSelectedStar] = (res.ratings[currentSelectedStar] || 0) + 1;
     res.reviews.unshift({ user: currentUser.username, rating: currentSelectedStar, text: reviewText });
@@ -1967,7 +1981,7 @@ function handlePostRatingAndReview(e) {
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     
     alert(`Ulasan & rating berhasil dikirim (+10 Poin & EXP).`);
-    document.getElementById('review-input').value = '';
+    if (reviewInput) reviewInput.value = '';
     openDetail(activeResourceId, false);
     renderResources();
 }
@@ -2047,13 +2061,15 @@ function handleChangeUserPassword(e) {
     }
 }
 
-// 20 MISI QUEST LENGKAP
+/* ========================================================
+   POIN 3: 20 MISI QUEST LENGKAP DARI MUDAH HINGGA SULIT
+   ======================================================== */
 const profileQuestsDefinition = [
     { id: 'q1', title: 'Sukai 1 Script', reward: 10, target: 1, type: 'like' },
     { id: 'q2', title: 'Sukai 3 Script', reward: 25, target: 3, type: 'like' },
     { id: 'q3', title: 'Sukai 5 Script', reward: 40, target: 5, type: 'like' },
     { id: 'q4', title: 'Sukai 10 Script', reward: 75, target: 10, type: 'like' },
-    { id: 'q5', title: 'Sukai 20 Script', reward: 150, target: 20, type: 'like' },
+    { id: 'q5', title: 'Sukai 25 Script', reward: 150, target: 25, type: 'like' },
     { id: 'q6', title: 'Rating Bintang 5 untuk 1 Script', reward: 15, target: 1, type: 'rate5' },
     { id: 'q7', title: 'Rating Bintang 5 untuk 3 Script', reward: 35, target: 3, type: 'rate5' },
     { id: 'q8', title: 'Rating Bintang 5 untuk 5 Script', reward: 60, target: 5, type: 'rate5' },
