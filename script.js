@@ -4,48 +4,57 @@ let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
 let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
-let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di FileHub Ultimate Suite v13. Nikmati pembaruan fitur lengkap!" };
+let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v14. Fokus Script Mobile Legends dan Free Fire dengan sub-kategori lengkap!" };
+
+// STRUKTUR KATEGORI & SUB-KATEGORI (Bisa ditambah manual oleh Admin)
+let categoryConfig = JSON.parse(localStorage.getItem('frh_category_config')) || {
+    "Script Mobile Legends": ["Script Skin", "Script Anti Lag", "Script Booster", "Game Booster"],
+    "Script Free Fire": ["Script Skin", "Script Anti Lag", "Script Aimbot"]
+};
 
 let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
     {
         id: 1,
-        name: "Sketchware Pro Mod",
-        category: "Aplikasi",
-        subcategory: "Android 64-bit",
-        version: "v6.3",
-        linkAd: "https://safelink-sample.com/file1",
-        linkNoAd: "https://drive.google.com/file1-clean",
+        name: "Script Skin Epic MLBB v1",
+        category: "Script Mobile Legends",
+        subcategory: "Script Skin",
+        typeUpload: "file",
+        version: "v1.0",
+        // Menyimpan array link manual dinamis
+        links: [
+            { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1" },
+            { name: "Link Tanpa Iklan (VVIP)", url: "https://drive.google.com/ml1-clean" },
+            { name: "Direct File (VVIP)", url: "https://direct-download.com/ml1" }
+        ],
         paidUnlockedUsers: [],
         isSpecialAccess: true,
-        description: "Aplikasi Android builder visual dengan dukungan modifikasi penuh.\n\n[Changelog v6.3]: Perbaikan bug kompilasi & peningkatan kecepatan.",
-        fileSize: "15.4 MB",
+        description: "Script skin epic permanen anti ban work 100% di mode ranked.\n\n[Petunjuk]: Salin folder art ke com.mobile.legends/files/dragon2017/assets.",
+        fileSize: "25.4 MB",
         screenshot: "",
         verified: true,
         uploader: "superadmin",
-        likes: 12,
-        views: 145,
+        likes: 15,
+        views: 210,
         likedBy: [],
         savedBy: [],
-        ratings: { 5: 4, 4: 2 },
+        ratings: { 5: 5, 4: 1 },
         ratedUsers: {},
-        reviews: [{ user: "Budi", rating: 5, text: "Aplikasi sangat mantap dan berjalan lancar!" }],
-        comments: [{ user: "Budi", text: "Mantap aplikasinya work 100%!" }],
-        editStatus: null // 'Edited' atau 'Updated'
+        reviews: [{ user: "Budi", rating: 5, text: "Mantap work tanpa lag di ranked!" }],
+        comments: [{ user: "Budi", text: "Aman gais ga ada banned." }],
+        editStatus: null
     }
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Selamat Datang di FileHub Ultimate Suite v13!", content: "Pembaruan fitur kontrol user lengkap, tombol selesai edit/update, live chat real-time yang dapat diakhiri, dan broadcast berjalan.", date: "11 Agustus 2026" }
+    { id: 1, title: "Pembaruan RapzResource HUB v14", content: "Fokus penuh pada Script Mobile Legends dan Free Fire, sub-kategori kustom, serta upload link manual dinamis.", date: "12 Agustus 2026" }
 ];
 
-let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [
-    { id: 1, title: "Request Adobe Photoshop APK", desc: "Mohon sediakan versi modifikasinya.", user: "Budi", status: "Pending" }
-];
+let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
 
 let liveChatConversations = JSON.parse(localStorage.getItem('frh_livechat_conversations')) || {
     "Budi": [
-        { sender: "Budi", text: "Halo admin, saya ingin konfirmasi redeem saldo Dana.", time: "10:00" },
-        { sender: "superadmin", text: "Baik Budi, silakan tunggu diverifikasi.", time: "10:05" }
+        { sender: "Budi", text: "Halo admin, mau tanya cara pasang script FF skin gimana?", time: "10:00" },
+        { sender: "superadmin", text: "Halo Budi, silakan cek petunjuk di deskripsi ya.", time: "10:05" }
     ]
 };
 let activeChatUser = "Budi";
@@ -53,32 +62,34 @@ let activeChatUser = "Budi";
 let redeemRewards = JSON.parse(localStorage.getItem('frh_redeem_rewards')) || [
     { id: 1, name: "Akses VVIP Tanpa Iklan (1 Bulan)", cost: 50, type: "vip", limitPerUser: 1, quota: 100, claimedCount: 0 },
     { id: 2, name: "Akses Postingan Khusus Satuan", cost: 25, type: "post_access", limitPerUser: 5, quota: 200, claimedCount: 0 },
-    { id: 3, name: "Saldo Dana Rp 25.000", cost: 100, type: "dana", limitPerUser: 1, quota: 50, claimedCount: 0 },
-    { id: 4, name: "Saldo Gopay Rp 25.000", cost: 100, type: "gopay", limitPerUser: 1, quota: 50, claimedCount: 0 },
-    { id: 5, name: "Saldo Shopeepay Rp 25.000", cost: 100, type: "shopeepay", limitPerUser: 1, quota: 50, claimedCount: 0 }
+    { id: 3, name: "Saldo Dana Rp 25.000", cost: 100, type: "dana", limitPerUser: 1, quota: 50, claimedCount: 0 }
 ];
 
 let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) || {};
 let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
 let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {}; 
 let userQuestClaims = JSON.parse(localStorage.getItem('frh_user_quest_claims')) || {};
-let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; // { username: expireTimestamp }
+let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; 
 let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {}; 
 let userAuditLogs = JSON.parse(localStorage.getItem('frh_user_audit_logs')) || {};
 let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || []; 
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di platform FileHub Ultimate Suite v13!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di RapzResource HUB v14!", type: 'info', read: false, time: "Baru saja" }
 ];
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
 
-let currentFilter = 'All';
+// Filter state baru
+let currentMainCategory = 'All';
+let currentSubCategory = 'All';
+
 let activeResourceId = null;
 let currentSelectedStar = 5;
 let adminSessionTimer = null;
 let currentLogFilter = 'all';
+let activeEditModeAction = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkVipExpiration();
@@ -87,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAdminLockState();
     renderNotifications();
     renderBroadcastBanner();
+    updateSubCategories();
+    addCustomLinkRow(); // Default 1 row link saat pertama load form upload
 
     const userInp = document.getElementById('uni-user');
     const passInp = document.getElementById('uni-pass');
@@ -116,7 +129,100 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ========================================================
-   MANAJEMEN WAKTU VVIP & BAN
+   MANAJEMEN KATEGORI & SUB-KATEGORI MANUAL
+   ======================================================== */
+function updateSubCategories() {
+    const mainCatSelect = document.getElementById('up-category');
+    const subCatSelect = document.getElementById('up-subcategory');
+    if (!mainCatSelect || !subCatSelect) return;
+
+    const selectedMain = mainCatSelect.value;
+    subCatSelect.innerHTML = '';
+    
+    let subs = categoryConfig[selectedMain] || [];
+    subs.forEach(sub => {
+        subCatSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    });
+}
+
+function renderAdminCategoriesConfig() {
+    const mlList = document.getElementById('admin-ml-sub-list');
+    const ffList = document.getElementById('admin-ff-sub-list');
+    if (!mlList || !ffList) return;
+
+    mlList.innerHTML = '';
+    ffList.innerHTML = '';
+
+    (categoryConfig["Script Mobile Legends"] || []).forEach((sub, idx) => {
+        mlList.innerHTML += `
+            <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs">
+                <span class="text-slate-200 font-semibold">${sub}</span>
+                <button onclick="removeSubCategory('Script Mobile Legends', ${idx})" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        `;
+    });
+
+    (categoryConfig["Script Free Fire"] || []).forEach((sub, idx) => {
+        ffList.innerHTML += `
+            <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs">
+                <span class="text-slate-200 font-semibold">${sub}</span>
+                <button onclick="removeSubCategory('Script Free Fire', ${idx})" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        `;
+    });
+}
+
+function addNewSubCategory(mainCat) {
+    let inputId = mainCat === 'Script Mobile Legends' ? 'new-ml-sub-input' : 'new-ff-sub-input';
+    let val = document.getElementById(inputId).value.trim();
+    if (!val) {
+        alert('Nama sub-kategori tidak boleh kosong!');
+        return;
+    }
+    if (!categoryConfig[mainCat]) categoryConfig[mainCat] = [];
+    if (categoryConfig[mainCat].includes(val)) {
+        alert('Sub-kategori sudah ada!');
+        return;
+    }
+    categoryConfig[mainCat].push(val);
+    localStorage.setItem('frh_category_config', JSON.stringify(categoryConfig));
+    document.getElementById(inputId).value = '';
+    renderAdminCategoriesConfig();
+    updateSubCategories();
+    alert('Sub-kategori berhasil ditambahkan!');
+}
+
+function removeSubCategory(mainCat, idx) {
+    if (confirm('Hapus sub-kategori ini?')) {
+        categoryConfig[mainCat].splice(idx, 1);
+        localStorage.setItem('frh_category_config', JSON.stringify(categoryConfig));
+        renderAdminCategoriesConfig();
+        updateSubCategories();
+        alert('Sub-kategori dihapus.');
+    }
+}
+
+/* ========================================================
+   MANAJEMEN LINK DINAMIS MANUAL (Upload File / Aplikasi)
+   ======================================================== */
+function addCustomLinkRow(nameVal = '', urlVal = '') {
+    const container = document.getElementById('dynamic-links-container');
+    if (!container) return;
+    const rowId = Date.now() + Math.random();
+
+    let div = document.createElement('div');
+    div.className = "flex items-center gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800";
+    div.id = `link-row-${rowId}`;
+    div.innerHTML = `
+        <input type="text" placeholder="Nama Link (Cth: Link Iklan Free / Direct File VVIP)" value="${nameVal}" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-name-input" required>
+        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-url-input" required>
+        <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-2.5 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-lg transition-all text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+    `;
+    container.appendChild(div);
+}
+
+/* ========================================================
+   WAKTU VVIP & BAN
    ======================================================== */
 function checkVipExpiration() {
     let now = Date.now();
@@ -174,7 +280,7 @@ function sendTelegramNotification(text) {
     let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
     let data = {
         chat_id: telegramConfig.chatId,
-        text: `🤖 [FileHub Ultimate v13]\n${text}`,
+        text: `🤖 [RapzResource HUB v14]\n${text}`,
         parse_mode: 'HTML'
     };
     fetch(url, {
@@ -193,9 +299,6 @@ function handleSaveTelegramConfig(e) {
     sendTelegramNotification('✅ Bot Telegram berhasil dihubungkan ke pusat logs dan livechat.');
 }
 
-/* ========================================================
-   POINT 7: BROADCAST DIPERBARUI (JUDUL DI ATAS, PESAN DI BAWAH MEMANJANG BERJALAN)
-   ======================================================== */
 function handleSaveBroadcast(e) {
     e.preventDefault();
     const title = document.getElementById('bc-title').value.trim();
@@ -227,9 +330,6 @@ function renderBroadcastBanner() {
     `;
 }
 
-/* ========================================================
-   LOGS & NOTIFIKASI
-   ======================================================== */
 function resetAllLogs() {
     if (confirm('Apakah Anda yakin ingin MENGHAPUS SEMUA (Reset All Logs) pusat sistem logs?')) {
         systemLogs = [];
@@ -552,7 +652,7 @@ function switchMainView(view) {
 }
 
 /* ========================================================
-   SUPPORT CHAT & LIVE CHAT (POINT 2: DAPAT DIAKHIRI OLEH USER/ADMIN)
+   SUPPORT CHAT & LIVE CHAT
    ======================================================== */
 function toggleSupportChatModal() {
     const modal = document.getElementById('support-chat-modal');
@@ -596,8 +696,8 @@ function handlePostRequest(e) {
     closeRequestModal();
     e.target.reset();
     renderCommunityRequests();
-    alert('Request file berhasil diajukan ke admin!');
-    sendTelegramNotification(`<b>[NEW REQUEST FILE]</b>\nUser: @${currentUser.username}\nJudul: ${title}\nDesc: ${desc}`);
+    alert('Request script berhasil diajukan ke admin!');
+    sendTelegramNotification(`<b>[NEW REQUEST SCRIPT]</b>\nUser: @${currentUser.username}\nJudul: ${title}\nDesc: ${desc}`);
 }
 
 function renderCommunityRequests() {
@@ -605,7 +705,6 @@ function renderCommunityRequests() {
     if (!list) return;
     list.innerHTML = '';
     
-    // Point 3: Request di dashboard admin diganti jadi laporan link rusak yang diteruskan dari laporkan link rusak postingan di user
     let reports = brokenReports;
     if (reports.length === 0) {
         list.innerHTML = `<p class="text-xs text-slate-500">Belum ada laporan link rusak.</p>`;
@@ -615,7 +714,7 @@ function renderCommunityRequests() {
         list.innerHTML += `
             <div class="bg-slate-950 p-4 rounded-xl border border-rose-500/30 flex justify-between items-center text-xs">
                 <div>
-                    <span class="font-bold text-rose-400 text-sm block">Postingan: ${rep.resName}</span>
+                    <span class="font-bold text-rose-400 text-sm block">Script: ${rep.resName}</span>
                     <span class="text-[10px] text-slate-400 mt-1 inline-block">Dilaporkan oleh user: @${rep.user}</span>
                 </div>
                 ${currentUser.role === 'admin' ? `<button onclick="resolveBrokenReport(${idx})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg cursor-pointer">Selesaikan / Hapus Laporan</button>` : ''}
@@ -661,7 +760,7 @@ function renderLeaderboardPage() {
 }
 
 function switchAdminTab(type) {
-    ['upload', 'manage', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
+    ['upload', 'manage', 'categories', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
         if(sec) sec.classList.add('hidden');
@@ -673,6 +772,7 @@ function switchAdminTab(type) {
     if(targetBtn) targetBtn.className = "px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer";
     
     if (type === 'manage') renderAdminManageList();
+    if (type === 'categories') renderAdminCategoriesConfig();
     if (type === 'users') renderAdminUsersList();
     if (type === 'broadcast') {
         document.getElementById('bc-title').value = currentBroadcast.title || '';
@@ -689,9 +789,6 @@ function switchAdminTab(type) {
     if (type === 'analytics') renderAdminAnalytics();
 }
 
-/* ========================================================
-   POINT 1: FITUR KONTROL USER LENGKAP DI DASHBOARD ADMIN
-   ======================================================== */
 function renderAdminUsersList() {
     const list = document.getElementById('admin-users-list');
     if (!list) return;
@@ -737,7 +834,7 @@ function renderAdminUsersList() {
                     <button onclick="adminUnbanUser('${u.username}')" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] cursor-pointer">Buka Blokir</button>
                 </div>
                 <div class="border-t border-slate-900 pt-2">
-                    <span class="text-[11px] font-semibold text-cyan-400 block mb-1">Akses Postingan (Centang untuk Beri / Uncheck untuk Cabut):</span>
+                    <span class="text-[11px] font-semibold text-cyan-400 block mb-1">Akses Postingan Khusus:</span>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${postCheckboxes || '<span class="text-slate-500 text-[10px]">Belum ada post</span>'}</div>
                 </div>
             </div>
@@ -813,12 +910,11 @@ function toggleAdminUserPostAccess(username, resId) {
     if (!userUnlockedPosts[username]) userUnlockedPosts[username] = [];
     let idx = userUnlockedPosts[username].indexOf(resId);
     if (idx > -1) {
-        userUnlockedPosts[username].splice(idx, 1); // Cabut akses
+        userUnlockedPosts[username].splice(idx, 1);
     } else {
-        userUnlockedPosts[username].push(resId); // Beri akses centang
+        userUnlockedPosts[username].push(resId);
     }
     localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
-    recordSystemLog('redeem_point', `Admin mengatur centang akses post ID ${resId} untuk @${username}.`, username);
     alert(`Akses postingan untuk @${username} diperbarui.`);
 }
 
@@ -826,10 +922,8 @@ function toggleVipSubscription(username) {
     let isVipActive = userVipSubscriptions[username] && Date.now() < userVipSubscriptions[username];
     if (isVipActive) {
         delete userVipSubscriptions[username];
-        recordSystemLog('redeem_point', `Admin mencabut VVIP @${username}.`, username);
     } else {
-        userVipSubscriptions[username] = Date.now() + (30 * 24 * 60 * 60 * 1000); // 1 Bulan otomatis
-        recordSystemLog('redeem_point', `Admin memberikan VVIP 1 bulan untuk @${username}.`, username);
+        userVipSubscriptions[username] = Date.now() + (30 * 24 * 60 * 60 * 1000);
     }
     localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
     renderAdminUsersList();
@@ -838,7 +932,7 @@ function toggleVipSubscription(username) {
 
 function filterLogsCategory(cat) {
     currentLogFilter = cat;
-    ['all', 'naik_level', 'redeem_point', 'redeem_saldo', 'selesai_quest'].forEach(c => {
+    ['all', 'naik_level', 'redeem_point', 'selesai_quest'].forEach(c => {
         const btn = document.getElementById(`log-btn-${c}`);
         if(btn) {
             btn.className = c === cat 
@@ -860,19 +954,15 @@ function renderAdminLogsList() {
     });
 
     if (filtered.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada logs untuk kategori ini.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada logs.</p>`;
         return;
     }
 
     filtered.forEach(lg => {
-        let badgeColor = 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
-        if (lg.type === 'redeem_point' || lg.type === 'redeem_saldo') badgeColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-        if (lg.type === 'naik_level' || lg.type === 'selesai_quest') badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-
         list.innerHTML += `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
                 <div class="flex justify-between items-center text-[10px]">
-                    <span class="px-2 py-0.5 rounded border font-bold uppercase ${badgeColor}">${lg.type.replace('_', ' ')}</span>
+                    <span class="px-2 py-0.5 rounded border font-bold uppercase text-cyan-400 bg-cyan-500/20">${lg.type}</span>
                     <span class="text-slate-500">${lg.time}</span>
                 </div>
                 <p class="text-slate-200">${lg.detail} <span class="text-cyan-400 font-bold">(@${lg.user})</span></p>
@@ -916,7 +1006,7 @@ function renderAdminChatMessages() {
     box.innerHTML = '';
     let msgs = liveChatConversations[activeChatUser] || [];
     if (msgs.length === 0) {
-        box.innerHTML = `<p class="text-slate-500 text-center">Belum ada pesan dengan user ini.</p>`;
+        box.innerHTML = `<p class="text-slate-500 text-center">Belum ada pesan.</p>`;
         return;
     }
     msgs.forEach(m => {
@@ -979,7 +1069,7 @@ function renderUserLiveChatMessages() {
     if (!currentUser) return;
     let msgs = liveChatConversations[currentUser.username] || [];
     if (msgs.length === 0) {
-        box.innerHTML = `<p class="text-slate-500 text-center">Mulai percobaan chat dengan admin...</p>`;
+        box.innerHTML = `<p class="text-slate-500 text-center">Mulai chat dengan admin...</p>`;
         return;
     }
     msgs.forEach(m => {
@@ -1013,11 +1103,11 @@ function handleUserSendChat(e) {
 
 function userEndLiveChat() {
     if (!currentUser) return;
-    if (confirm('Apakah Anda ingin mengakhiri sesi live chat ini?')) {
+    if (confirm('Akhiri sesi live chat ini?')) {
         delete liveChatConversations[currentUser.username];
         localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
         renderUserLiveChatMessages();
-        alert('Live chat berhasil diakhiri.');
+        alert('Live chat diakhiri.');
     }
 }
 
@@ -1072,9 +1162,6 @@ function deleteReward(idx) {
     renderAdminRewardsList();
 }
 
-/* ========================================================
-   POINT 5: REDEEM POIN (HILANG DARI PROFIL JIKA MELEWATI MAX USER / KUOTA)
-   ======================================================== */
 function renderUserRedeemRewardsList() {
     const list = document.getElementById('user-redeem-rewards-list');
     if (!list) return;
@@ -1089,13 +1176,7 @@ function renderUserRedeemRewardsList() {
         let quotaMax = rew.quota || 100;
         let claimedTotal = rew.claimedCount || 0;
 
-        let isReachedLimit = userClaimedCount >= limit;
-        let isQuotaFull = claimedTotal >= quotaMax;
-
-        // Jika melewati max user atau max kapasitas, hilang dari user profile redeem
-        if (isReachedLimit || isQuotaFull) {
-            return; 
-        }
+        if (userClaimedCount >= limit || claimedTotal >= quotaMax) return;
 
         let canAfford = myPts >= rew.cost;
         let btnText = canAfford ? "Tukar Hadiah" : "Poin Tidak Cukup";
@@ -1120,21 +1201,7 @@ function initRedeemReward(id) {
     let myPts = userPoints[uname] || 0;
 
     if (myPts < rew.cost) {
-        alert('Poin Anda tidak mencukupi untuk menukar hadiah ini.');
-        return;
-    }
-
-    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
-    let userClaimedCount = userRedeemHistory[uname][rew.id] || 0;
-    if (userClaimedCount >= (rew.limitPerUser || 1)) {
-        alert('Anda telah mencapai batas maksimal penukaran untuk reward ini.');
-        renderProfilePage();
-        return;
-    }
-
-    if ((rew.claimedCount || 0) >= (rew.quota || 100)) {
-        alert('Kuota total penukaran reward ini sudah habis.');
-        renderProfilePage();
+        alert('Poin Anda tidak mencukupi.');
         return;
     }
 
@@ -1156,15 +1223,15 @@ function openRedeemPostModal(rew) {
     let specialResources = resources.filter(r => r.isSpecialAccess);
 
     if (specialResources.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Tidak ada postingan dengan akses khusus yang tersedia saat ini.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Tidak ada script khusus.</p>`;
         return;
     }
 
     specialResources.forEach(res => {
         let isAlreadyUnlocked = unlockedArr.includes(res.id);
         let btnHtml = isAlreadyUnlocked 
-            ? `<span class="text-emerald-400 font-bold text-[10px]">Sudah Dibuka (1x Saja)</span>`
-            : `<button onclick="confirmRedeemPostAccess(${res.id}, '${rew.name.replace(/'/g, "")}', ${rew.cost}, ${rew.id})" class="px-3 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Pilih & Buka</button>`;
+            ? `<span class="text-emerald-400 font-bold text-[10px]">Sudah Dibuka</span>`
+            : `<button onclick="confirmRedeemPostAccess(${res.id}, '${rew.name}', ${rew.cost}, ${rew.id})" class="px-3 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Pilih & Buka</button>`;
 
         list.innerHTML += `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
@@ -1185,32 +1252,13 @@ function closeRedeemPostModal() {
 function confirmRedeemPostAccess(resId, rewName, cost, rewardId) {
     let uname = currentUser.username;
     if (!userUnlockedPosts[uname]) userUnlockedPosts[uname] = [];
-    if (userUnlockedPosts[uname].includes(resId)) {
-        alert('Anda sudah membuka akses untuk postingan ini!');
-        return;
-    }
-
     userPoints[uname] -= cost;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
-
     userUnlockedPosts[uname].push(resId);
     localStorage.setItem('frh_user_unlocked_posts', JSON.stringify(userUnlockedPosts));
 
-    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
-    userRedeemHistory[uname][rewardId] = (userRedeemHistory[uname][rewardId] || 0) + 1;
-    localStorage.setItem('frh_user_redeem_history', JSON.stringify(userRedeemHistory));
-
-    let rewObj = redeemRewards.find(r => r.id === rewardId);
-    if (rewObj) {
-        rewObj.claimedCount = (rewObj.claimedCount || 0) + 1;
-        localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
-    }
-
-    let targetRes = resources.find(r => r.id === resId);
-    recordSystemLog('redeem_point', `User @${uname} menukar ${cost} poin untuk "${rewName}" (Akses Post: ${targetRes ? targetRes.name : resId}).`, uname);
-
     closeRedeemPostModal();
-    alert(`Berhasil! Akses postingan khusus "${targetRes ? targetRes.name : ''}" telah dibuka.`);
+    alert('Akses postingan khusus berhasil dibuka!');
     renderProfilePage();
 }
 
@@ -1219,51 +1267,49 @@ function executeRedeemReward(rew) {
     userPoints[uname] -= rew.cost;
     localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
 
-    if (!userRedeemHistory[uname]) userRedeemHistory[uname] = {};
-    userRedeemHistory[uname][rew.id] = (userRedeemHistory[uname][rew.id] || 0) + 1;
-    localStorage.setItem('frh_user_redeem_history', JSON.stringify(userRedeemHistory));
-
-    rew.claimedCount = (rew.claimedCount || 0) + 1;
-    localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
-
     if (rew.type === 'vip') {
-        userVipSubscriptions[uname] = Date.now() + (30 * 24 * 60 * 60 * 1000); // Otomatis VVIP 1 bulan
+        userVipSubscriptions[uname] = Date.now() + (30 * 24 * 60 * 60 * 1000);
         localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
-        recordSystemLog('redeem_point', `User @${uname} mengaktifkan VVIP 1 bulan otomatis via redeem poin.`, uname);
     }
 
-    addNotification(`Berhasil menukar redeem: ${rew.name}`, 'admin');
-    alert(`Berhasil menukar poin dengan "${rew.name}"! Akses langsung aktif.`);
+    alert(`Berhasil menukar "${rew.name}"!`);
     renderProfilePage();
 }
 
 /* ========================================================
-   POINT 6: KELOLA FILE & OPSI SIMPAN SELESAI EDIT/UPDATE (ICON EDITED/UPDATED)
+   UPLOAD & MANAJEMEN SCRIPT (LINK MANUAL DINAMIS)
    ======================================================== */
-let activeEditModeAction = null; // 'edit' atau 'update'
-
-function setSubmitEditMode(val) {
-    activeEditModeAction = 'edit';
-}
-
-function setSubmitUpdateMode(val) {
-    activeEditModeAction = 'update';
-}
+function setSubmitEditMode(val) { activeEditModeAction = 'edit'; }
+function setSubmitUpdateMode(val) { activeEditModeAction = 'update'; }
 
 function handleSaveResource(e) {
     e.preventDefault();
     const editId = document.getElementById('edit-resource-id').value;
-    const name = document.getElementById('up-name').value;
+    const name = document.getElementById('up-name').value.trim();
     const category = document.getElementById('up-category').value;
-    const subcategory = document.getElementById('up-subcategory').value.trim();
+    const subcategory = document.getElementById('up-subcategory').value;
+    const typeUpload = document.getElementById('up-type-upload').value;
     const version = document.getElementById('up-version').value.trim();
-    const linkAd = document.getElementById('up-link-ad').value.trim();
-    const linkNoAd = document.getElementById('up-link-noad').value.trim();
-    const description = document.getElementById('up-desc').value;
-    const fileSize = document.getElementById('up-link-size').value;
+    const fileSize = document.getElementById('up-link-size').value.trim();
     const screenshot = document.getElementById('up-screenshot').value.trim();
+    const description = document.getElementById('up-desc').value.trim();
     const verified = document.getElementById('up-verified').checked;
     const isSpecialAccess = document.getElementById('up-special-access').checked;
+
+    // Ambil daftar link dinamis manual dari container
+    let links = [];
+    document.querySelectorAll('#dynamic-links-container > div').forEach(row => {
+        let nInput = row.querySelector('.link-name-input');
+        let uInput = row.querySelector('.link-url-input');
+        if (nInput && uInput && nInput.value && uInput.value) {
+            links.push({ name: nInput.value.trim(), url: uInput.value.trim() });
+        }
+    });
+
+    if (links.length === 0) {
+        alert('Harap masukkan setidaknya 1 tautan unduhan secara manual.');
+        return;
+    }
 
     if (editId) {
         let res = resources.find(r => r.id == editId);
@@ -1271,31 +1317,26 @@ function handleSaveResource(e) {
             res.name = name;
             res.category = category;
             res.subcategory = subcategory;
+            res.typeUpload = typeUpload;
             res.version = version;
-            res.linkAd = linkAd;
-            res.linkNoAd = linkNoAd;
-            res.description = description;
             res.fileSize = fileSize;
             res.screenshot = screenshot;
+            res.description = description;
             res.verified = verified;
             res.isSpecialAccess = isSpecialAccess;
+            res.links = links;
             
-            // Point 6: Icon edited jika selesai edit, updates jika selesai update
-            if (activeEditModeAction === 'edit') {
-                res.editStatus = 'Edited';
-            } else if (activeEditModeAction === 'update') {
-                res.editStatus = 'Updated';
-            } else {
-                res.editStatus = 'Edited';
-            }
+            if (activeEditModeAction === 'edit') res.editStatus = 'Edited';
+            else if (activeEditModeAction === 'update') res.editStatus = 'Updated';
+            else res.editStatus = 'Edited';
         }
-        alert('Tautan resource berhasil diperbarui!');
+        alert('Script berhasil diperbarui!');
         resetUploadForm();
     } else {
         const newRes = {
             id: Date.now(),
-            name, category, subcategory, version,
-            linkAd, linkNoAd, paidUnlockedUsers: [],
+            name, category, subcategory, typeUpload, version,
+            links, paidUnlockedUsers: [],
             isSpecialAccess,
             description, fileSize, screenshot, verified,
             uploader: currentUser.username,
@@ -1306,9 +1347,11 @@ function handleSaveResource(e) {
             editStatus: null
         };
         resources.unshift(newRes);
-        addNotification(`Resource baru dipublikasikan: ${name}`, 'admin');
-        alert('Tautan resource berhasil dipublikasikan!');
+        addNotification(`Script baru dipublikasikan: ${name}`, 'admin');
+        alert('Script berhasil dipublikasikan!');
         e.target.reset();
+        document.getElementById('dynamic-links-container').innerHTML = '';
+        addCustomLinkRow();
     }
 
     localStorage.setItem('frh_resources', JSON.stringify(resources));
@@ -1319,19 +1362,28 @@ function editResource(id) {
     const res = resources.find(r => r.id === id);
     if (!res) return;
     switchAdminTab('upload');
-    document.getElementById('form-upload-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Resource: ${res.name}`;
+    document.getElementById('form-upload-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Script: ${res.name}`;
     document.getElementById('edit-resource-id').value = res.id;
     document.getElementById('up-name').value = res.name;
     document.getElementById('up-category').value = res.category;
+    updateSubCategories();
     document.getElementById('up-subcategory').value = res.subcategory;
+    document.getElementById('up-type-upload').value = res.typeUpload || 'file';
     document.getElementById('up-version').value = res.version || 'v1.0';
-    document.getElementById('up-link-ad').value = res.linkAd || '';
-    document.getElementById('up-link-noad').value = res.linkNoAd || '';
     document.getElementById('up-link-size').value = res.fileSize;
     document.getElementById('up-screenshot').value = res.screenshot || '';
     document.getElementById('up-desc').value = res.description;
     document.getElementById('up-verified').checked = res.verified || false;
     document.getElementById('up-special-access').checked = res.isSpecialAccess || false;
+
+    // Load dynamic links manual
+    const container = document.getElementById('dynamic-links-container');
+    container.innerHTML = '';
+    if (res.links && res.links.length > 0) {
+        res.links.forEach(l => addCustomLinkRow(l.name, l.url));
+    } else {
+        addCustomLinkRow();
+    }
 
     document.getElementById('btn-submit-resource').classList.add('hidden');
     document.getElementById('btn-submit-edit').classList.remove('hidden');
@@ -1343,12 +1395,14 @@ function editResource(id) {
 
 function resetUploadForm() {
     document.getElementById('edit-resource-id').value = '';
-    document.getElementById('form-upload-title').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Tambah Link File / Aplikasi Baru`;
+    document.getElementById('form-upload-title').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Tambah Script Game Baru`;
     document.getElementById('btn-submit-resource').classList.remove('hidden');
     document.getElementById('btn-submit-edit').classList.add('hidden');
     document.getElementById('btn-submit-update').classList.add('hidden');
     document.getElementById('btn-cancel-edit').classList.add('hidden');
     document.querySelector('form').reset();
+    document.getElementById('dynamic-links-container').innerHTML = '';
+    addCustomLinkRow();
     activeEditModeAction = null;
 }
 
@@ -1356,7 +1410,7 @@ let pendingDeleteId = null;
 function deleteResource(id) {
     pendingDeleteId = id;
     const res = resources.find(r => r.id === id);
-    document.getElementById('confirm-msg').textContent = `Apakah Anda yakin ingin menghapus "${res ? res.name : 'resource ini'}"?`;
+    document.getElementById('confirm-msg').textContent = `Hapus "${res ? res.name : 'script ini'}"?`;
     document.getElementById('custom-confirm-modal').classList.remove('hidden');
     document.getElementById('confirm-btn-yes').onclick = executeDeleteResource;
 }
@@ -1385,7 +1439,7 @@ function openReaderMode() {
 function openVersionComparison() {
     const res = resources.find(r => r.id === activeResourceId);
     if (!res) return;
-    document.getElementById('reader-content').textContent = `=== KOMPARASI & CATATAN RILIS VERSI ===\nVersi Saat Ini: ${res.version || 'v1.0'}\n\n${res.description}`;
+    document.getElementById('reader-content').textContent = `=== PETUNJUK PEMASANGAN & VERSI ===\nVersi: ${res.version || 'v1.0'}\n\n${res.description}`;
     document.getElementById('reader-mode-modal').classList.remove('hidden');
 }
 
@@ -1398,7 +1452,7 @@ function renderAdminManageList() {
     if (!list) return;
     list.innerHTML = '';
     if (resources.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500 col-span-full">Belum ada resource.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 col-span-full">Belum ada script.</p>`;
         return;
     }
     resources.forEach(res => {
@@ -1406,8 +1460,8 @@ function renderAdminManageList() {
             <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col justify-between text-xs space-y-3">
                 <div>
                     <span class="font-bold text-white text-sm block">${res.name} (${res.version || 'v1.0'})</span>
-                    <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 inline-block mt-1">${res.category}</span>
-                    ${res.isSpecialAccess ? '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 inline-block ml-1 font-bold">Akses Khusus</span>' : ''}
+                    <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 inline-block mt-1">${res.category} (${res.subcategory})</span>
+                    ${res.isSpecialAccess ? '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 inline-block ml-1 font-bold">Khusus</span>' : ''}
                     ${res.editStatus === 'Edited' ? '<span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 inline-block ml-1 font-bold">Edited</span>' : ''}
                     ${res.editStatus === 'Updated' ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 inline-block ml-1 font-bold">Updated</span>' : ''}
                 </div>
@@ -1432,7 +1486,7 @@ function toggleSpecialAccessFlag(id) {
         res.isSpecialAccess = !res.isSpecialAccess;
         localStorage.setItem('frh_resources', JSON.stringify(resources));
         renderAdminManageList();
-        alert(`Status akses khusus untuk "${res.name}" berhasil diubah.`);
+        alert(`Status akses khusus "${res.name}" diubah.`);
     }
 }
 
@@ -1446,19 +1500,15 @@ function renderAdminAnalytics() {
 
 function exportDataBackup() {
     const backupData = {
-        resources,
-        announcements,
+        resources, announcements,
         users: JSON.parse(localStorage.getItem('frh_users')) || [],
-        brokenReports,
-        userPoints,
-        userVipSubscriptions,
-        systemLogs,
+        brokenReports, userPoints, userVipSubscriptions, systemLogs,
         exportDate: new Date().toISOString()
     };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "filehub_ultimatesuite_v13_backup.json");
+    dlAnchor.setAttribute("download", "rapzresource_hub_v14_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -1470,29 +1520,84 @@ function handleUpdateAdminCredentials(e) {
     adminCreds.pass = document.getElementById('set-admin-pass').value;
     adminCreds.pin = document.getElementById('set-admin-pin').value;
     localStorage.setItem('frh_admin_creds', JSON.stringify(adminCreds));
-    alert('Kredensial Super Admin berhasil diperbarui!');
+    alert('Kredensial Super Admin diperbarui!');
 }
 
 function renderAdminDashboard() {
     renderAdminManageList();
     renderAdminAnalytics();
     renderAdminUsersList();
+    renderAdminCategoriesConfig();
 }
 
-function filterCategory(cat) {
-    currentFilter = cat;
-    ['All', 'File', 'Aplikasi', 'Special', 'Saved'].forEach(c => {
-        const btn = document.getElementById(`cat-btn-${c}`);
+/* ========================================================
+   FILTER UTAMA & SUB-KATEGORI INTERAKTIF
+   ======================================================== */
+function filterMainCategory(cat) {
+    currentMainCategory = cat;
+    currentSubCategory = 'All';
+
+    ['All', 'Script Mobile Legends', 'Script Free Fire', 'Saved'].forEach(c => {
+        let btn = document.getElementById(`main-cat-btn-${c}`) || document.getElementById(`cat-btn-${c}`);
         if(btn) {
             btn.className = c === cat 
-                ? "px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md"
-                : "px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer";
+                ? "px-4 py-2.5 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md"
+                : "px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer";
+        }
+    });
+
+    const subBar = document.getElementById('sub-category-bar');
+    if (cat === 'Script Mobile Legends' || cat === 'Script Free Fire') {
+        subBar.classList.remove('hidden');
+        renderSubCategoryButtons(cat);
+    } else {
+        subBar.classList.add('hidden');
+    }
+
+    renderResources();
+}
+
+function filterSaved() {
+    currentMainCategory = 'Saved';
+    currentSubCategory = 'All';
+    document.getElementById('sub-category-bar').classList.add('hidden');
+    renderResources();
+}
+
+function renderSubCategoryButtons(mainCat) {
+    const wrapper = document.getElementById('sub-category-buttons-wrapper');
+    if (!wrapper) return;
+    wrapper.innerHTML = '';
+
+    let subs = categoryConfig[mainCat] || [];
+    
+    // Tombol "Semua" di sub kategori
+    wrapper.innerHTML += `
+        <button onclick="filterSubCategory('All')" id="sub-btn-All" class="px-3 py-1.5 rounded-lg text-xs font-bold ${currentSubCategory === 'All' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'} cursor-pointer">Semua</button>
+    `;
+
+    subs.forEach(sub => {
+        let isActive = currentSubCategory === sub;
+        wrapper.innerHTML += `
+            <button onclick="filterSubCategory('${sub}')" id="sub-btn-${sub}" class="px-3 py-1.5 rounded-lg text-xs font-bold ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'} cursor-pointer">${sub}</button>
+        `;
+    });
+}
+
+function filterSubCategory(sub) {
+    currentSubCategory = sub;
+    // Update active style sub buttons
+    let subs = categoryConfig[currentMainCategory] || [];
+    ['All', ...subs].forEach(s => {
+        let btn = document.getElementById(`sub-btn-${s}`);
+        if (btn) {
+            btn.className = s === sub 
+                ? "px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer"
+                : "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer";
         }
     });
     renderResources();
 }
-
-function filterSaved() { filterCategory('Saved'); }
 
 function handleSearchInput() {
     const keyword = document.getElementById('search-input').value.trim();
@@ -1525,7 +1630,7 @@ function renderRecentSearchDropdown() {
     box.classList.remove('hidden');
 
     if (matchedFiles.length > 0) {
-        box.innerHTML += `<div class="text-[10px] text-cyan-400 px-2 py-1 uppercase">Live Search Match</div>`;
+        box.innerHTML += `<div class="text-[10px] text-cyan-400 px-2 py-1 uppercase">Hasil Pencarian</div>`;
         matchedFiles.forEach(f => {
             box.innerHTML += `<div onclick="openDetail(${f.id})" class="px-2 py-1.5 hover:bg-slate-800 rounded-lg text-xs text-slate-200 cursor-pointer flex items-center justify-between"><span class="font-bold">${f.name}</span> <span class="text-[10px] text-slate-500">${f.category}</span></div>`;
         });
@@ -1570,10 +1675,13 @@ function renderResources() {
 
     let filtered = resources.filter(res => {
         let matchCat = true;
-        if (currentFilter === 'File') matchCat = res.category === 'File';
-        if (currentFilter === 'Aplikasi') matchCat = res.category === 'Aplikasi';
-        if (currentFilter === 'Special') matchCat = res.isSpecialAccess;
-        if (currentFilter === 'Saved') matchCat = res.savedBy && res.savedBy.includes(currentUser.username);
+        if (currentMainCategory === 'Script Mobile Legends') matchCat = res.category === 'Script Mobile Legends';
+        if (currentMainCategory === 'Script Free Fire') matchCat = res.category === 'Script Free Fire';
+        if (currentMainCategory === 'Saved') matchCat = res.savedBy && res.savedBy.includes(currentUser.username);
+
+        if (matchCat && currentSubCategory !== 'All' && (currentMainCategory === 'Script Mobile Legends' || currentMainCategory === 'Script Free Fire')) {
+            matchCat = res.subcategory === currentSubCategory;
+        }
 
         let matchSearch = res.name.toLowerCase().includes(searchKeyword) || res.description.toLowerCase().includes(searchKeyword);
         return matchCat && matchSearch;
@@ -1585,7 +1693,7 @@ function renderResources() {
     if (sortBy === 'size') filtered.sort((a, b) => parseFileSize(a.fileSize) - parseFileSize(b.fileSize));
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-500"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p class="text-sm">Tidak ada resource yang ditemukan.</p></div>`;
+        grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-500"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p class="text-sm">Tidak ada script yang ditemukan.</p></div>`;
         return;
     }
 
@@ -1594,7 +1702,7 @@ function renderResources() {
         const isSaved = res.savedBy && res.savedBy.includes(currentUser.username);
         const isBroken = brokenReports.some(rep => rep.resName === res.name);
 
-        const iconClass = res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400';
+        const iconClass = res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400';
         const avgRating = calculateAverageRating(res);
 
         grid.innerHTML += `
@@ -1613,6 +1721,7 @@ function renderResources() {
                             <span class="text-[10px] text-amber-400 font-bold"><i class="fa-solid fa-star"></i> ${avgRating}</span>
                         </div>
                     </div>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">${res.category} • ${res.subcategory}</span>
                     <h3 onclick="openDetail(${res.id})" class="font-bold text-base text-white group-hover:text-cyan-400 transition-colors cursor-pointer line-clamp-1">${res.name}</h3>
                     <p class="text-xs text-slate-300 mt-2 line-clamp-2 leading-relaxed">${res.description}</p>
                 </div>
@@ -1622,7 +1731,7 @@ function renderResources() {
                         <button onclick="toggleLike(${res.id})" class="flex items-center gap-1 hover:text-rose-400 transition-colors cursor-pointer ${isLiked ? 'text-rose-500' : ''}">
                             <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> <span>${res.likes || 0}</span>
                         </button>
-                        <span class="flex items-center gap-1" title="Jumlah Lihat Post"><i class="fa-solid fa-eye text-cyan-400"></i> ${res.views || 0}</span>
+                        <span class="flex items-center gap-1" title="Jumlah Dilihat"><i class="fa-solid fa-eye text-cyan-400"></i> ${res.views || 0}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="toggleSave(${res.id})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer ${isSaved ? 'text-amber-400' : 'text-slate-300'}" title="Simpan">
@@ -1639,9 +1748,9 @@ function renderResources() {
 function copyDirectLinkFromModal() {
     if (!activeResourceId) return;
     const res = resources.find(r => r.id === activeResourceId);
-    if (!res) return;
-    navigator.clipboard.writeText(res.linkNoAd || res.linkAd);
-    alert(`Tautan "${res.name}" berhasil disalin ke clipboard!`);
+    if (!res || !res.links || res.links.length === 0) return;
+    navigator.clipboard.writeText(res.links[0].url);
+    alert(`Tautan utama "${res.name}" berhasil disalin ke clipboard!`);
 }
 
 function calculateAverageRating(res) {
@@ -1667,8 +1776,8 @@ function toggleLike(id) {
         res.likes += 1;
         addPoints(currentUser.username, 2);
         addExpAndLevelProgress(currentUser.username);
-        logUserAction(currentUser.username, `Menyukai resource: ${res.name}`);
-        recordSystemLog('like_post', `User @${currentUser.username} menyukai post "${res.name}".`, currentUser.username);
+        logUserAction(currentUser.username, `Menyukai script: ${res.name}`);
+        recordSystemLog('like_post', `User @${currentUser.username} menyukai script "${res.name}".`, currentUser.username);
     }
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     renderResources();
@@ -1683,15 +1792,12 @@ function toggleSave(id) {
         res.savedBy.splice(index, 1);
     } else {
         res.savedBy.push(currentUser.username);
-        logUserAction(currentUser.username, `Menyimpan resource: ${res.name}`);
+        logUserAction(currentUser.username, `Menyimpan script: ${res.name}`);
     }
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     renderResources();
 }
 
-/* ========================================================
-   POINT 4: VALIDASI KETAT AKSES LINK TANPA IKLAN (VVIP AKTIF)
-   ======================================================== */
 function checkUserHasCleanLinkAccess(res) {
     if (!currentUser) return false;
     if (currentUser.role === 'admin') return true;
@@ -1700,7 +1806,6 @@ function checkUserHasCleanLinkAccess(res) {
     let unlockedArr = userUnlockedPosts[currentUser.username] || [];
     let isUnlockedPost = unlockedArr.includes(res.id);
 
-    // Validasi: Jika akun tersebut VVIPnya aktif atau unlock post, maka bisa klik. Kalau tidak aktif, maka tidak bisa klik.
     return isVip || isUnlockedPost;
 }
 
@@ -1749,36 +1854,45 @@ function openDetail(id, openModalWindow = true) {
     if (isBroken) alertBox.classList.remove('hidden');
     else alertBox.classList.add('hidden');
 
-    const downloadAdBtn = document.getElementById('modal-download-ad-btn');
-    const downloadNoAdBtn = document.getElementById('modal-download-noad-btn');
+    // Render Tautan Dinamis di Modal Detail dengan Validasi VVIP jika link bertuliskan VVIP/Tanpa Iklan/Direct
+    const dynamicLinksList = document.getElementById('modal-dynamic-links-list');
+    dynamicLinksList.innerHTML = '';
 
-    downloadAdBtn.href = res.linkAd;
+    if (res.links && res.links.length > 0) {
+        res.links.forEach(l => {
+            let isVipLink = l.name.toLowerCase().includes('vvip') || l.name.toLowerCase().includes('tanpa iklan') || l.name.toLowerCase().includes('direct');
+            let canAccess = !isVipLink || checkUserHasCleanLinkAccess(res);
 
-    // Point 4: Validasi akses link tanpa iklan (VVIP harus aktif)
-    let canAccessClean = checkUserHasCleanLinkAccess(res);
-    if (canAccessClean) {
-        downloadNoAdBtn.href = res.linkNoAd;
-        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Link Tanpa Iklan (${res.fileSize}) [VVIP Aktif]`;
+            let btnBg = isVipLink ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20' : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20';
+            let iconType = isVipLink ? 'fa-shield-halved' : 'fa-cloud-arrow-down';
+
+            if (canAccess) {
+                dynamicLinksList.innerHTML += `
+                    <a href="${l.url}" target="_blank" onclick="recordDownload(event, '${l.name}')" class="w-full py-3 ${btnBg} font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer text-xs">
+                        <i class="fa-solid ${iconType}"></i> ${l.name} (${res.fileSize || 'Files'})
+                    </a>
+                `;
+            } else {
+                dynamicLinksList.innerHTML += `
+                    <button onclick="alert('Akses Ditolak! Tautan VVIP ini memerlukan VVIP aktif atau membuka akses postingan khusus.'); switchMainView('profile'); closeModal();" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs border border-slate-700">
+                        <i class="fa-solid fa-lock text-amber-400"></i> ${l.name} [VVIP Diperlukan]
+                    </button>
+                `;
+            }
+        });
     } else {
-        downloadNoAdBtn.href = "#";
-        downloadNoAdBtn.onclick = (e) => {
-            e.preventDefault();
-            alert('Akses Tanpa Iklan Ditolak! Masa aktif VVIP Anda tidak aktif atau belum membuka akses postingan ini.');
-            switchMainView('profile');
-            closeModal();
-        };
-        downloadNoAdBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Link Tanpa Iklan (VVIP Tidak Aktif)`;
+        dynamicLinksList.innerHTML = `<p class="text-xs text-slate-500">Tidak ada tautan tersedia.</p>`;
     }
 
     const iconDiv = document.getElementById('modal-file-icon');
-    iconDiv.innerHTML = `<i class="${res.category === 'Aplikasi' ? 'fa-brands fa-android text-emerald-400' : 'fa-solid fa-file-zipper text-cyan-400'}"></i>`;
+    iconDiv.innerHTML = `<i class="${res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400'}"></i>`;
 
     let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
     const submitRatingBtn = document.getElementById('btn-submit-rating');
     const reviewInput = document.getElementById('review-input');
     if (hasRated) {
         submitRatingBtn.disabled = true;
-        submitRatingBtn.textContent = 'Anda sudah memberi rating pada post ini';
+        submitRatingBtn.textContent = 'Anda sudah memberi rating';
         submitRatingBtn.classList.add('opacity-50', 'cursor-not-allowed');
         reviewInput.disabled = true;
     } else {
@@ -1836,7 +1950,7 @@ function handlePostRatingAndReview(e) {
     if (!res.reviews) res.reviews = [];
 
     if (res.ratedUsers[currentUser.username]) {
-        alert('Anda sudah memberikan rating pada postingan ini sebelumnya.');
+        alert('Anda sudah memberikan rating.');
         return;
     }
 
@@ -1847,36 +1961,27 @@ function handlePostRatingAndReview(e) {
 
     addPoints(currentUser.username, 10);
     addExpAndLevelProgress(currentUser.username); 
-    logUserAction(currentUser.username, `Memberi rating ${currentSelectedStar} bintang & ulasan pada ${res.name}`);
-    recordSystemLog('rating_post', `User @${currentUser.username} memberi rating ${currentSelectedStar} bintang pada post "${res.name}".`, currentUser.username);
+    logUserAction(currentUser.username, `Memberi rating & ulasan pada ${res.name}`);
+    recordSystemLog('rating_post', `User @${currentUser.username} memberi rating pada "${res.name}".`, currentUser.username);
 
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     
-    alert(`Terima kasih! Ulasan & rating berhasil dikirim (+10 Poin & EXP).`);
+    alert(`Ulasan & rating berhasil dikirim (+10 Poin & EXP).`);
     document.getElementById('review-input').value = '';
     openDetail(activeResourceId, false);
     renderResources();
 }
 
-function recordDownload(e, type) {
+function recordDownload(e, linkName) {
     if (!currentUser) {
         e.preventDefault();
-        alert('Anda wajib login atau daftar terlebih dahulu sebelum mengunduh file.');
+        alert('Anda wajib login terlebih dahulu sebelum mengunduh.');
         document.getElementById('auth-modal').classList.remove('hidden');
         return;
     }
 
-    if (type === 'noad') {
-        let res = resources.find(r => r.id === activeResourceId);
-        if (!checkUserHasCleanLinkAccess(res)) {
-            e.preventDefault();
-            alert('Validasi Gagal! VVIP Anda tidak aktif.');
-            return;
-        }
-    }
-
     addPoints(currentUser.username, 5);
-    logUserAction(currentUser.username, `Mengunduh resource (${type === 'ad' ? 'Dengan Iklan' : 'Tanpa Iklan'})`);
+    logUserAction(currentUser.username, `Mengunduh script via ${linkName}`);
 }
 
 function reportBrokenLink() {
@@ -1888,7 +1993,7 @@ function reportBrokenLink() {
         addNotification(`Laporan link rusak diteruskan ke admin: ${res.name}`, 'danger');
         addPoints(currentUser.username, 5);
         logUserAction(currentUser.username, `Melaporkan link rusak: ${res.name}`);
-        alert('Laporan link rusak berhasil diteruskan ke dashboard admin (+5 Poin).');
+        alert('Laporan link rusak berhasil diteruskan (+5 Poin).');
         openDetail(activeResourceId, false);
         renderResources();
     } else {
@@ -1914,8 +2019,8 @@ function handlePostComment(e) {
     
     addPoints(currentUser.username, 5);
     addExpAndLevelProgress(currentUser.username); 
-    logUserAction(currentUser.username, `Mengomentari resource: ${res.name}`);
-    recordSystemLog('komentar_post', `User @${currentUser.username} berkomentar pada post "${res.name}".`, currentUser.username);
+    logUserAction(currentUser.username, `Mengomentari script: ${res.name}`);
+    recordSystemLog('komentar_post', `User @${currentUser.username} berkomentar pada "${res.name}".`, currentUser.username);
 
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     input.value = '';
@@ -1936,20 +2041,18 @@ function handleChangeUserPassword(e) {
     if (userObj) {
         userObj.password = newPass;
         localStorage.setItem('frh_users', JSON.stringify(users));
-        alert('Password akun berhasil diubah!');
+        alert('Password berhasil diubah!');
         document.getElementById('new-user-pass').value = '';
         togglePasswordForm();
     }
 }
 
 const profileQuestsDefinition = [
-    { id: 'like_1', title: 'Sukai 1 postingan', reward: 10, target: 1, type: 'like' },
-    { id: 'like_5', title: 'Sukai 5 Postingan', reward: 30, target: 5, type: 'like' },
-    { id: 'rate_star5_1', title: 'Lakukan Rating Bintang 5 Untuk 1 Postingan', reward: 15, target: 1, type: 'rate5' },
-    { id: 'rate_star5_3', title: 'Lakukan Rating Bintang 5 Untuk 3 Postingan', reward: 45, target: 3, type: 'rate5' },
-    { id: 'comment_10', title: 'Lakukan 10 Komentar Pada Postingan', reward: 50, target: 10, type: 'comment' },
-    { id: 'view_100', title: 'Lihat 100 Postingan', reward: 75, target: 100, type: 'view' },
-    { id: 'get_badge', title: 'Dapatkan Badge', reward: 100, target: 1, type: 'badge' }
+    { id: 'like_1', title: 'Sukai 1 script', reward: 10, target: 1, type: 'like' },
+    { id: 'like_5', title: 'Sukai 5 Script', reward: 30, target: 5, type: 'like' },
+    { id: 'rate_star5_1', title: 'Rating Bintang 5 untuk 1 Script', reward: 15, target: 1, type: 'rate5' },
+    { id: 'comment_10', title: 'Kirim 10 Komentar', reward: 50, target: 10, type: 'comment' },
+    { id: 'view_100', title: 'Lihat 100 Script', reward: 75, target: 100, type: 'view' }
 ];
 
 function checkQuestRealProgress(type) {
@@ -1977,10 +2080,6 @@ function checkQuestRealProgress(type) {
         let myViews = userViewHistory[uname] || [];
         return myViews.length;
     }
-    if (type === 'badge') {
-        let badge = getUserBadge(uname);
-        return badge.includes('Member Baru') ? 0 : 1;
-    }
     return 0;
 }
 
@@ -1988,7 +2087,7 @@ function claimProfileQuest(questId, target, type, reward) {
     let uname = currentUser.username;
     if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
     if (userQuestClaims[uname][questId]) {
-        alert('Quest ini sudah pernah diklaim sebelumnya!');
+        alert('Quest sudah diklaim!');
         return;
     }
 
@@ -1998,12 +2097,12 @@ function claimProfileQuest(questId, target, type, reward) {
         localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
         addPoints(uname, reward);
         addExpAndLevelProgress(uname, 25); 
-        addNotification(`Quest "${questId}" berhasil diklaim! (+${reward} Poin & EXP)`, 'admin');
-        recordSystemLog('selesai_quest', `User @${uname} berhasil menyelesaikan dan mengklaim quest "${questId}" (+${reward} Poin).`, uname);
-        alert(`Validasi Berhasil! Quest selesai. Anda mendapatkan +${reward} Poin & EXP.`);
+        addNotification(`Quest "${questId}" selesai! (+${reward} Poin & EXP)`, 'admin');
+        recordSystemLog('selesai_quest', `User @${uname} menyelesaikan quest "${questId}" (+${reward} Poin).`, uname);
+        alert(`Quest selesai! Anda mendapatkan +${reward} Poin & EXP.`);
         renderProfilePage();
     } else {
-        alert(`Validasi Gagal! Anda belum memenuhi syarat (Progress saat ini: ${currentProgress}/${target}).`);
+        alert(`Belum memenuhi syarat (Progress: ${currentProgress}/${target}).`);
     }
 }
 
@@ -2040,9 +2139,9 @@ function renderProfilePage() {
 
             let btnHtml = '';
             if (isClaimed) {
-                btnHtml = `<span class="text-emerald-400 font-bold text-[11px]"><i class="fa-solid fa-check"></i> Selesai & Diklaim</span>`;
+                btnHtml = `<span class="text-emerald-400 font-bold text-[11px]"><i class="fa-solid fa-check"></i> Selesai</span>`;
             } else if (canClaim) {
-                btnHtml = `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl cursor-pointer">Klaim Poin (+${q.reward})</button>`;
+                btnHtml = `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl cursor-pointer">Klaim (+${q.reward})</button>`;
             } else {
                 btnHtml = `<span class="text-slate-500 text-[10px]">Progress: ${currentProg}/${q.target}</span>`;
             }
@@ -2065,7 +2164,7 @@ function renderProfilePage() {
     viewList.innerHTML = '';
     let myViews = userViewHistory[uname] || [];
     if (myViews.length === 0) {
-        viewList.innerHTML = `<p class="text-xs text-slate-500">Belum ada riwayat melihat post.</p>`;
+        viewList.innerHTML = `<p class="text-xs text-slate-500">Belum ada riwayat.</p>`;
     } else {
         myViews.forEach(name => {
             viewList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2"><i class="fa-solid fa-eye text-cyan-400"></i> ${name}</div>`;
@@ -2077,7 +2176,7 @@ function renderProfilePage() {
     let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(uname));
     
     if (mySaved.length === 0) {
-        savedList.innerHTML = `<p class="text-xs text-slate-500">Belum ada file disimpan.</p>`;
+        savedList.innerHTML = `<p class="text-xs text-slate-500">Belum ada script disimpan.</p>`;
     } else {
         mySaved.forEach(res => {
             savedList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between"><span>${res.name}</span><button onclick="openDetail(${res.id})" class="text-cyan-400 font-bold cursor-pointer">Buka</button></div>`;
