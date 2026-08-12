@@ -4,9 +4,8 @@ let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
 let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
-let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v19. Tampilan Login/Register modern, About & Live Chat disatukan di titik tiga!" };
+let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v20. Tautan Tombol Titik Tiga di kanan bawah, About kustom admin, dan fitur lengkap!" };
 
-// Pengaturan Halaman About (Dapat diatur manual via Admin Dashboard)
 let aboutConfig = JSON.parse(localStorage.getItem('frh_about_config')) || {
     websiteName: "RapzResource HUB",
     description: "Pusat unduhan dan repositori script game Android terlengkap, modern, dan profesional untuk para kreator serta gamers.",
@@ -58,7 +57,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Pembaruan RapzResource HUB v19", content: "Pembaruan Tampilan Login/Register, About Config Admin, dan Menu Titik Tiga.", date: "12 Agustus 2026" }
+    { id: 1, title: "Pembaruan RapzResource HUB v20", content: "Pembaruan Tampilan Login/Register, About Config Admin, dan Menu Titik Tiga Kanan Bawah.", date: "12 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
@@ -88,7 +87,7 @@ let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || [];
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di RapzResource HUB v19!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di RapzResource HUB v20!", type: 'info', read: false, time: "Baru saja" }
 ];
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
@@ -98,6 +97,7 @@ let userQuestHistory = JSON.parse(localStorage.getItem('frh_user_quest_history')
 let userRedeemLogHistory = JSON.parse(localStorage.getItem('frh_user_redeem_log_history')) || {};
 let userReportHistory = JSON.parse(localStorage.getItem('frh_user_report_history')) || {};
 let userPasswordHistory = JSON.parse(localStorage.getItem('frh_user_password_history')) || {};
+let userEmailHistory = JSON.parse(localStorage.getItem('frh_user_email_history')) || {};
 
 let currentMainCategory = 'All';
 let currentSubCategory = 'All';
@@ -124,6 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
     [userInp, passInp].forEach(el => {
         if (el) el.addEventListener('input', checkUnifiedAdminTrigger);
     });
+
+    // Auto-fill remember me if stored
+    let rememberedEmail = localStorage.getItem('frh_remembered_email');
+    if (rememberedEmail && document.getElementById('uni-user')) {
+        document.getElementById('uni-user').value = rememberedEmail;
+        let remCb = document.getElementById('remember-me-checkbox');
+        if (remCb) remCb.checked = true;
+    }
 
     document.addEventListener('keydown', (e) => {
         if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
@@ -181,7 +189,7 @@ function showToast(message, type = 'success') {
 }
 
 /* ========================================================
-   POIN 4: FITUR ICON TITIK 3 (About & Live Chat Disatukan)
+   FITUR ICON TITIK 3 (About & Live Chat Disatukan di Kanan Bawah)
    ======================================================== */
 function toggleThreeDotsDropdown(forceClose = false) {
     const dropdown = document.getElementById('three-dots-dropdown');
@@ -210,7 +218,7 @@ function handleThreeDotsMenu(action) {
 }
 
 /* ========================================================
-   POIN 3: RENDER & ADMIN CONFIG HALAMAN ABOUT
+   RENDER & ADMIN CONFIG HALAMAN ABOUT
    ======================================================== */
 function renderAboutPage() {
     const container = document.getElementById('about-page-content');
@@ -413,7 +421,7 @@ function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '') {
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
         <input type="text" placeholder="Nama Link (Cth: VVIP Server 1)..." value="${nameVal}" class="w-full sm:w-52 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
-        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
+        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 shadow-inner text-slate-200 link-url-input" required>
         <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl transition-all text-xs cursor-pointer shadow-md"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(div);
@@ -475,7 +483,7 @@ function sendTelegramNotification(text) {
     let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
     let data = {
         chat_id: telegramConfig.chatId,
-        text: `🤖 [RapzResource HUB v19]\n${text}`,
+        text: `🤖 [RapzResource HUB v20]\n${text}`,
         parse_mode: 'HTML'
     };
     fetch(url, {
@@ -647,7 +655,7 @@ function formatFileSizeInput(el) {
 }
 
 /* ========================================================
-   POIN 2: PEMBARUAN TAMPILAN MASUK AKUN & DAFTAR AKUN
+   MANAJEMEN AUTH (LOGIN & REGISTER DENGAN FIELD BARU)
    ======================================================== */
 function switchAuthTab(tab) {
     const loginCard = document.getElementById('auth-card-login');
@@ -685,18 +693,25 @@ function checkUnifiedAdminTrigger() {
 
 function handleUnifiedLogin(e) {
     e.preventDefault();
-    const uVal = document.getElementById('uni-user').value.trim();
+    const emailOrUser = document.getElementById('uni-user').value.trim();
     const pVal = document.getElementById('uni-pass').value;
     const pinVal = document.getElementById('uni-pin').value;
+    const termsChecked = document.getElementById('uni-terms').checked;
+    const rememberMe = document.getElementById('remember-me-checkbox')?.checked || false;
 
-    if (uVal === adminCreds.user && pVal === adminCreds.pass) {
+    if (!termsChecked) {
+        showToast('Anda harus menyetujui persyaratan dan ketentuan yang berlaku!', 'warning');
+        return;
+    }
+
+    if (emailOrUser === adminCreds.user && pVal === adminCreds.pass) {
         const now = Date.now();
         if (now < adminLockUntil) return;
 
         if (pinVal === adminCreds.pin) {
             adminFailedAttempts = 0;
             localStorage.setItem('frh_admin_fails', adminFailedAttempts);
-            currentUser = { username: 'Super Administrator', role: 'admin' };
+            currentUser = { username: 'Super Administrator', email: 'admin@rapzresource.hub', role: 'admin' };
             resetAdminSessionTimer();
         } else {
             adminFailedAttempts++;
@@ -713,27 +728,35 @@ function handleUnifiedLogin(e) {
         }
     } else {
         let users = JSON.parse(localStorage.getItem('frh_users')) || [];
-        const validUser = users.find(u => u.username === uVal && u.password === pVal);
+        // Login dengan Email atau Username
+        const validUser = users.find(u => (u.email === emailOrUser || u.username === emailOrUser) && u.password === pVal);
         
-        if (userBans[uVal]) {
-            let banUntil = userBans[uVal];
+        if (userBans[validUser ? validUser.username : emailOrUser]) {
+            let banUntil = userBans[validUser ? validUser.username : emailOrUser];
             if (banUntil === 'permanent' || Date.now() < banUntil) {
                 showToast('Akun Anda sedang diblokir oleh Administrator.', 'error');
                 return;
             }
         }
 
-        if (!validUser && uVal !== 'user') {
-            showToast('Username atau Password salah!', 'error');
+        if (!validUser) {
+            showToast('Email/Username atau Password salah!', 'error');
             return;
         }
-        currentUser = { username: uVal, role: 'user' };
-        logUserAction(uVal, 'Masuk ke sistem');
-        recordSystemLog('akun_login', `User @${uVal} berhasil masuk ke akun.`, uVal);
 
-        if (!userLoginHistory[uVal]) userLoginHistory[uVal] = [];
-        userLoginHistory[uVal].unshift({ time: new Date().toLocaleString('id-ID'), status: 'Berhasil Masuk' });
-        if (userLoginHistory[uVal].length > 15) userLoginHistory[uVal].pop();
+        currentUser = { username: validUser.username, fullName: validUser.fullName, email: validUser.email, role: 'user' };
+        logUserAction(validUser.username, 'Masuk ke sistem');
+        recordSystemLog('akun_login', `User @${validUser.username} berhasil masuk ke akun.`, validUser.username);
+
+        if (rememberMe) {
+            localStorage.setItem('frh_remembered_email', validUser.email);
+        } else {
+            localStorage.removeItem('frh_remembered_email');
+        }
+
+        if (!userLoginHistory[validUser.username]) userLoginHistory[validUser.username] = [];
+        userLoginHistory[validUser.username].unshift({ time: new Date().toLocaleString('id-ID'), status: 'Berhasil Masuk' });
+        if (userLoginHistory[validUser.username].length > 15) userLoginHistory[validUser.username].pop();
         localStorage.setItem('frh_user_login_history', JSON.stringify(userLoginHistory));
     }
     localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
@@ -753,16 +776,30 @@ document.addEventListener('keypress', () => { if (currentUser && currentUser.rol
 
 function handleRegister(e) {
     e.preventDefault();
+    const fullName = document.getElementById('reg-fullname').value.trim();
     const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
+    const termsChecked = document.getElementById('reg-terms').checked;
+
+    if (!termsChecked) {
+        showToast('Anda harus menyetujui persyaratan dan ketentuan yang berlaku!', 'warning');
+        return;
+    }
+
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
     if (users.some(u => u.username === username)) {
         showToast('Username sudah terdaftar!', 'warning');
         return;
     }
-    users.push({ username, password });
+    if (users.some(u => u.email === email)) {
+        showToast('Email sudah terdaftar!', 'warning');
+        return;
+    }
+
+    users.push({ fullName, username, email, password });
     localStorage.setItem('frh_users', JSON.stringify(users));
-    recordSystemLog('daftar_baru', `Akun baru terdaftar dengan username @${username}.`, username);
+    recordSystemLog('daftar_baru', `Akun baru terdaftar dengan username @${username} dan email ${email}.`, username);
     showToast('Registrasi berhasil! Silakan masuk.', 'success');
     switchAuthTab('login');
 }
@@ -1009,7 +1046,7 @@ function renderAdminUsersList() {
             <div class="bg-slate-950/90 backdrop-blur-md p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl transition-all hover:border-slate-700">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-user-shield text-cyan-400"></i> ${u.username} ${isBanned ? '<span class="text-rose-500 font-bold bg-rose-500/10 px-2 py-0.5 rounded-lg text-[10px]">Diblokir</span>' : ''}</span>
+                        <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-user-shield text-cyan-400"></i> ${u.username} (${u.email || '-'}) ${isBanned ? '<span class="text-rose-500 font-bold bg-rose-500/10 px-2 py-0.5 rounded-lg text-[10px]">Diblokir</span>' : ''}</span>
                         <span class="text-[11px] text-slate-400 mt-1 block">Poin: <span class="text-amber-400 font-extrabold">${uPts} Pts</span> | VVIP: <span class="${isVip ? 'text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-[10px]' : 'text-slate-400'}">${isVip ? 'Aktif' : 'Non-VVIP'}</span></span>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
@@ -1699,7 +1736,7 @@ function exportDataBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "rapzresource_hub_v19_backup.json");
+    dlAnchor.setAttribute("download", "rapzresource_hub_v20_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -2040,7 +2077,7 @@ function checkUserHasCleanLinkAccess(res) {
 }
 
 /* ========================================================
-   POIN 1: PENGHAPUSAN TOTAL KOMPARASI & MODE BACA DI DETAIL
+   PENGHAPUSAN TOTAL KOMPARASI & MODE BACA DI DETAIL
    ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
@@ -2311,24 +2348,47 @@ function togglePasswordForm() {
     if (box) box.classList.toggle('hidden');
 }
 
-function handleChangeUserPassword(e) {
+/* ========================================================
+   PEMBARUAN PROFILE: UBAH EMAIL DAN PASSWORD
+   ======================================================== */
+function handleChangeUserEmailAndPassword(e) {
     e.preventDefault();
+    const newEmail = document.getElementById('new-user-email').value.trim();
     const newPass = document.getElementById('new-user-pass').value;
+
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
     let userObj = users.find(u => u.username === currentUser.username);
+
     if (userObj) {
-        userObj.password = newPass;
+        if (newEmail && newEmail !== userObj.email) {
+            if (users.some(u => u.email === newEmail)) {
+                showToast('Email tersebut sudah digunakan oleh akun lain!', 'warning');
+                return;
+            }
+            userObj.email = newEmail;
+            currentUser.email = newEmail;
+            
+            let uname = currentUser.username;
+            if (!userEmailHistory[uname]) userEmailHistory[uname] = [];
+            userEmailHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: `Email diubah ke ${newEmail}` });
+            localStorage.setItem('frh_user_email_history', JSON.stringify(userEmailHistory));
+        }
+
+        if (newPass) {
+            userObj.password = newPass;
+            let uname = currentUser.username;
+            if (!userPasswordHistory[uname]) userPasswordHistory[uname] = [];
+            userPasswordHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: 'Password berhasil diubah' });
+            localStorage.setItem('frh_user_password_history', JSON.stringify(userPasswordHistory));
+        }
+
         localStorage.setItem('frh_users', JSON.stringify(users));
+        localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
 
-        let uname = currentUser.username;
-        if (!userPasswordHistory[uname]) userPasswordHistory[uname] = [];
-        userPasswordHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: 'Password berhasil diubah' });
-        if (userPasswordHistory[uname].length > 10) userPasswordHistory[uname].pop();
-        localStorage.setItem('frh_user_password_history', JSON.stringify(userPasswordHistory));
-
-        showToast('Password berhasil diubah!', 'success');
+        showToast('Profil (Email/Password) berhasil diperbarui!', 'success');
         document.getElementById('new-user-pass').value = '';
         togglePasswordForm();
+        renderProfilePage();
     }
 }
 
@@ -2521,6 +2581,7 @@ function renderAdditionalUserHistories(uname) {
     let redeems = userRedeemLogHistory[uname] || [];
     let reports = userReportHistory[uname] || [];
     let passwords = userPasswordHistory[uname] || [];
+    let emails = userEmailHistory[uname] || [];
 
     profileExtraContainer.innerHTML = `
         <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
@@ -2551,7 +2612,14 @@ function renderAdditionalUserHistories(uname) {
             </div>
         </div>
 
-        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl md:col-span-2">
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-envelope text-cyan-400"></i> Riwayat Ubah Email</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${emails.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat ubah email.</p>' : emails.map(em => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${em.info}</span><span class="text-slate-500">${em.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
             <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-key text-blue-400"></i> Riwayat Ubah Password</h4>
             <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
                 ${passwords.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat ubah password.</p>' : passwords.map(p => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${p.info}</span><span class="text-slate-500">${p.time}</span></div>`).join('')}
