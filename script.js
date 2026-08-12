@@ -4,20 +4,7 @@ let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
 let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
-let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v20. Tautan Tombol Titik Tiga di kanan bawah, About kustom admin, dan fitur lengkap!" };
-
-let aboutConfig = JSON.parse(localStorage.getItem('frh_about_config')) || {
-    websiteName: "RapzResource HUB",
-    description: "Pusat unduhan dan repositori script game Android terlengkap, modern, dan profesional untuk para kreator serta gamers.",
-    creators: [
-        { name: "Muhammad Ezar Rafiansyah", role: "Lead Developer & Owner", link: "https://github.com" }
-    ],
-    socials: [
-        { name: "Telegram Channel", icon: "fa-brands fa-telegram", url: "https://t.me" },
-        { name: "GitHub Repository", icon: "fa-brands fa-github", url: "https://github.com" },
-        { name: "YouTube Channel", icon: "fa-brands fa-youtube", url: "https://youtube.com" }
-    ]
-};
+let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v18. Pembaruan kustomisasi link, pembersihan tombol redundan, dan riwayat profil lengkap!" };
 
 let categoryConfig = JSON.parse(localStorage.getItem('frh_category_config')) || {
     "Script Mobile Legends": ["Script Skin", "Script Anti Lag", "Script Booster", "Game Booster"],
@@ -57,7 +44,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Pembaruan RapzResource HUB v20", content: "Pembaruan Tampilan Login/Register, About Config Admin, dan Menu Titik Tiga Kanan Bawah.", date: "12 Agustus 2026" }
+    { id: 1, title: "Pembaruan RapzResource HUB v18", content: "Kustomisasi Nama Link, Pembersihan Fitur Redundan, dan Riwayat Profil Komprehensif.", date: "12 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
@@ -87,17 +74,17 @@ let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || [];
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di RapzResource HUB v20!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di RapzResource HUB v18!", type: 'info', read: false, time: "Baru saja" }
 ];
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
 
+// Riwayat Profil Tambahan
 let userLoginHistory = JSON.parse(localStorage.getItem('frh_user_login_history')) || {};
 let userQuestHistory = JSON.parse(localStorage.getItem('frh_user_quest_history')) || {};
 let userRedeemLogHistory = JSON.parse(localStorage.getItem('frh_user_redeem_log_history')) || {};
 let userReportHistory = JSON.parse(localStorage.getItem('frh_user_report_history')) || {};
 let userPasswordHistory = JSON.parse(localStorage.getItem('frh_user_password_history')) || {};
-let userEmailHistory = JSON.parse(localStorage.getItem('frh_user_email_history')) || {};
 
 let currentMainCategory = 'All';
 let currentSubCategory = 'All';
@@ -125,14 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener('input', checkUnifiedAdminTrigger);
     });
 
-    // Auto-fill remember me if stored
-    let rememberedEmail = localStorage.getItem('frh_remembered_email');
-    if (rememberedEmail && document.getElementById('uni-user')) {
-        document.getElementById('uni-user').value = rememberedEmail;
-        let remCb = document.getElementById('remember-me-checkbox');
-        if (remCb) remCb.checked = true;
-    }
-
     document.addEventListener('keydown', (e) => {
         if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
             e.preventDefault();
@@ -144,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeCustomConfirm();
             closeRequestModal();
             closeRedeemPostModal();
-            toggleThreeDotsDropdown(true);
+            toggleSupportChatModal();
         }
     });
 
@@ -189,156 +168,7 @@ function showToast(message, type = 'success') {
 }
 
 /* ========================================================
-   FITUR ICON TITIK 3 (About & Live Chat Disatukan di Kanan Bawah)
-   ======================================================== */
-function toggleThreeDotsDropdown(forceClose = false) {
-    const dropdown = document.getElementById('three-dots-dropdown');
-    if (!dropdown) return;
-    if (forceClose) {
-        dropdown.classList.add('hidden');
-    } else {
-        dropdown.classList.toggle('hidden');
-    }
-}
-
-function handleThreeDotsMenu(action) {
-    toggleThreeDotsDropdown(true);
-    if (action === 'about') {
-        switchMainView('about');
-    } else if (action === 'livechat') {
-        switchMainView('livechat');
-        if (currentUser) {
-            let introText = `[Sistem Bantuan]: Halo admin, saya butuh bantuan/kendala terkait akun atau transaksi.`;
-            if (!liveChatConversations[currentUser.username]) liveChatConversations[currentUser.username] = [];
-            liveChatConversations[currentUser.username].push({ sender: currentUser.username, text: introText, time: new Date().toLocaleTimeString('id-ID') });
-            localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
-            renderUserLiveChatMessages();
-        }
-    }
-}
-
-/* ========================================================
-   RENDER & ADMIN CONFIG HALAMAN ABOUT
-   ======================================================== */
-function renderAboutPage() {
-    const container = document.getElementById('about-page-content');
-    if (!container) return;
-
-    let creatorsHtml = aboutConfig.creators.map(c => `
-        <div class="flex items-center justify-between bg-slate-950/80 backdrop-blur-md p-4 rounded-2xl border border-slate-800">
-            <div>
-                <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-user-gear text-cyan-400"></i> ${c.name}</span>
-                <span class="text-slate-400 text-xs mt-0.5 block">${c.role}</span>
-            </div>
-            ${c.link ? `<a href="${c.link}" target="_blank" class="px-3.5 py-2 bg-cyan-500/20 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 rounded-xl font-bold transition-all text-xs flex items-center gap-1.5"><i class="fa-solid fa-arrow-up-right-from-square"></i> Profil</a>` : ''}
-        </div>
-    `).join('');
-
-    let socialsHtml = aboutConfig.socials.map(s => `
-        <a href="${s.url}" target="_blank" class="flex items-center gap-3 bg-slate-950/80 backdrop-blur-md p-4 rounded-2xl border border-slate-800 hover:border-cyan-500/50 transition-all shadow-lg group">
-            <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 text-base group-hover:scale-110 transition-transform">
-                <i class="${s.icon}"></i>
-            </div>
-            <span class="font-bold text-white text-xs">${s.name}</span>
-        </a>
-    `).join('');
-
-    container.innerHTML = `
-        <div class="max-w-3xl mx-auto space-y-6 animate-fadeIn py-4">
-            <div class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 backdrop-blur-xl border border-slate-800 p-8 rounded-3xl shadow-2xl space-y-4 text-center">
-                <div class="w-16 h-16 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl mx-auto flex items-center justify-center text-cyan-400 text-2xl shadow-lg"><i class="fa-solid fa-circle-info"></i></div>
-                <h2 class="text-2xl font-extrabold text-white">${aboutConfig.websiteName}</h2>
-                <p class="text-xs text-slate-300 leading-relaxed max-w-xl mx-auto">${aboutConfig.description}</p>
-            </div>
-
-            <div class="space-y-3">
-                <h3 class="text-sm font-extrabold text-cyan-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-users"></i> Pembuat & Pengembang</h3>
-                <div class="grid grid-cols-1 gap-3">${creatorsHtml}</div>
-            </div>
-
-            <div class="space-y-3">
-                <h3 class="text-sm font-extrabold text-cyan-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-share-nodes"></i> Sosial Media & Tautan Resmi</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${socialsHtml}</div>
-            </div>
-        </div>
-    `;
-}
-
-function renderAdminAboutConfig() {
-    document.getElementById('admin-about-name').value = aboutConfig.websiteName || '';
-    document.getElementById('admin-about-desc').value = aboutConfig.description || '';
-
-    const creatorsList = document.getElementById('admin-about-creators-list');
-    creatorsList.innerHTML = '';
-    aboutConfig.creators.forEach((c, idx) => {
-        creatorsList.innerHTML += `
-            <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-                <span><b>${c.name}</b> (${c.role})</span>
-                <button onclick="removeAboutCreator(${idx})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        `;
-    });
-
-    const socialsList = document.getElementById('admin-about-socials-list');
-    socialsList.innerHTML = '';
-    aboutConfig.socials.forEach((s, idx) => {
-        socialsList.innerHTML += `
-            <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-                <span class="flex items-center gap-2"><i class="${s.icon}"></i> <b>${s.name}</b> (${s.url})</span>
-                <button onclick="removeAboutSocial(${idx})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        `;
-    });
-}
-
-function handleSaveAboutMainConfig(e) {
-    e.preventDefault();
-    aboutConfig.websiteName = document.getElementById('admin-about-name').value.trim();
-    aboutConfig.description = document.getElementById('admin-about-desc').value.trim();
-    localStorage.setItem('frh_about_config', JSON.stringify(aboutConfig));
-    showToast('Konfigurasi utama About berhasil disimpan!', 'success');
-}
-
-function addAboutCreator() {
-    let name = prompt("Masukkan Nama Pembuat:");
-    let role = prompt("Masukkan Peran/Jabatan Pembuat:");
-    let link = prompt("Masukkan Link Profil (Opsional):");
-    if (name) {
-        aboutConfig.creators.push({ name, role: role || 'Contributor', link: link || '' });
-        localStorage.setItem('frh_about_config', JSON.stringify(aboutConfig));
-        renderAdminAboutConfig();
-        showToast('Pembuat berhasil ditambahkan.', 'success');
-    }
-}
-
-function removeAboutCreator(idx) {
-    aboutConfig.creators.splice(idx, 1);
-    localStorage.setItem('frh_about_config', JSON.stringify(aboutConfig));
-    renderAdminAboutConfig();
-    showToast('Pembuat dihapus.', 'success');
-}
-
-function addAboutSocial() {
-    let name = prompt("Masukkan Nama Platform (Cth: Telegram):");
-    let icon = prompt("Masukkan Kelas Icon FontAwesome (Cth: fa-brands fa-telegram):", "fa-brands fa-telegram");
-    let url = prompt("Masukkan URL Tautan:");
-    if (name && url) {
-        aboutConfig.socials.push({ name, icon: icon || 'fa-solid fa-globe', url });
-        localStorage.setItem('frh_about_config', JSON.stringify(aboutConfig));
-        renderAdminAboutConfig();
-        showToast('Sosial media berhasil ditambahkan.', 'success');
-    }
-}
-
-function removeAboutSocial(idx) {
-    aboutConfig.socials.splice(idx, 1);
-    localStorage.setItem('frh_about_config', JSON.stringify(aboutConfig));
-    renderAdminAboutConfig();
-    showToast('Sosial media dihapus.', 'success');
-}
-
-/* ========================================================
-   MANAJEMEN KATEGORI & LINK MANUAL
+   MANAJEMEN KATEGORI & SUB-KATEGORI MANUAL
    ======================================================== */
 function updateSubCategories() {
     const mainCatSelect = document.getElementById('up-category');
@@ -411,6 +241,9 @@ function removeSubCategory(mainCat, idx) {
     }
 }
 
+/* ========================================================
+   POIN 1: FITUR KUSTOMISASI NAMA LINK BEBAS
+   ======================================================== */
 function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '') {
     const container = document.getElementById('dynamic-links-container');
     if (!container) return;
@@ -421,7 +254,7 @@ function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '') {
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
         <input type="text" placeholder="Nama Link (Cth: VVIP Server 1)..." value="${nameVal}" class="w-full sm:w-52 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
-        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 shadow-inner text-slate-200 link-url-input" required>
+        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
         <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl transition-all text-xs cursor-pointer shadow-md"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(div);
@@ -483,7 +316,7 @@ function sendTelegramNotification(text) {
     let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
     let data = {
         chat_id: telegramConfig.chatId,
-        text: `🤖 [RapzResource HUB v20]\n${text}`,
+        text: `🤖 [RapzResource HUB v18]\n${text}`,
         parse_mode: 'HTML'
     };
     fetch(url, {
@@ -654,27 +487,17 @@ function formatFileSizeInput(el) {
     }
 }
 
-/* ========================================================
-   MANAJEMEN AUTH (LOGIN & REGISTER DENGAN FIELD BARU)
-   ======================================================== */
 function switchAuthTab(tab) {
-    const loginCard = document.getElementById('auth-card-login');
-    const regCard = document.getElementById('auth-card-register');
-    const tabLogin = document.getElementById('auth-tab-login');
-    const tabReg = document.getElementById('auth-tab-register');
-
-    if (!loginCard || !regCard) return;
-
     if (tab === 'login') {
-        loginCard.classList.remove('hidden');
-        regCard.classList.add('hidden');
-        if (tabLogin) tabLogin.className = "flex-1 py-3 text-xs font-extrabold rounded-2xl transition-all text-cyan-400 bg-slate-800/90 shadow-xl border border-cyan-500/30 flex items-center justify-center gap-2 cursor-pointer";
-        if (tabReg) tabReg.className = "flex-1 py-3 text-xs font-bold rounded-2xl transition-all text-slate-400 hover:text-slate-200 bg-slate-950/40 border border-slate-800/60 flex items-center justify-center gap-2 cursor-pointer";
+        document.getElementById('form-login-unified').classList.remove('hidden');
+        document.getElementById('form-reg-unified').classList.add('hidden');
+        document.getElementById('tab-login').className = "flex-1 py-3 text-xs font-bold rounded-xl transition-all text-cyan-400 bg-slate-800/90 shadow-lg cursor-pointer flex items-center justify-center gap-2";
+        document.getElementById('tab-reg').className = "flex-1 py-3 text-xs font-semibold rounded-xl transition-all text-slate-400 hover:text-slate-200 cursor-pointer flex items-center justify-center gap-2";
     } else {
-        loginCard.classList.add('hidden');
-        regCard.classList.remove('hidden');
-        if (tabReg) tabReg.className = "flex-1 py-3 text-xs font-extrabold rounded-2xl transition-all text-cyan-400 bg-slate-800/90 shadow-xl border border-cyan-500/30 flex items-center justify-center gap-2 cursor-pointer";
-        if (tabLogin) tabLogin.className = "flex-1 py-3 text-xs font-bold rounded-2xl transition-all text-slate-400 hover:text-slate-200 bg-slate-950/40 border border-slate-800/60 flex items-center justify-center gap-2 cursor-pointer";
+        document.getElementById('form-login-unified').classList.add('hidden');
+        document.getElementById('form-reg-unified').classList.remove('hidden');
+        document.getElementById('tab-reg').className = "flex-1 py-3 text-xs font-bold rounded-xl transition-all text-cyan-400 bg-slate-800/90 shadow-lg cursor-pointer flex items-center justify-center gap-2";
+        document.getElementById('tab-login').className = "flex-1 py-3 text-xs font-semibold rounded-xl transition-all text-slate-400 cursor-pointer flex items-center justify-center gap-2";
     }
 }
 
@@ -683,7 +506,6 @@ function checkUnifiedAdminTrigger() {
     const pVal = document.getElementById('uni-pass').value;
     const pinContainer = document.getElementById('container-admin-pin');
 
-    if (!pinContainer) return;
     if (uVal === adminCreds.user && pVal === adminCreds.pass) {
         pinContainer.classList.remove('hidden');
     } else {
@@ -693,25 +515,18 @@ function checkUnifiedAdminTrigger() {
 
 function handleUnifiedLogin(e) {
     e.preventDefault();
-    const emailOrUser = document.getElementById('uni-user').value.trim();
+    const uVal = document.getElementById('uni-user').value.trim();
     const pVal = document.getElementById('uni-pass').value;
     const pinVal = document.getElementById('uni-pin').value;
-    const termsChecked = document.getElementById('uni-terms').checked;
-    const rememberMe = document.getElementById('remember-me-checkbox')?.checked || false;
 
-    if (!termsChecked) {
-        showToast('Anda harus menyetujui persyaratan dan ketentuan yang berlaku!', 'warning');
-        return;
-    }
-
-    if (emailOrUser === adminCreds.user && pVal === adminCreds.pass) {
+    if (uVal === adminCreds.user && pVal === adminCreds.pass) {
         const now = Date.now();
         if (now < adminLockUntil) return;
 
         if (pinVal === adminCreds.pin) {
             adminFailedAttempts = 0;
             localStorage.setItem('frh_admin_fails', adminFailedAttempts);
-            currentUser = { username: 'Super Administrator', email: 'admin@rapzresource.hub', role: 'admin' };
+            currentUser = { username: 'Super Administrator', role: 'admin' };
             resetAdminSessionTimer();
         } else {
             adminFailedAttempts++;
@@ -728,35 +543,28 @@ function handleUnifiedLogin(e) {
         }
     } else {
         let users = JSON.parse(localStorage.getItem('frh_users')) || [];
-        // Login dengan Email atau Username
-        const validUser = users.find(u => (u.email === emailOrUser || u.username === emailOrUser) && u.password === pVal);
+        const validUser = users.find(u => u.username === uVal && u.password === pVal);
         
-        if (userBans[validUser ? validUser.username : emailOrUser]) {
-            let banUntil = userBans[validUser ? validUser.username : emailOrUser];
+        if (userBans[uVal]) {
+            let banUntil = userBans[uVal];
             if (banUntil === 'permanent' || Date.now() < banUntil) {
                 showToast('Akun Anda sedang diblokir oleh Administrator.', 'error');
                 return;
             }
         }
 
-        if (!validUser) {
-            showToast('Email/Username atau Password salah!', 'error');
+        if (!validUser && uVal !== 'user') {
+            showToast('Username atau Password salah!', 'error');
             return;
         }
+        currentUser = { username: uVal, role: 'user' };
+        logUserAction(uVal, 'Masuk ke sistem');
+        recordSystemLog('akun_login', `User @${uVal} berhasil masuk ke akun.`, uVal);
 
-        currentUser = { username: validUser.username, fullName: validUser.fullName, email: validUser.email, role: 'user' };
-        logUserAction(validUser.username, 'Masuk ke sistem');
-        recordSystemLog('akun_login', `User @${validUser.username} berhasil masuk ke akun.`, validUser.username);
-
-        if (rememberMe) {
-            localStorage.setItem('frh_remembered_email', validUser.email);
-        } else {
-            localStorage.removeItem('frh_remembered_email');
-        }
-
-        if (!userLoginHistory[validUser.username]) userLoginHistory[validUser.username] = [];
-        userLoginHistory[validUser.username].unshift({ time: new Date().toLocaleString('id-ID'), status: 'Berhasil Masuk' });
-        if (userLoginHistory[validUser.username].length > 15) userLoginHistory[validUser.username].pop();
+        // Poin 5: Rekam Riwayat Login User
+        if (!userLoginHistory[uVal]) userLoginHistory[uVal] = [];
+        userLoginHistory[uVal].unshift({ time: new Date().toLocaleString('id-ID'), status: 'Berhasil Masuk' });
+        if (userLoginHistory[uVal].length > 15) userLoginHistory[uVal].pop();
         localStorage.setItem('frh_user_login_history', JSON.stringify(userLoginHistory));
     }
     localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
@@ -776,30 +584,16 @@ document.addEventListener('keypress', () => { if (currentUser && currentUser.rol
 
 function handleRegister(e) {
     e.preventDefault();
-    const fullName = document.getElementById('reg-fullname').value.trim();
     const username = document.getElementById('reg-username').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
-    const termsChecked = document.getElementById('reg-terms').checked;
-
-    if (!termsChecked) {
-        showToast('Anda harus menyetujui persyaratan dan ketentuan yang berlaku!', 'warning');
-        return;
-    }
-
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
     if (users.some(u => u.username === username)) {
         showToast('Username sudah terdaftar!', 'warning');
         return;
     }
-    if (users.some(u => u.email === email)) {
-        showToast('Email sudah terdaftar!', 'warning');
-        return;
-    }
-
-    users.push({ fullName, username, email, password });
+    users.push({ username, password });
     localStorage.setItem('frh_users', JSON.stringify(users));
-    recordSystemLog('daftar_baru', `Akun baru terdaftar dengan username @${username} dan email ${email}.`, username);
+    recordSystemLog('daftar_baru', `Akun baru terdaftar dengan username @${username}.`, username);
     showToast('Registrasi berhasil! Silakan masuk.', 'success');
     switchAuthTab('login');
 }
@@ -851,7 +645,6 @@ function checkAuthState() {
             document.getElementById('leaderboard-panel').classList.add('hidden');
             document.getElementById('requests-panel').classList.add('hidden');
             document.getElementById('livechat-panel').classList.add('hidden');
-            document.getElementById('about-panel').classList.add('hidden');
             document.getElementById('nav-profile-btn').classList.add('hidden');
             renderAdminDashboard();
         } else {
@@ -876,7 +669,7 @@ function getUserBadge(username) {
 }
 
 function switchMainView(view) {
-    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel', 'about-panel'].forEach(id => {
+    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
@@ -898,14 +691,30 @@ function switchMainView(view) {
     } else if (view === 'livechat') {
         document.getElementById('livechat-panel').classList.remove('hidden');
         renderUserLiveChatMessages();
-    } else if (view === 'about') {
-        document.getElementById('about-panel').classList.remove('hidden');
-        renderAboutPage();
     }
 }
 
 function toggleSupportChatModal() {
-    switchMainView('livechat');
+    const modal = document.getElementById('support-chat-modal');
+    if (modal) modal.classList.toggle('hidden');
+}
+
+function selectSupportCategory(cat) {
+    toggleSupportChatModal();
+    if (cat === 'Bantuan') {
+        switchMainView('livechat');
+        let introText = `[Sistem Bantuan]: Halo admin, saya butuh bantuan/kendala terkait akun atau transaksi.`;
+        if (currentUser) {
+            if (!liveChatConversations[currentUser.username]) liveChatConversations[currentUser.username] = [];
+            liveChatConversations[currentUser.username].push({ sender: currentUser.username, text: introText, time: new Date().toLocaleTimeString('id-ID') });
+            localStorage.setItem('frh_livechat_conversations', JSON.stringify(liveChatConversations));
+            renderUserLiveChatMessages();
+            sendTelegramNotification(`<b>[SUPPORT CHAT: BANTUAN]</b>\nUser: @${currentUser.username}\nPesan: ${introText}`);
+        }
+    } else if (cat === 'Request') {
+        switchMainView('requests');
+        openRequestModal();
+    }
 }
 
 function openRequestModal() {
@@ -992,7 +801,7 @@ function renderLeaderboardPage() {
 }
 
 function switchAdminTab(type) {
-    ['upload', 'manage', 'categories', 'users', 'aboutconfig', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
+    ['upload', 'manage', 'categories', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
         if(sec) sec.classList.add('hidden');
@@ -1006,7 +815,6 @@ function switchAdminTab(type) {
     if (type === 'manage') renderAdminManageList();
     if (type === 'categories') renderAdminCategoriesConfig();
     if (type === 'users') renderAdminUsersList();
-    if (type === 'aboutconfig') renderAdminAboutConfig();
     if (type === 'broadcast') {
         document.getElementById('bc-title').value = currentBroadcast.title || '';
         document.getElementById('bc-content').value = currentBroadcast.content || '';
@@ -1046,7 +854,7 @@ function renderAdminUsersList() {
             <div class="bg-slate-950/90 backdrop-blur-md p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl transition-all hover:border-slate-700">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-user-shield text-cyan-400"></i> ${u.username} (${u.email || '-'}) ${isBanned ? '<span class="text-rose-500 font-bold bg-rose-500/10 px-2 py-0.5 rounded-lg text-[10px]">Diblokir</span>' : ''}</span>
+                        <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-user-shield text-cyan-400"></i> ${u.username} ${isBanned ? '<span class="text-rose-500 font-bold bg-rose-500/10 px-2 py-0.5 rounded-lg text-[10px]">Diblokir</span>' : ''}</span>
                         <span class="text-[11px] text-slate-400 mt-1 block">Poin: <span class="text-amber-400 font-extrabold">${uPts} Pts</span> | VVIP: <span class="${isVip ? 'text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-[10px]' : 'text-slate-400'}">${isVip ? 'Aktif' : 'Non-VVIP'}</span></span>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
@@ -1506,6 +1314,7 @@ function executeRedeemReward(rew) {
         localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
     }
 
+    // Poin 5: Rekam Riwayat Redeem Berhasil
     if (!userRedeemLogHistory[uname]) userRedeemLogHistory[uname] = [];
     userRedeemLogHistory[uname].unshift({ name: rew.name, cost: rew.cost, time: new Date().toLocaleString('id-ID') });
     if (userRedeemLogHistory[uname].length > 15) userRedeemLogHistory[uname].pop();
@@ -1649,6 +1458,7 @@ function deleteResource(id) {
     document.getElementById('confirm-btn-yes').onclick = executeDeleteResource;
 }
 
+// Poin 4: Sinkronisasi riwayat jika postingan dihapus oleh admin
 function executeDeleteResource() {
     if (pendingDeleteId) {
         let deletedRes = resources.find(r => r.id === pendingDeleteId);
@@ -1728,7 +1538,7 @@ function renderAdminAnalytics() {
 
 function exportDataBackup() {
     const backupData = {
-        resources, announcements, aboutConfig,
+        resources, announcements,
         users: JSON.parse(localStorage.getItem('frh_users')) || [],
         brokenReports, userPoints, userVipSubscriptions, systemLogs,
         exportDate: new Date().toISOString()
@@ -1736,7 +1546,7 @@ function exportDataBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "rapzresource_hub_v20_backup.json");
+    dlAnchor.setAttribute("download", "rapzresource_hub_v18_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -1757,7 +1567,6 @@ function renderAdminDashboard() {
     renderAdminAnalytics();
     renderAdminUsersList();
     renderAdminCategoriesConfig();
-    renderAdminAboutConfig();
 }
 
 function filterMainCategory(cat) {
@@ -1975,6 +1784,11 @@ function renderResources() {
             const iconClass = res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400';
             const avgRating = calculateAverageRating(res);
 
+            // Poin 4: Sinkronisasi pembersihan jika postingan yang disimpan dihapus admin
+            if (isSaved && !resources.some(r => r.id === res.id)) {
+                // handled by filtering
+            }
+
             grid.innerHTML += `
                 <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-xl border ${isBroken ? 'border-rose-500/50' : 'border-slate-800/80'} rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/50 transition-all duration-300 shadow-xl group hover:-translate-y-1">
                     <div>
@@ -2077,7 +1891,7 @@ function checkUserHasCleanLinkAccess(res) {
 }
 
 /* ========================================================
-   PENGHAPUSAN TOTAL KOMPARASI & MODE BACA DI DETAIL
+   POIN 2 & 3: DETAIL POSTINGAN (Tanpa Tombol Salin/Lapor Utama & Tanpa Mode Baca)
    ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
@@ -2244,6 +2058,7 @@ function reportSpecificLink(resName, linkName) {
         addPoints(currentUser.username, 5);
         logUserAction(currentUser.username, `Melaporkan link rusak: ${reportText}`);
 
+        // Poin 5: Rekam Riwayat Laporan Link Rusak
         let uname = currentUser.username;
         if (!userReportHistory[uname]) userReportHistory[uname] = [];
         userReportHistory[uname].unshift({ reportText, time: new Date().toLocaleString('id-ID') });
@@ -2348,47 +2163,25 @@ function togglePasswordForm() {
     if (box) box.classList.toggle('hidden');
 }
 
-/* ========================================================
-   PEMBARUAN PROFILE: UBAH EMAIL DAN PASSWORD
-   ======================================================== */
-function handleChangeUserEmailAndPassword(e) {
+function handleChangeUserPassword(e) {
     e.preventDefault();
-    const newEmail = document.getElementById('new-user-email').value.trim();
     const newPass = document.getElementById('new-user-pass').value;
-
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
     let userObj = users.find(u => u.username === currentUser.username);
-
     if (userObj) {
-        if (newEmail && newEmail !== userObj.email) {
-            if (users.some(u => u.email === newEmail)) {
-                showToast('Email tersebut sudah digunakan oleh akun lain!', 'warning');
-                return;
-            }
-            userObj.email = newEmail;
-            currentUser.email = newEmail;
-            
-            let uname = currentUser.username;
-            if (!userEmailHistory[uname]) userEmailHistory[uname] = [];
-            userEmailHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: `Email diubah ke ${newEmail}` });
-            localStorage.setItem('frh_user_email_history', JSON.stringify(userEmailHistory));
-        }
-
-        if (newPass) {
-            userObj.password = newPass;
-            let uname = currentUser.username;
-            if (!userPasswordHistory[uname]) userPasswordHistory[uname] = [];
-            userPasswordHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: 'Password berhasil diubah' });
-            localStorage.setItem('frh_user_password_history', JSON.stringify(userPasswordHistory));
-        }
-
+        userObj.password = newPass;
         localStorage.setItem('frh_users', JSON.stringify(users));
-        localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
 
-        showToast('Profil (Email/Password) berhasil diperbarui!', 'success');
+        // Poin 5: Rekam Riwayat Ubah Password
+        let uname = currentUser.username;
+        if (!userPasswordHistory[uname]) userPasswordHistory[uname] = [];
+        userPasswordHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: 'Password berhasil diubah' });
+        if (userPasswordHistory[uname].length > 10) userPasswordHistory[uname].pop();
+        localStorage.setItem('frh_user_password_history', JSON.stringify(userPasswordHistory));
+
+        showToast('Password berhasil diubah!', 'success');
         document.getElementById('new-user-pass').value = '';
         togglePasswordForm();
-        renderProfilePage();
     }
 }
 
@@ -2458,6 +2251,7 @@ function claimProfileQuest(questId, target, type, reward) {
         addPoints(uname, reward);
         addExpAndLevelProgress(uname, 25); 
 
+        // Poin 5: Rekam Riwayat Quest Selesai
         if (!userQuestHistory[uname]) userQuestHistory[uname] = [];
         let qDef = profileQuestsDefinition.find(q => q.id === questId);
         userQuestHistory[uname].unshift({ title: qDef ? qDef.title : questId, reward, time: new Date().toLocaleString('id-ID') });
@@ -2473,6 +2267,9 @@ function claimProfileQuest(questId, target, type, reward) {
     }
 }
 
+/* ========================================================
+   POIN 5: RENDER RIWAYAT LENGKAP DI PROFIL USER
+   ======================================================== */
 function renderProfilePage() {
     let uname = currentUser.username;
     document.getElementById('profile-username').textContent = uname;
@@ -2527,6 +2324,7 @@ function renderProfilePage() {
 
     renderUserRedeemRewardsList();
 
+    // Poin 4 & 5: Sinkronisasi Riwayat Lihat Post (hapus jika post aslinya dihapus admin)
     const viewList = document.getElementById('profile-view-history-list');
     if (viewList) {
         viewList.innerHTML = '';
@@ -2544,6 +2342,7 @@ function renderProfilePage() {
         }
     }
 
+    // Poin 4 & 5: Sinkronisasi Riwayat Post Disimpan (hapus jika post aslinya dihapus admin)
     const savedList = document.getElementById('profile-saved-list');
     if (savedList) {
         savedList.innerHTML = '';
@@ -2558,10 +2357,12 @@ function renderProfilePage() {
         }
     }
 
+    // Render Riwayat Tambahan Sesuai Poin 5 di Profil
     renderAdditionalUserHistories(uname);
 }
 
 function renderAdditionalUserHistories(uname) {
+    // Buat container riwayat lengkap tambahan jika belum ada di DOM profile
     let profileExtraContainer = document.getElementById('profile-extra-histories');
     if (!profileExtraContainer) {
         const parentProfile = document.getElementById('profile-panel');
@@ -2581,7 +2382,6 @@ function renderAdditionalUserHistories(uname) {
     let redeems = userRedeemLogHistory[uname] || [];
     let reports = userReportHistory[uname] || [];
     let passwords = userPasswordHistory[uname] || [];
-    let emails = userEmailHistory[uname] || [];
 
     profileExtraContainer.innerHTML = `
         <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
@@ -2612,14 +2412,7 @@ function renderAdditionalUserHistories(uname) {
             </div>
         </div>
 
-        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
-            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-envelope text-cyan-400"></i> Riwayat Ubah Email</h4>
-            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                ${emails.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat ubah email.</p>' : emails.map(em => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${em.info}</span><span class="text-slate-500">${em.time}</span></div>`).join('')}
-            </div>
-        </div>
-
-        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl md:col-span-2">
             <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-key text-blue-400"></i> Riwayat Ubah Password</h4>
             <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
                 ${passwords.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat ubah password.</p>' : passwords.map(p => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${p.info}</span><span class="text-slate-500">${p.time}</span></div>`).join('')}
