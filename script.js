@@ -4,9 +4,9 @@ let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
 let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
-let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v15. Fokus Script Mobile Legends dan Free Fire dengan sub-kategori lengkap!" };
+let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v16. Tampilan baru lebih modern, profesional, berikon, dan beranimasi!" };
 
-// STRUKTUR KATEGORI & SUB-KATEGORI (Bisa ditambah manual oleh Admin)
+// STRUKTUR KATEGORI & SUB-KATEGORI
 let categoryConfig = JSON.parse(localStorage.getItem('frh_category_config')) || {
     "Script Mobile Legends": ["Script Skin", "Script Anti Lag", "Script Booster", "Game Booster"],
     "Script Free Fire": ["Script Skin", "Script Anti Lag", "Script Aimbot"]
@@ -18,7 +18,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
         name: "Script Skin Epic MLBB v1",
         category: "Script Mobile Legends",
         subcategory: "Script Skin",
-        typeUpload: "file",
+        typeUpload: "link",
         version: "v1.0",
         links: [
             { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1" },
@@ -45,7 +45,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Pembaruan RapzResource HUB v15", content: "Fokus penuh pada Script Mobile Legends dan Free Fire, sub-kategori kustom, serta upload link manual dinamis.", date: "12 Agustus 2026" }
+    { id: 1, title: "Pembaruan RapzResource HUB v16", content: "Pembaruan UI Modern, Animasi Halus, dan Penghapusan Fitur Upload File Lokal demi Stabilitas.", date: "12 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
@@ -75,7 +75,7 @@ let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || [];
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di RapzResource HUB v15!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di RapzResource HUB v16!", type: 'info', read: false, time: "Baru saja" }
 ];
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
@@ -153,18 +153,18 @@ function renderAdminCategoriesConfig() {
 
     (categoryConfig["Script Mobile Legends"] || []).forEach((sub, idx) => {
         mlList.innerHTML += `
-            <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs">
-                <span class="text-slate-200 font-semibold">${sub}</span>
-                <button onclick="removeSubCategory('Script Mobile Legends', ${idx})" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            <div class="flex items-center justify-between bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-800 text-xs shadow-md transition-all hover:border-cyan-500/40">
+                <span class="text-slate-200 font-semibold flex items-center gap-2"><i class="fa-solid fa-folder-open text-cyan-400"></i> ${sub}</span>
+                <button onclick="removeSubCategory('Script Mobile Legends', ${idx})" class="text-rose-400 hover:text-rose-300 p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 transition-all"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
     });
 
     (categoryConfig["Script Free Fire"] || []).forEach((sub, idx) => {
         ffList.innerHTML += `
-            <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs">
-                <span class="text-slate-200 font-semibold">${sub}</span>
-                <button onclick="removeSubCategory('Script Free Fire', ${idx})" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            <div class="flex items-center justify-between bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-slate-800 text-xs shadow-md transition-all hover:border-amber-500/40">
+                <span class="text-slate-200 font-semibold flex items-center gap-2"><i class="fa-solid fa-folder-open text-amber-400"></i> ${sub}</span>
+                <button onclick="removeSubCategory('Script Free Fire', ${idx})" class="text-rose-400 hover:text-rose-300 p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 transition-all"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
     });
@@ -201,7 +201,7 @@ function removeSubCategory(mainCat, idx) {
 }
 
 /* ========================================================
-   MANAJEMEN LINK DINAMIS MANUAL (Mendukung Multi VVIP Direct Upload via Admin)
+   MANAJEMEN LINK URL MANUAL BERBASIS URL (Tanpa Upload File Lokal)
    ======================================================== */
 function addCustomLinkRow(nameVal = '', urlVal = '') {
     const container = document.getElementById('dynamic-links-container');
@@ -209,36 +209,18 @@ function addCustomLinkRow(nameVal = '', urlVal = '') {
     const rowId = Date.now() + Math.random();
 
     let div = document.createElement('div');
-    div.className = "flex flex-col sm:flex-row items-center gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800";
+    div.className = "flex flex-col sm:flex-row items-center gap-3 bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-lg animate-fadeIn";
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
-        <select class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold" required>
+        <select class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
             <option value="Link Iklan (Free)" ${nameVal === 'Link Iklan (Free)' ? 'selected' : ''}>Link Iklan (Free)</option>
             <option value="Link Tanpa Iklan (VVIP)" ${nameVal === 'Link Tanpa Iklan (VVIP)' ? 'selected' : ''}>Link Tanpa Iklan (VVIP)</option>
             <option value="Direct File (VVIP)" ${nameVal === 'Direct File (VVIP)' ? 'selected' : ''}>Direct File (VVIP)</option>
         </select>
-        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-url-input" required>
-        <input type="file" onchange="handleAdminDirectFileUpload(this, '${rowId}')" class="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-cyan-500 file:text-slate-950 hover:file:bg-cyan-400 cursor-pointer" title="Upload File Langsung ke Web">
-        <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-2.5 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-lg transition-all text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
+        <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl transition-all text-xs cursor-pointer shadow-md"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(div);
-}
-
-function handleAdminDirectFileUpload(fileInput, rowId) {
-    const file = fileInput.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const row = document.getElementById(`link-row-${rowId}`);
-        if (row) {
-            const urlInput = row.querySelector('.link-url-input');
-            if (urlInput) {
-                urlInput.value = e.target.result; // Menyimpan Base64 file langsung ke URL input manual
-                alert(`File "${file.name}" berhasil diunggah secara lokal ke sistem!`);
-            }
-        }
-    };
-    reader.readAsDataURL(file);
 }
 
 /* ========================================================
@@ -300,7 +282,7 @@ function sendTelegramNotification(text) {
     let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
     let data = {
         chat_id: telegramConfig.chatId,
-        text: `🤖 [RapzResource HUB v15]\n${text}`,
+        text: `🤖 [RapzResource HUB v16]\n${text}`,
         parse_mode: 'HTML'
     };
     fetch(url, {
@@ -337,13 +319,13 @@ function renderBroadcastBanner() {
         return;
     }
     bannerBox.innerHTML = `
-        <div class="bg-slate-900 border border-cyan-500/40 rounded-2xl p-4 shadow-lg space-y-2">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 border border-cyan-500/30 rounded-2xl p-4 shadow-xl space-y-2 backdrop-blur-md animate-fadeIn">
             <div class="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                <i class="fa-solid fa-bullhorn animate-pulse"></i> ${currentBroadcast.title}
+                <i class="fa-solid fa-bullhorn animate-bounce"></i> ${currentBroadcast.title}
             </div>
-            <div class="overflow-hidden relative bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                <div class="animate-marquee text-xs text-slate-200 font-semibold">
-                    ${currentBroadcast.content}
+            <div class="overflow-hidden relative bg-slate-950/80 p-3 rounded-xl border border-slate-800/80 shadow-inner">
+                <div class="animate-marquee text-xs text-slate-200 font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-cyan-400"></i> ${currentBroadcast.content}
                 </div>
             </div>
         </div>
@@ -395,19 +377,20 @@ function renderNotifications() {
     }
 
     if (notifications.length === 0) {
-        list.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada notifikasi.</p>`;
+        list.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2"><i class="fa-regular fa-bell-slash"></i> Tidak ada notifikasi.</p>`;
         return;
     }
 
     notifications.forEach(n => {
         let borderColor = 'border-cyan-500/30';
-        if (n.type === 'admin') borderColor = 'border-amber-500/30';
-        if (n.type === 'danger') borderColor = 'border-rose-500/30';
+        let iconCol = 'text-cyan-400 fa-circle-info';
+        if (n.type === 'admin') { borderColor = 'border-amber-500/30'; iconCol = 'text-amber-400 fa-triangle-exclamation'; }
+        if (n.type === 'danger') { borderColor = 'border-rose-500/30'; iconCol = 'text-rose-400 fa-circle-exclamation'; }
 
         list.innerHTML += `
-            <div class="bg-slate-950 p-2.5 rounded-xl border ${borderColor} text-xs space-y-1 ${n.read ? 'opacity-60' : ''}">
-                <p class="text-slate-300">${n.text}</p>
-                <span class="text-[9px] text-slate-500">Baru saja</span>
+            <div class="bg-slate-950/90 backdrop-blur-md p-3 rounded-2xl border ${borderColor} text-xs space-y-1 shadow-md transition-all hover:scale-[1.01] ${n.read ? 'opacity-60' : ''}">
+                <p class="text-slate-300 flex items-start gap-2"><i class="fa-solid ${iconCol} mt-0.5"></i> <span>${n.text}</span></p>
+                <span class="text-[9px] text-slate-500 block text-right"><i class="fa-regular fa-clock"></i> Baru saja</span>
             </div>
         `;
     });
@@ -474,13 +457,13 @@ function switchAuthTab(tab) {
     if (tab === 'login') {
         document.getElementById('form-login-unified').classList.remove('hidden');
         document.getElementById('form-reg-unified').classList.add('hidden');
-        document.getElementById('tab-login').className = "flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-cyan-400 bg-slate-800 shadow-sm cursor-pointer";
-        document.getElementById('tab-reg').className = "flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200 cursor-pointer";
+        document.getElementById('tab-login').className = "flex-1 py-3 text-xs font-bold rounded-xl transition-all text-cyan-400 bg-slate-800/90 shadow-lg cursor-pointer flex items-center justify-center gap-2";
+        document.getElementById('tab-reg').className = "flex-1 py-3 text-xs font-semibold rounded-xl transition-all text-slate-400 hover:text-slate-200 cursor-pointer flex items-center justify-center gap-2";
     } else {
         document.getElementById('form-login-unified').classList.add('hidden');
         document.getElementById('form-reg-unified').classList.remove('hidden');
-        document.getElementById('tab-reg').className = "flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-cyan-400 bg-slate-800 shadow-sm cursor-pointer";
-        document.getElementById('tab-login').className = "flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-slate-400 cursor-pointer";
+        document.getElementById('tab-reg').className = "flex-1 py-3 text-xs font-bold rounded-xl transition-all text-cyan-400 bg-slate-800/90 shadow-lg cursor-pointer flex items-center justify-center gap-2";
+        document.getElementById('tab-login').className = "flex-1 py-3 text-xs font-semibold rounded-xl transition-all text-slate-400 cursor-pointer flex items-center justify-center gap-2";
     }
 }
 
@@ -727,17 +710,17 @@ function renderCommunityRequests() {
     
     let reports = brokenReports;
     if (reports.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada laporan link rusak.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-solid fa-circle-check text-emerald-400"></i> Belum ada laporan link rusak.</p>`;
         return;
     }
     reports.forEach((rep, idx) => {
         list.innerHTML += `
-            <div class="bg-slate-950 p-4 rounded-xl border border-rose-500/30 flex justify-between items-center text-xs">
+            <div class="bg-slate-950/80 backdrop-blur-md p-4 rounded-2xl border border-rose-500/30 flex justify-between items-center text-xs shadow-lg transition-all hover:border-rose-500/60">
                 <div>
-                    <span class="font-bold text-rose-400 text-sm block">Script: ${rep.resName}</span>
-                    <span class="text-[10px] text-slate-400 mt-1 inline-block">Dilaporkan oleh user: @${rep.user}</span>
+                    <span class="font-bold text-rose-400 text-sm block flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Script: ${rep.resName}</span>
+                    <span class="text-[10px] text-slate-400 mt-1 inline-block"><i class="fa-solid fa-user"></i> Dilaporkan oleh user: @${rep.user}</span>
                 </div>
-                ${currentUser.role === 'admin' ? `<button onclick="resolveBrokenReport(${idx})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg cursor-pointer">Selesaikan / Hapus Laporan</button>` : ''}
+                ${currentUser.role === 'admin' ? `<button onclick="resolveBrokenReport(${idx})" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl cursor-pointer shadow-md transition-all hover:scale-105 flex items-center gap-1.5"><i class="fa-solid fa-check text-emerald-400"></i> Selesaikan</button>` : ''}
             </div>
         `;
     });
@@ -763,17 +746,18 @@ function renderLeaderboardPage() {
 
     ranking.forEach((r, idx) => {
         let rankBadge = `#${idx + 1}`;
-        if (idx === 0) rankBadge = '👑 #1';
-        if (idx === 1) rankBadge = '🥈 #2';
-        if (idx === 2) rankBadge = '🥉 #3';
+        let badgeColor = 'text-slate-300 bg-slate-900 border-slate-800';
+        if (idx === 0) { rankBadge = '👑 #1'; badgeColor = 'text-amber-300 bg-amber-500/10 border-amber-500/30 font-extrabold shadow-lg shadow-amber-500/10 animate-pulse'; }
+        if (idx === 1) { rankBadge = '🥈 #2'; badgeColor = 'text-slate-200 bg-slate-800 border-slate-700 font-bold'; }
+        if (idx === 2) { rankBadge = '🥉 #3'; badgeColor = 'text-amber-600 bg-amber-900/20 border-amber-800/40 font-bold'; }
 
         list.innerHTML += `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+            <div class="bg-slate-950/80 backdrop-blur-md p-4 rounded-2xl border ${badgeColor} flex items-center justify-between text-xs shadow-lg transition-all hover:scale-[1.01]">
                 <div class="flex items-center gap-3">
-                    <span class="font-bold text-amber-400 w-10">${rankBadge}</span>
-                    <span class="font-bold text-white">${r.username}</span>
+                    <span class="w-12 text-center py-1 rounded-xl bg-slate-900 border border-slate-800 font-bold ${rankBadge.includes('👑') ? 'text-amber-400' : 'text-cyan-400'}">${rankBadge}</span>
+                    <span class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-circle text-cyan-400"></i> ${r.username}</span>
                 </div>
-                <div class="text-cyan-400 font-bold">${r.points} Pts</div>
+                <div class="text-cyan-400 font-extrabold flex items-center gap-1"><i class="fa-solid fa-coins text-amber-400"></i> ${r.points} Pts</div>
             </div>
         `;
     });
@@ -784,12 +768,12 @@ function switchAdminTab(type) {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
         if(sec) sec.classList.add('hidden');
-        if(btn) btn.className = "px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer";
+        if(btn) btn.className = "px-4 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-2xl transition-all cursor-pointer shadow-md border border-slate-800/80 flex items-center gap-2";
     });
     const targetSec = document.getElementById(`admin-${type}-section`);
     const targetBtn = document.getElementById(`btn-tab-${type}`);
     if(targetSec) targetSec.classList.remove('hidden');
-    if(targetBtn) targetBtn.className = "px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer";
+    if(targetBtn) targetBtn.className = "px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold text-xs rounded-2xl transition-all shadow-xl shadow-amber-500/20 cursor-pointer flex items-center gap-2 scale-105";
     
     if (type === 'manage') renderAdminManageList();
     if (type === 'categories') renderAdminCategoriesConfig();
@@ -815,7 +799,7 @@ function renderAdminUsersList() {
     list.innerHTML = '';
     let users = JSON.parse(localStorage.getItem('frh_users')) || [];
     if (users.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500">Belum ada user terdaftar.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada user terdaftar.</p>`;
         return;
     }
     users.forEach((u) => {
@@ -826,36 +810,36 @@ function renderAdminUsersList() {
 
         let postCheckboxes = resources.map(res => {
             let isUnlocked = unlockedArr.includes(res.id);
-            return `<label class="flex items-center gap-1.5 text-[10px] text-slate-300"><input type="checkbox" ${isUnlocked ? 'checked' : ''} onchange="toggleAdminUserPostAccess('${u.username}', ${res.id})" class="accent-cyan-500"> ${res.name}</label>`;
+            return `<label class="flex items-center gap-1.5 text-[10px] text-slate-300 bg-slate-900/80 p-2 rounded-xl border border-slate-800"><input type="checkbox" ${isUnlocked ? 'checked' : ''} onchange="toggleAdminUserPostAccess('${u.username}', ${res.id})" class="accent-cyan-500 rounded"> <span class="truncate">${res.name}</span></label>`;
         }).join('');
 
         list.innerHTML += `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div class="bg-slate-950/90 backdrop-blur-md p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl transition-all hover:border-slate-700">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <span class="font-bold text-white text-sm block">${u.username} ${isBanned ? '<span class="text-rose-500 font-bold">(Diblokir)</span>' : ''}</span>
-                        <span class="text-[10px] text-slate-400">Poin: <span class="text-amber-400 font-bold">${uPts} Pts</span> | VVIP: <span class="${isVip ? 'text-amber-400 font-bold' : 'text-slate-400'}">${isVip ? 'Aktif' : 'Non-VVIP'}</span></span>
+                        <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-user-shield text-cyan-400"></i> ${u.username} ${isBanned ? '<span class="text-rose-500 font-bold bg-rose-500/10 px-2 py-0.5 rounded-lg text-[10px]">Diblokir</span>' : ''}</span>
+                        <span class="text-[11px] text-slate-400 mt-1 block">Poin: <span class="text-amber-400 font-extrabold">${uPts} Pts</span> | VVIP: <span class="${isVip ? 'text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-[10px]' : 'text-slate-400'}">${isVip ? 'Aktif' : 'Non-VVIP'}</span></span>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center">
-                        <button onclick="adminAddPoints('${u.username}')" class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 font-bold rounded cursor-pointer">+ Poin</button>
-                        <button onclick="adminSubPoints('${u.username}')" class="px-2.5 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">- Poin</button>
-                        <button onclick="toggleVipSubscription('${u.username}')" class="px-2.5 py-1 ${isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'} font-bold rounded cursor-pointer">${isVip ? 'Cabut VVIP' : 'Beri VVIP'}</button>
-                        <button onclick="adminResetUser('${u.username}')" class="px-2.5 py-1 bg-cyan-500/20 text-cyan-400 font-bold rounded cursor-pointer">Reset</button>
-                        <button onclick="adminDeleteUser('${u.username}')" class="px-2.5 py-1 bg-rose-500 text-slate-950 font-bold rounded cursor-pointer">Hapus</button>
+                        <button onclick="adminAddPoints('${u.username}')" class="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-plus"></i> Poin</button>
+                        <button onclick="adminSubPoints('${u.username}')" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-minus"></i> Poin</button>
+                        <button onclick="toggleVipSubscription('${u.username}')" class="px-3 py-1.5 ${isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-amber-400'} font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-crown"></i> ${isVip ? 'Cabut VVIP' : 'Beri VVIP'}</button>
+                        <button onclick="adminResetUser('${u.username}')" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-rotate-right"></i> Reset</button>
+                        <button onclick="adminDeleteUser('${u.username}')" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-trash"></i> Hapus</button>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-2 items-center pt-2 border-t border-slate-900">
-                    <span class="text-[10px] font-bold text-slate-400">Blokir:</span>
-                    <button onclick="adminBanUser('${u.username}', 7)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] cursor-pointer">7 Hari</button>
-                    <button onclick="adminBanUser('${u.username}', 12)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] cursor-pointer">12 Hari</button>
-                    <button onclick="adminBanUser('${u.username}', 120)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] cursor-pointer">120 Hari</button>
-                    <button onclick="adminBanUser('${u.username}', 9999)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] cursor-pointer">9999 Hari</button>
-                    <button onclick="adminBanUser('${u.username}', 'permanent')" class="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded text-[10px] cursor-pointer">Permanen</button>
-                    <button onclick="adminUnbanUser('${u.username}')" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] cursor-pointer">Buka Blokir</button>
+                <div class="flex flex-wrap gap-2 items-center pt-3 border-t border-slate-900">
+                    <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1"><i class="fa-solid fa-ban text-rose-400"></i> Blokir:</span>
+                    <button onclick="adminBanUser('${u.username}', 7)" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[10px] cursor-pointer border border-slate-800 transition-all">7 Hari</button>
+                    <button onclick="adminBanUser('${u.username}', 12)" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[10px] cursor-pointer border border-slate-800 transition-all">12 Hari</button>
+                    <button onclick="adminBanUser('${u.username}', 120)" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[10px] cursor-pointer border border-slate-800 transition-all">120 Hari</button>
+                    <button onclick="adminBanUser('${u.username}', 9999)" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-[10px] cursor-pointer border border-slate-800 transition-all">9999 Hari</button>
+                    <button onclick="adminBanUser('${u.username}', 'permanent')" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-xl text-[10px] cursor-pointer border border-rose-500/30 transition-all font-bold">Permanen</button>
+                    <button onclick="adminUnbanUser('${u.username}')" class="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-xl text-[10px] cursor-pointer border border-emerald-500/30 transition-all font-bold"><i class="fa-solid fa-unlock"></i> Buka Blokir</button>
                 </div>
-                <div class="border-t border-slate-900 pt-2">
-                    <span class="text-[11px] font-semibold text-cyan-400 block mb-1">Akses Postingan Khusus:</span>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${postCheckboxes || '<span class="text-slate-500 text-[10px]">Belum ada post</span>'}</div>
+                <div class="border-t border-slate-900 pt-3">
+                    <span class="text-[11px] font-bold text-cyan-400 block mb-2 flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Akses Postingan Khusus:</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">${postCheckboxes || '<span class="text-slate-500 text-[10px]">Belum ada post</span>'}</div>
                 </div>
             </div>
         `;
@@ -956,8 +940,8 @@ function filterLogsCategory(cat) {
         const btn = document.getElementById(`log-btn-${c}`);
         if(btn) {
             btn.className = c === cat 
-                ? "px-3 py-1 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer"
-                : "px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer";
+                ? "px-3.5 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-xl cursor-pointer shadow-md transition-all"
+                : "px-3.5 py-1.5 bg-slate-900 text-slate-300 hover:bg-slate-800 rounded-xl cursor-pointer border border-slate-800 transition-all";
         }
     });
     renderAdminLogsList();
@@ -974,18 +958,18 @@ function renderAdminLogsList() {
     });
 
     if (filtered.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada logs.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-solid fa-list-check"></i> Belum ada logs.</p>`;
         return;
     }
 
     filtered.forEach(lg => {
         list.innerHTML += `
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+            <div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 space-y-1.5 shadow-md">
                 <div class="flex justify-between items-center text-[10px]">
-                    <span class="px-2 py-0.5 rounded border font-bold uppercase text-cyan-400 bg-cyan-500/20">${lg.type}</span>
-                    <span class="text-slate-500">${lg.time}</span>
+                    <span class="px-2.5 py-0.5 rounded-lg border font-extrabold uppercase text-cyan-400 bg-cyan-500/10 border-cyan-500/20"><i class="fa-solid fa-terminal"></i> ${lg.type}</span>
+                    <span class="text-slate-500 flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${lg.time}</span>
                 </div>
-                <p class="text-slate-200">${lg.detail} <span class="text-cyan-400 font-bold">(@${lg.user})</span></p>
+                <p class="text-slate-200 text-xs">${lg.detail} <span class="text-cyan-400 font-bold">(@${lg.user})</span></p>
             </div>
         `;
     });
@@ -1000,8 +984,9 @@ function renderAdminLiveChatUsers() {
     users.forEach(u => {
         let isSel = activeChatUser === u.username;
         list.innerHTML += `
-            <div onclick="selectActiveChatUser('${u.username}')" class="p-2.5 rounded-xl cursor-pointer text-xs font-semibold flex justify-between items-center ${isSel ? 'bg-cyan-500 text-slate-950' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}">
-                <span>${u.username}</span>
+            <div onclick="selectActiveChatUser('${u.username}')" class="p-3 rounded-2xl cursor-pointer text-xs font-semibold flex justify-between items-center transition-all ${isSel ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20 scale-102' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800'}">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-user"></i> ${u.username}</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
             </div>
         `;
     });
@@ -1022,23 +1007,23 @@ function renderAdminChatMessages() {
         box.innerHTML = '';
         return;
     }
-    header.textContent = `Chat Real-Time dengan: @${activeChatUser}`;
+    header.innerHTML = `<i class="fa-solid fa-comments text-cyan-400"></i> Chat Real-Time dengan: @${activeChatUser}`;
     box.innerHTML = '';
     let msgs = liveChatConversations[activeChatUser] || [];
     if (msgs.length === 0) {
-        box.innerHTML = `<p class="text-slate-500 text-center">Belum ada pesan.</p>`;
+        box.innerHTML = `<p class="text-slate-500 text-center py-6">Belum ada pesan.</p>`;
         return;
     }
     msgs.forEach(m => {
         let isMe = m.sender === 'superadmin';
         box.innerHTML += `
-            <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1 ${isMe ? 'border-cyan-500/30' : ''}">
+            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/80 space-y-1.5 shadow-md ${isMe ? 'border-cyan-500/30 bg-cyan-950/20' : ''}">
                 <div class="flex justify-between text-[10px] text-slate-400">
-                    <span class="font-bold text-cyan-400">${m.sender}</span>
-                    <span>${m.time}</span>
+                    <span class="font-bold text-cyan-400 flex items-center gap-1"><i class="fa-solid fa-user-circle"></i> ${m.sender}</span>
+                    <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${m.time}</span>
                 </div>
-                <p class="text-slate-200">${m.text}</p>
-                ${m.img ? `<img src="${m.img}" class="max-h-32 rounded-lg mt-1 border border-slate-800">` : ''}
+                <p class="text-slate-200 text-xs">${m.text}</p>
+                ${m.img ? `<img src="${m.img}" class="max-h-36 rounded-xl mt-1.5 border border-slate-800 shadow-lg">` : ''}
             </div>
         `;
     });
@@ -1089,19 +1074,19 @@ function renderUserLiveChatMessages() {
     if (!currentUser) return;
     let msgs = liveChatConversations[currentUser.username] || [];
     if (msgs.length === 0) {
-        box.innerHTML = `<p class="text-slate-500 text-center">Mulai chat dengan admin...</p>`;
+        box.innerHTML = `<p class="text-slate-500 text-center py-6"><i class="fa-regular fa-comment-dots text-2xl mb-2 block text-cyan-400"></i> Mulai chat dengan admin...</p>`;
         return;
     }
     msgs.forEach(m => {
         let isMe = m.sender === currentUser.username;
         box.innerHTML += `
-            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1 ${isMe ? 'border-cyan-500/30' : ''}">
+            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/80 space-y-1.5 shadow-md ${isMe ? 'border-cyan-500/30 bg-cyan-950/20' : ''}">
                 <div class="flex justify-between text-[10px] text-slate-400">
-                    <span class="font-bold text-cyan-400">${m.sender}</span>
-                    <span>${m.time}</span>
+                    <span class="font-bold text-cyan-400 flex items-center gap-1"><i class="fa-solid fa-user-circle"></i> ${m.sender}</span>
+                    <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${m.time}</span>
                 </div>
-                <p class="text-slate-200">${m.text}</p>
-                ${m.img ? `<img src="${m.img}" class="max-h-32 rounded-lg mt-1 border border-slate-800">` : ''}
+                <p class="text-slate-200 text-xs">${m.text}</p>
+                ${m.img ? `<img src="${m.img}" class="max-h-36 rounded-xl mt-1.5 border border-slate-800 shadow-lg">` : ''}
             </div>
         `;
     });
@@ -1150,12 +1135,12 @@ function renderAdminRewardsList() {
     list.innerHTML = '';
     redeemRewards.forEach((rew, idx) => {
         list.innerHTML += `
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+            <div class="bg-slate-950/90 backdrop-blur-md p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs shadow-lg">
                 <div>
-                    <span class="font-bold text-white">${rew.name}</span>
-                    <span class="text-amber-400 block">${rew.cost} Poin | Tipe: ${rew.type} | Max/User: ${rew.limitPerUser || 1} | Kuota: ${rew.claimedCount || 0}/${rew.quota || 100}</span>
+                    <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-gift text-amber-400"></i> ${rew.name}</span>
+                    <span class="text-amber-400 font-bold block mt-1 flex items-center gap-1"><i class="fa-solid fa-coins"></i> ${rew.cost} Poin | Tipe: ${rew.type} | Max/User: ${rew.limitPerUser || 1} | Kuota: ${rew.claimedCount || 0}/${rew.quota || 100}</span>
                 </div>
-                <button onclick="deleteReward(${idx})" class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded cursor-pointer">Hapus</button>
+                <button onclick="deleteReward(${idx})" class="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-slate-950 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1.5"><i class="fa-solid fa-trash"></i> Hapus</button>
             </div>
         `;
     });
@@ -1203,13 +1188,13 @@ function renderUserRedeemRewardsList() {
         let isDisabled = !canAfford;
 
         list.innerHTML += `
-            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col justify-between text-xs space-y-3">
+            <div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-5 rounded-2xl flex flex-col justify-between text-xs space-y-4 shadow-xl transition-all hover:border-cyan-500/40">
                 <div>
-                    <span class="font-bold text-white text-sm block">${rew.name}</span>
-                    <span class="text-amber-400 font-bold mt-1 inline-block"><i class="fa-solid fa-coins"></i> ${rew.cost} Poin</span>
-                    <span class="text-[10px] text-slate-400 block mt-0.5">Limit/User: ${userClaimedCount}/${limit} | Kuota: ${claimedTotal}/${quotaMax}</span>
+                    <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-award text-amber-400"></i> ${rew.name}</span>
+                    <span class="text-amber-400 font-extrabold mt-2 inline-block flex items-center gap-1.5"><i class="fa-solid fa-coins"></i> ${rew.cost} Poin</span>
+                    <span class="text-[10px] text-slate-400 block mt-1"><i class="fa-solid fa-chart-pie"></i> Limit/User: ${userClaimedCount}/${limit} | Kuota: ${claimedTotal}/${quotaMax}</span>
                 </div>
-                <button onclick="initRedeemReward(${rew.id})" ${isDisabled ? 'disabled' : ''} class="w-full py-2.5 ${isDisabled ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold'} rounded-xl transition-all cursor-pointer">${btnText}</button>
+                <button onclick="initRedeemReward(${rew.id})" ${isDisabled ? 'disabled' : ''} class="w-full py-3 ${isDisabled ? 'bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800' : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-slate-950 font-extrabold shadow-lg shadow-cyan-500/20'} rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"><i class="fa-solid ${isDisabled ? 'fa-lock' : 'fa-gift'}"></i> ${btnText}</button>
             </div>
         `;
     });
@@ -1243,21 +1228,21 @@ function openRedeemPostModal(rew) {
     let specialResources = resources.filter(r => r.isSpecialAccess);
 
     if (specialResources.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Tidak ada script khusus.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 text-center py-6"><i class="fa-solid fa-folder-open text-2xl mb-2 block text-cyan-400"></i> Tidak ada script khusus.</p>`;
         return;
     }
 
     specialResources.forEach(res => {
         let isAlreadyUnlocked = unlockedArr.includes(res.id);
         let btnHtml = isAlreadyUnlocked 
-            ? `<span class="text-emerald-400 font-bold text-[10px]">Sudah Dibuka</span>`
-            : `<button onclick="confirmRedeemPostAccess(${res.id}, '${rew.name}', ${rew.cost}, ${rew.id})" class="px-3 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Pilih & Buka</button>`;
+            ? `<span class="text-emerald-400 font-bold text-[11px] bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20"><i class="fa-solid fa-check"></i> Sudah Dibuka</span>`
+            : `<button onclick="confirmRedeemPostAccess(${res.id}, '${rew.name}', ${rew.cost}, ${rew.id})" class="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold rounded-xl cursor-pointer shadow-md transition-all flex items-center gap-1.5"><i class="fa-solid fa-unlock"></i> Pilih & Buka</button>`;
 
         list.innerHTML += `
-            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+            <div class="bg-slate-950/90 backdrop-blur-md p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs shadow-lg">
                 <div>
-                    <span class="font-bold text-white block">${res.name}</span>
-                    <span class="text-[10px] text-amber-400">Akses Khusus (${res.version || 'v1.0'})</span>
+                    <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-shield-halved text-cyan-400"></i> ${res.name}</span>
+                    <span class="text-[10px] text-amber-400 font-bold mt-1 inline-block flex items-center gap-1"><i class="fa-solid fa-key"></i> Akses Khusus (${res.version || 'v1.0'})</span>
                 </div>
                 <div>${btnHtml}</div>
             </div>
@@ -1297,7 +1282,7 @@ function executeRedeemReward(rew) {
 }
 
 /* ========================================================
-   UPLOAD & MANAJEMEN SCRIPT
+   UPLOAD & MANAJEMEN SCRIPT (Tanpa Upload File Lokal)
    ======================================================== */
 function setSubmitEditMode(val) { activeEditModeAction = 'edit'; }
 function setSubmitUpdateMode(val) { activeEditModeAction = 'update'; }
@@ -1387,7 +1372,7 @@ function editResource(id) {
     document.getElementById('up-category').value = res.category;
     updateSubCategories();
     document.getElementById('up-subcategory').value = res.subcategory;
-    document.getElementById('up-type-upload').value = res.typeUpload || 'file';
+    document.getElementById('up-type-upload').value = res.typeUpload || 'link';
     document.getElementById('up-version').value = res.version || 'v1.0';
     document.getElementById('up-link-size').value = res.fileSize;
     document.getElementById('up-screenshot').value = res.screenshot || '';
@@ -1467,27 +1452,27 @@ function renderAdminManageList() {
     if (!list) return;
     list.innerHTML = '';
     if (resources.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-500 col-span-full">Belum ada script.</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-500 col-span-full text-center py-6"><i class="fa-solid fa-folder-open text-2xl mb-2 block text-cyan-400"></i> Belum ada script.</p>`;
         return;
     }
     resources.forEach(res => {
         list.innerHTML += `
-            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col justify-between text-xs space-y-3">
+            <div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-5 rounded-2xl flex flex-col justify-between text-xs space-y-4 shadow-xl transition-all hover:border-cyan-500/40">
                 <div>
-                    <span class="font-bold text-white text-sm block">${res.name} (${res.version || 'v1.0'})</span>
-                    <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 inline-block mt-1">${res.category} (${res.subcategory})</span>
-                    ${res.isSpecialAccess ? '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 inline-block ml-1 font-bold">Khusus</span>' : ''}
-                    ${res.editStatus === 'Edited' ? '<span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 inline-block ml-1 font-bold">Edited</span>' : ''}
-                    ${res.editStatus === 'Updated' ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 inline-block ml-1 font-bold">Updated</span>' : ''}
+                    <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-gamepad text-cyan-400"></i> ${res.name} (${res.version || 'v1.0'})</span>
+                    <span class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 font-bold inline-block mt-2"><i class="fa-solid fa-folder"></i> ${res.category} (${res.subcategory})</span>
+                    ${res.isSpecialAccess ? '<span class="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-400 font-extrabold inline-block ml-1.5 border border-amber-500/30"><i class="fa-solid fa-key"></i> Khusus</span>' : ''}
+                    ${res.editStatus === 'Edited' ? '<span class="px-2.5 py-1 rounded-xl bg-blue-500/20 text-blue-400 font-extrabold inline-block ml-1.5 border border-blue-500/30">Edited</span>' : ''}
+                    ${res.editStatus === 'Updated' ? '<span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 font-extrabold inline-block ml-1.5 border border-emerald-500/30">Updated</span>' : ''}
                 </div>
-                <div class="flex items-center justify-between pt-2 border-t border-slate-900">
-                    <label class="flex items-center gap-1 text-[11px] text-amber-400 cursor-pointer font-semibold">
-                        <input type="checkbox" ${res.isSpecialAccess ? 'checked' : ''} onchange="toggleSpecialAccessFlag(${res.id})" class="accent-amber-500">
-                        Akses Khusus
+                <div class="flex items-center justify-between pt-3 border-t border-slate-900">
+                    <label class="flex items-center gap-2 text-[11px] text-amber-400 cursor-pointer font-bold">
+                        <input type="checkbox" ${res.isSpecialAccess ? 'checked' : ''} onchange="toggleSpecialAccessFlag(${res.id})" class="accent-amber-500 rounded">
+                        <i class="fa-solid fa-lock"></i> Akses Khusus
                     </label>
                     <div class="flex gap-2">
-                        <button onclick="editResource(${res.id})" class="px-3 py-1 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-slate-950 font-bold rounded-lg transition-all cursor-pointer">Edit</button>
-                        <button onclick="deleteResource(${res.id})" class="px-3 py-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-slate-950 font-bold rounded-lg transition-all cursor-pointer">Hapus</button>
+                        <button onclick="editResource(${res.id})" class="px-3.5 py-1.5 bg-amber-500/20 hover:bg-amber-500 text-amber-400 hover:text-slate-950 font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                        <button onclick="deleteResource(${res.id})" class="px-3.5 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-slate-950 font-bold rounded-xl transition-all cursor-pointer shadow-md flex items-center gap-1"><i class="fa-solid fa-trash"></i> Hapus</button>
                     </div>
                 </div>
             </div>
@@ -1523,7 +1508,7 @@ function exportDataBackup() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", "rapzresource_hub_v15_backup.json");
+    dlAnchor.setAttribute("download", "rapzresource_hub_v16_backup.json");
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -1556,8 +1541,8 @@ function filterMainCategory(cat) {
         let btn = document.getElementById(`main-cat-btn-${c}`) || document.getElementById(`cat-btn-${c}`);
         if(btn) {
             btn.className = c === cat 
-                ? "px-4 py-2.5 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md"
-                : "px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer";
+                ? "px-4 py-3 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-cyan-500 to-cyan-600 text-slate-950 transition-all cursor-pointer shadow-xl shadow-cyan-500/20 flex items-center gap-2 scale-105"
+                : "px-4 py-3 rounded-2xl text-xs font-bold bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer flex items-center gap-2";
         }
     });
 
@@ -1587,13 +1572,13 @@ function renderSubCategoryButtons(mainCat) {
     let subs = categoryConfig[mainCat] || [];
     
     wrapper.innerHTML += `
-        <button onclick="filterSubCategory('All')" id="sub-btn-All" class="px-3 py-1.5 rounded-lg text-xs font-bold ${currentSubCategory === 'All' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'} cursor-pointer">Semua</button>
+        <button onclick="filterSubCategory('All')" id="sub-btn-All" class="px-3.5 py-2 rounded-xl text-xs font-bold ${currentSubCategory === 'All' ? 'bg-amber-500 text-slate-950 font-extrabold shadow-lg shadow-amber-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'} cursor-pointer transition-all flex items-center gap-1.5"><i class="fa-solid fa-border-all"></i> Semua</button>
     `;
 
     subs.forEach(sub => {
         let isActive = currentSubCategory === sub;
         wrapper.innerHTML += `
-            <button onclick="filterSubCategory('${sub}')" id="sub-btn-${sub}" class="px-3 py-1.5 rounded-lg text-xs font-bold ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'} cursor-pointer">${sub}</button>
+            <button onclick="filterSubCategory('${sub}')" id="sub-btn-${sub}" class="px-3.5 py-2 rounded-xl text-xs font-bold ${isActive ? 'bg-amber-500 text-slate-950 font-extrabold shadow-lg shadow-amber-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'} cursor-pointer transition-all flex items-center gap-1.5"><i class="fa-solid fa-folder"></i> ${sub}</button>
         `;
     });
 }
@@ -1605,8 +1590,8 @@ function filterSubCategory(sub) {
         let btn = document.getElementById(`sub-btn-${s}`);
         if (btn) {
             btn.className = s === sub 
-                ? "px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer"
-                : "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer";
+                ? "px-3.5 py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 cursor-pointer transition-all flex items-center gap-1.5"
+                : "px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 cursor-pointer transition-all flex items-center gap-1.5";
         }
     });
     renderResources();
@@ -1643,16 +1628,16 @@ function renderRecentSearchDropdown() {
     box.classList.remove('hidden');
 
     if (matchedFiles.length > 0) {
-        box.innerHTML += `<div class="text-[10px] text-cyan-400 px-2 py-1 uppercase">Hasil Pencarian</div>`;
+        box.innerHTML += `<div class="text-[10px] text-cyan-400 px-3 py-1.5 uppercase font-bold tracking-wider"><i class="fa-solid fa-magnifying-glass"></i> Hasil Pencarian</div>`;
         matchedFiles.forEach(f => {
-            box.innerHTML += `<div onclick="openDetail(${f.id})" class="px-2 py-1.5 hover:bg-slate-800 rounded-lg text-xs text-slate-200 cursor-pointer flex items-center justify-between"><span class="font-bold">${f.name}</span> <span class="text-[10px] text-slate-500">${f.category}</span></div>`;
+            box.innerHTML += `<div onclick="openDetail(${f.id})" class="px-3 py-2 hover:bg-slate-800/80 rounded-xl text-xs text-slate-200 cursor-pointer flex items-center justify-between transition-all"><span class="font-bold flex items-center gap-2"><i class="fa-solid fa-gamepad text-cyan-400"></i> ${f.name}</span> <span class="text-[10px] text-slate-500">${f.category}</span></div>`;
         });
     }
 
     if (userRecentSearches.length > 0) {
-        box.innerHTML += `<div class="text-[10px] text-slate-500 px-2.5 py-1 uppercase border-t border-slate-800 mt-1 flex justify-between items-center"><span>Pencarian Terakhir</span></div>`;
+        box.innerHTML += `<div class="text-[10px] text-slate-500 px-3 py-1.5 uppercase font-bold tracking-wider border-t border-slate-800 mt-1 flex justify-between items-center"><span><i class="fa-solid fa-clock-rotate-left"></i> Pencarian Terakhir</span></div>`;
         userRecentSearches.forEach((term, index) => {
-            box.innerHTML += `<div class="px-2 py-1.5 hover:bg-slate-800 rounded-lg text-xs text-slate-300 flex items-center justify-between"><span onclick="selectRecentSearch('${term}')" class="cursor-pointer flex-1"><i class="fa-solid fa-clock-rotate-left text-slate-500 mr-2"></i> ${term}</span><button onclick="removeSearchItem(event, ${index})" class="text-rose-400 hover:text-rose-300 px-1"><i class="fa-solid fa-xmark"></i></button></div>`;
+            box.innerHTML += `<div class="px-3 py-2 hover:bg-slate-800/80 rounded-xl text-xs text-slate-300 flex items-center justify-between transition-all"><span onclick="selectRecentSearch('${term}')" class="cursor-pointer flex-1 flex items-center gap-2"><i class="fa-solid fa-history text-slate-500"></i> ${term}</span><button onclick="removeSearchItem(event, ${index})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-xmark"></i></button></div>`;
         });
     }
 }
@@ -1706,51 +1691,51 @@ function renderResources() {
     if (sortBy === 'size') filtered.sort((a, b) => parseFileSize(a.fileSize) - parseFileSize(b.fileSize));
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-500"><i class="fa-regular fa-folder-open text-4xl mb-3"></i><p class="text-sm">Tidak ada script yang ditemukan.</p></div>`;
+        grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 bg-slate-900/40 rounded-3xl border border-slate-800/80 backdrop-blur-md"><i class="fa-regular fa-folder-open text-5xl mb-3 text-cyan-400 animate-pulse"></i><p class="text-sm font-bold text-slate-300">Tidak ada script yang ditemukan.</p></div>`;
         return;
     }
 
     filtered.forEach(res => {
         const isLiked = res.likedBy && res.likedBy.includes(currentUser.username);
         const isSaved = res.savedBy && res.savedBy.includes(currentUser.username);
-        const isBroken = brokenReports.some(rep => rep.resName === res.name);
+        const isBroken = brokenReports.some(rep => rep.resName.includes(res.name));
 
         const iconClass = res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400';
         const avgRating = calculateAverageRating(res);
 
         grid.innerHTML += `
-            <div class="bg-slate-900 border ${isBroken ? 'border-rose-500/50' : 'border-slate-800/80'} rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg group">
+            <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-xl border ${isBroken ? 'border-rose-500/50' : 'border-slate-800/80'} rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/50 transition-all duration-300 shadow-xl group hover:-translate-y-1">
                 <div>
                     <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-lg ${iconClass}"></div>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-cyan-400">${res.version || 'v1.0'}</span>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-11 h-11 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-lg shadow-inner ${iconClass} group-hover:scale-110 transition-transform"></div>
+                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 shadow-sm">${res.version || 'v1.0'}</span>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            ${res.isSpecialAccess ? '<span class="text-[10px] text-amber-400 font-bold bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30"><i class="fa-solid fa-key"></i> Khusus</span>' : ''}
-                            ${res.editStatus === 'Edited' ? '<span class="text-[10px] text-blue-400 font-bold bg-blue-500/20 px-2 py-0.5 rounded">Edited</span>' : ''}
-                            ${res.editStatus === 'Updated' ? '<span class="text-[10px] text-emerald-400 font-bold bg-emerald-500/20 px-2 py-0.5 rounded">Updated</span>' : ''}
-                            ${isBroken ? '<span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded">Rusak</span>' : ''}
-                            <span class="text-[10px] text-amber-400 font-bold"><i class="fa-solid fa-star"></i> ${avgRating}</span>
+                        <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                            ${res.isSpecialAccess ? '<span class="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20 shadow-sm flex items-center gap-1"><i class="fa-solid fa-key"></i> Khusus</span>' : ''}
+                            ${res.editStatus === 'Edited' ? '<span class="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-500/20">Edited</span>' : ''}
+                            ${res.editStatus === 'Updated' ? '<span class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">Updated</span>' : ''}
+                            ${isBroken ? '<span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-xl border border-rose-500/20">Rusak</span>' : ''}
+                            <span class="text-[11px] text-amber-400 font-extrabold bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20 flex items-center gap-1 shadow-sm"><i class="fa-solid fa-star"></i> ${avgRating}</span>
                         </div>
                     </div>
-                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">${res.category} • ${res.subcategory}</span>
-                    <h3 onclick="openDetail(${res.id})" class="font-bold text-base text-white group-hover:text-cyan-400 transition-colors cursor-pointer line-clamp-1">${res.name}</h3>
-                    <p class="text-xs text-slate-300 mt-2 line-clamp-2 leading-relaxed">${res.description}</p>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1.5 tracking-wider"><i class="fa-solid fa-tag"></i> ${res.category} • ${res.subcategory}</span>
+                    <h3 onclick="openDetail(${res.id})" class="font-extrabold text-base text-white group-hover:text-cyan-400 transition-colors cursor-pointer line-clamp-1">${res.name}</h3>
+                    <p class="text-xs text-slate-300 mt-2.5 line-clamp-2 leading-relaxed">${res.description}</p>
                 </div>
                 
-                <div class="pt-4 mt-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-300">
-                    <div class="flex items-center gap-3">
-                        <button onclick="toggleLike(${res.id})" class="flex items-center gap-1 hover:text-rose-400 transition-colors cursor-pointer ${isLiked ? 'text-rose-500' : ''}">
-                            <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> <span>${res.likes || 0}</span>
+                <div class="pt-4 mt-5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleLike(${res.id})" class="flex items-center gap-1.5 hover:text-rose-400 transition-colors cursor-pointer ${isLiked ? 'text-rose-500 font-bold' : ''}">
+                            <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart text-sm"></i> <span>${res.likes || 0}</span>
                         </button>
-                        <span class="flex items-center gap-1" title="Jumlah Dilihat"><i class="fa-solid fa-eye text-cyan-400"></i> ${res.views || 0}</span>
+                        <span class="flex items-center gap-1.5" title="Jumlah Dilihat"><i class="fa-solid fa-eye text-cyan-400"></i> ${res.views || 0}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleSave(${res.id})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer ${isSaved ? 'text-amber-400' : 'text-slate-300'}" title="Simpan">
-                            <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+                        <button onclick="toggleSave(${res.id})" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer shadow-md ${isSaved ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-slate-300'}" title="Simpan">
+                            <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark text-sm"></i>
                         </button>
-                        <button onclick="openDetail(${res.id})" class="px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg transition-all cursor-pointer">Detail</button>
+                        <button onclick="openDetail(${res.id})" class="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-slate-950 font-extrabold rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Detail</button>
                     </div>
                 </div>
             </div>
@@ -1815,7 +1800,7 @@ function checkUserHasCleanLinkAccess(res) {
 }
 
 /* ========================================================
-   DETAIL POSTINGAN DENGAN FITUR SALIN LINK & LAPOR LINK RUSAK DI SETIAP TOMBOL
+   DETAIL POSTINGAN MODERN UI DENGAN FITUR SALIN LINK & LAPOR RUSAK
    ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
@@ -1867,47 +1852,45 @@ function openDetail(id, openModalWindow = true) {
         screenshotBox.classList.add('hidden');
     }
 
-    const isBroken = brokenReports.some(rep => rep.resName === res.name);
+    const isBroken = brokenReports.some(rep => rep.resName.includes(res.name));
     const alertBox = document.getElementById('modal-broken-alert');
     if (isBroken) alertBox.classList.remove('hidden');
     else alertBox.classList.add('hidden');
 
-    // RENDER TOMBOL DOWNLOAD + TOMBOL SALIN LINK & LAPOR LINK RUSAK DI BAWAHNYA
     const dynamicLinksList = document.getElementById('modal-dynamic-links-list');
     dynamicLinksList.innerHTML = '';
 
     if (res.links && res.links.length > 0) {
-        res.links.forEach((l, index) => {
+        res.links.forEach((l) => {
             let isVipLink = l.name.toLowerCase().includes('vvip') || l.name.toLowerCase().includes('tanpa iklan') || l.name.toLowerCase().includes('direct');
             let canAccess = !isVipLink || checkUserHasCleanLinkAccess(res);
 
-            let btnBg = isVipLink ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20' : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20';
+            let btnBg = isVipLink ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20' : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-slate-950 shadow-cyan-500/20';
             let iconType = isVipLink ? 'fa-shield-halved' : 'fa-cloud-arrow-down';
 
             let actionButtonHtml = '';
             if (canAccess) {
                 actionButtonHtml = `
-                    <a href="${l.url}" target="_blank" onclick="recordDownload(event, '${l.name}')" class="w-full py-3 ${btnBg} font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer text-xs">
-                        <i class="fa-solid ${iconType}"></i> ${l.name} (${res.fileSize || 'Files'})
+                    <a href="${l.url}" target="_blank" onclick="recordDownload(event, '${l.name}')" class="w-full py-3.5 ${btnBg} font-extrabold rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer text-xs">
+                        <i class="fa-solid ${iconType} text-sm"></i> ${l.name} (${res.fileSize || 'Files'})
                     </a>
                 `;
             } else {
                 actionButtonHtml = `
-                    <button onclick="alert('Akses Ditolak! Tautan VVIP ini memerlukan VVIP aktif atau membuka akses postingan khusus.'); switchMainView('profile'); closeModal();" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs border border-slate-700">
-                        <i class="fa-solid fa-lock text-amber-400"></i> ${l.name} [VVIP Diperlukan]
+                    <button onclick="alert('Akses Ditolak! Tautan VVIP ini memerlukan VVIP aktif atau membuka akses postingan khusus.'); switchMainView('profile'); closeModal();" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-400 font-extrabold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs border border-slate-800 shadow-md">
+                        <i class="fa-solid fa-lock text-amber-400 text-sm"></i> ${l.name} [VVIP Diperlukan]
                     </button>
                 `;
             }
 
-            // Tambahan tombol salin link & lapor link rusak persis di bawah setiap tombol unduhan
             dynamicLinksList.innerHTML += `
-                <div class="space-y-1.5 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+                <div class="space-y-2 bg-slate-950/80 backdrop-blur-md p-3.5 rounded-3xl border border-slate-800/90 shadow-xl">
                     ${actionButtonHtml}
                     <div class="flex items-center gap-2 pt-1">
-                        <button onclick="copySpecificLink('${encodeURIComponent(l.url)}', '${l.name}')" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-800">
-                            <i class="fa-regular fa-copy text-cyan-400"></i> Salin Link (${l.name})
+                        <button onclick="copySpecificLink('${encodeURIComponent(l.url)}', '${l.name}')" class="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border border-slate-800 shadow-md hover:border-cyan-500/40">
+                            <i class="fa-regular fa-copy text-cyan-400"></i> Salin Link
                         </button>
-                        <button onclick="reportSpecificLink('${res.name}', '${l.name}')" class="py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-rose-500/20" title="Laporkan link rusak">
+                        <button onclick="reportSpecificLink('${res.name}', '${l.name}')" class="py-2 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-rose-500/20 shadow-md" title="Laporkan link rusak">
                             <i class="fa-solid fa-triangle-exclamation"></i> Lapor Rusak
                         </button>
                     </div>
@@ -1915,7 +1898,7 @@ function openDetail(id, openModalWindow = true) {
             `;
         });
     } else {
-        dynamicLinksList.innerHTML = `<p class="text-xs text-slate-500">Tidak ada tautan tersedia.</p>`;
+        dynamicLinksList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-solid fa-link-slash"></i> Tidak ada tautan tersedia.</p>`;
     }
 
     const iconDiv = document.getElementById('modal-file-icon');
@@ -1926,7 +1909,7 @@ function openDetail(id, openModalWindow = true) {
     
     if (hasRated) {
         if (ratingSectionBox) {
-            ratingSectionBox.innerHTML = `<div class="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center text-xs text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Anda sudah memberikan ulasan & rating untuk script ini. Terima kasih!</div>`;
+            ratingSectionBox.innerHTML = `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl text-center text-xs text-emerald-400 font-extrabold shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-circle-check text-base"></i> Anda sudah memberikan ulasan & rating untuk script ini. Terima kasih!</div>`;
         }
     }
 
@@ -1934,13 +1917,13 @@ function openDetail(id, openModalWindow = true) {
     document.getElementById('review-count').textContent = res.reviews ? res.reviews.length : 0;
     reviewList.innerHTML = '';
     if (!res.reviews || res.reviews.length === 0) {
-        reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-2">Belum ada ulasan.</p>`;
+        reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comment-dots"></i> Belum ada ulasan.</p>`;
     } else {
         res.reviews.forEach(rv => {
             let starsHtml = '<span class="text-amber-400">';
             for(let i=0; i<rv.rating; i++) starsHtml += '<i class="fa-solid fa-star"></i>';
             starsHtml += '</span>';
-            reviewList.innerHTML += `<div class="bg-slate-950 border border-slate-800/60 p-3 rounded-xl text-xs space-y-1"><div class="flex justify-between items-center"><span class="font-bold text-cyan-400">${rv.user}</span> ${starsHtml}</div><p class="text-slate-300">${rv.text}</p></div>`;
+            reviewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><div class="flex justify-between items-center"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${rv.user}</span> ${starsHtml}</div><p class="text-slate-300">${rv.text}</p></div>`;
         });
     }
 
@@ -1948,10 +1931,10 @@ function openDetail(id, openModalWindow = true) {
     document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
     commentList.innerHTML = '';
     if (!res.comments || res.comments.length === 0) {
-        commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada komentar.</p>`;
+        commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comments"></i> Belum ada komentar.</p>`;
     } else {
         res.comments.forEach(c => {
-            commentList.innerHTML += `<div class="bg-slate-950 border border-slate-800/60 p-3 rounded-xl text-xs space-y-1"><span class="font-bold text-cyan-400">${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
+            commentList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
         });
     }
 }
@@ -1991,9 +1974,9 @@ function selectRatingStar(star) {
     const starBtns = document.querySelectorAll('#star-container button');
     starBtns.forEach((btn, idx) => {
         if ((idx + 1) <= star) {
-            btn.className = "text-amber-400 cursor-pointer";
+            btn.className = "text-amber-400 cursor-pointer scale-110 transition-transform";
         } else {
-            btn.className = "text-slate-600 hover:text-amber-400 cursor-pointer";
+            btn.className = "text-slate-600 hover:text-amber-400 cursor-pointer transition-transform";
         }
     });
 }
@@ -2044,12 +2027,9 @@ function recordDownload(e, linkName) {
 }
 
 function reportBrokenLink() {
-    reportBrokenLink = function() {
-        if (!activeResourceId) return;
-        let res = resources.find(r => r.id === activeResourceId);
-        reportSpecificLink(res.name, 'Semua Tautan');
-    };
-    reportBrokenLink();
+    if (!activeResourceId) return;
+    let res = resources.find(r => r.id === activeResourceId);
+    reportSpecificLink(res.name, 'Semua Tautan');
 }
 
 function closeModal() {
@@ -2184,13 +2164,13 @@ function renderProfilePage() {
     document.getElementById('profile-level-label').textContent = `Level: ${uLvlData.level} (EXP: ${uLvlData.exp}/${reqExp})`;
 
     let isVip = userVipSubscriptions[uname] && Date.now() < userVipSubscriptions[uname];
-    document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg"><i class="fa-solid fa-shield-halved"></i> VVIP Tanpa Iklan Aktif (1 Bulan)</span>` : `<span class="text-slate-400">Status: Member Free (Dengan Iklan)</span>`;
+    document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl font-bold flex items-center gap-1.5 shadow-lg"><i class="fa-solid fa-crown"></i> VVIP Tanpa Iklan Aktif (1 Bulan)</span>` : `<span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-user"></i> Status: Member Free (Dengan Iklan)</span>`;
 
     const trophyBox = document.getElementById('profile-trophies');
     trophyBox.innerHTML = '';
     let badgeStr = getUserBadge(uname);
     if (!badgeStr.includes('Member Baru')) {
-        trophyBox.innerHTML += `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold">${badgeStr}</span>`;
+        trophyBox.innerHTML += `<span class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-md"><i class="fa-solid fa-trophy"></i> ${badgeStr}</span>`;
     }
 
     const questList = document.getElementById('profile-quests-list');
@@ -2205,20 +2185,20 @@ function renderProfilePage() {
 
             let btnHtml = '';
             if (isClaimed) {
-                btnHtml = `<span class="text-emerald-400 font-bold text-[11px]"><i class="fa-solid fa-check"></i> Selesai</span>`;
+                btnHtml = `<span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 flex items-center gap-1"><i class="fa-solid fa-check"></i> Selesai</span>`;
             } else if (canClaim) {
-                btnHtml = `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl cursor-pointer">Klaim (+${q.reward})</button>`;
+                btnHtml = `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-extrabold rounded-xl cursor-pointer shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1"><i class="fa-solid fa-gift"></i> Klaim (+${q.reward})</button>`;
             } else {
-                btnHtml = `<span class="text-slate-500 text-[10px]">Progress: ${currentProg}/${q.target}</span>`;
+                btnHtml = `<span class="text-slate-500 text-[10px] font-semibold bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">Progress: ${currentProg}/${q.target}</span>`;
             }
 
             questList.innerHTML += `
-                <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between text-xs">
+                <div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl flex items-center justify-between text-xs shadow-lg transition-all hover:border-cyan-500/30">
                     <div>
-                        <span class="font-bold text-white block">${q.title}</span>
-                        <span class="text-amber-400 text-[10px]">Hadiah: +${q.reward} Poin & EXP</span>
+                        <span class="font-extrabold text-white block text-sm flex items-center gap-2"><i class="fa-solid fa-circle-check text-cyan-400"></i> ${q.title}</span>
+                        <span class="text-amber-400 text-[10px] font-bold mt-1 inline-block flex items-center gap-1"><i class="fa-solid fa-coins"></i> Hadiah: +${q.reward} Poin & EXP</span>
                     </div>
-                    <div>${btnHtml}</span></div>
+                    <div>${btnHtml}</div>
                 </div>
             `;
         });
@@ -2230,10 +2210,10 @@ function renderProfilePage() {
     viewList.innerHTML = '';
     let myViews = userViewHistory[uname] || [];
     if (myViews.length === 0) {
-        viewList.innerHTML = `<p class="text-xs text-slate-500">Belum ada riwayat.</p>`;
+        viewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-clock"></i> Belum ada riwayat.</p>`;
     } else {
         myViews.forEach(name => {
-            viewList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2"><i class="fa-solid fa-eye text-cyan-400"></i> ${name}</div>`;
+            viewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2.5 shadow-md"><i class="fa-solid fa-eye text-cyan-400"></i> <span class="font-bold">${name}</span></div>`;
         });
     }
 
@@ -2242,10 +2222,10 @@ function renderProfilePage() {
     let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(uname));
     
     if (mySaved.length === 0) {
-        savedList.innerHTML = `<p class="text-xs text-slate-500">Belum ada script disimpan.</p>`;
+        savedList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-bookmark"></i> Belum ada script disimpan.</p>`;
     } else {
         mySaved.forEach(res => {
-            savedList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between"><span>${res.name}</span><button onclick="openDetail(${res.id})" class="text-cyan-400 font-bold cursor-pointer">Buka</button></div>`;
+            savedList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between shadow-md"><span class="font-bold flex items-center gap-2"><i class="fa-solid fa-gamepad text-amber-400"></i> ${res.name}</span><button onclick="openDetail(${res.id})" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-arrow-right"></i> Buka</button></div>`;
         });
     }
 }
