@@ -20,14 +20,13 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
         subcategory: "Script Skin",
         typeUpload: "file",
         version: "v1.0",
-        // Poin 1: Pemisahan kategori link manual (Free, VVIP Tanpa Iklan, Direct File)
         links: [
             { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1" },
             { name: "Link Tanpa Iklan (VVIP)", url: "https://drive.google.com/ml1-clean" },
             { name: "Direct File (VVIP)", url: "https://direct-download.com/ml1" }
         ],
         paidUnlockedUsers: [],
-        isSpecialAccess: true, // Poin 2: Proteksi Akses Khusus
+        isSpecialAccess: true,
         description: "Script skin epic permanen anti ban work 100% di mode ranked.\n\n[Petunjuk]: Salin folder art ke com.mobile.legends/files/dragon2017/assets.",
         fileSize: "25.4 MB",
         screenshot: "",
@@ -81,7 +80,6 @@ let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
 
-// Filter state baru
 let currentMainCategory = 'All';
 let currentSubCategory = 'All';
 
@@ -203,7 +201,7 @@ function removeSubCategory(mainCat, idx) {
 }
 
 /* ========================================================
-   POIN 1: MANAJEMEN LINK DINAMIS MANUAL TERSTRUKTUR (Free, VVIP Tanpa Iklan, Direct File/Upload)
+   MANAJEMEN LINK DINAMIS MANUAL (Mendukung Multi VVIP Direct Upload via Admin)
    ======================================================== */
 function addCustomLinkRow(nameVal = '', urlVal = '') {
     const container = document.getElementById('dynamic-links-container');
@@ -211,7 +209,7 @@ function addCustomLinkRow(nameVal = '', urlVal = '') {
     const rowId = Date.now() + Math.random();
 
     let div = document.createElement('div');
-    div.className = "flex items-center gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800";
+    div.className = "flex flex-col sm:flex-row items-center gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800";
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
         <select class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold" required>
@@ -219,10 +217,28 @@ function addCustomLinkRow(nameVal = '', urlVal = '') {
             <option value="Link Tanpa Iklan (VVIP)" ${nameVal === 'Link Tanpa Iklan (VVIP)' ? 'selected' : ''}>Link Tanpa Iklan (VVIP)</option>
             <option value="Direct File (VVIP)" ${nameVal === 'Direct File (VVIP)' ? 'selected' : ''}>Direct File (VVIP)</option>
         </select>
-        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-url-input" required>
+        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-cyan-500 link-url-input" required>
+        <input type="file" onchange="handleAdminDirectFileUpload(this, '${rowId}')" class="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-cyan-500 file:text-slate-950 hover:file:bg-cyan-400 cursor-pointer" title="Upload File Langsung ke Web">
         <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-2.5 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-lg transition-all text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(div);
+}
+
+function handleAdminDirectFileUpload(fileInput, rowId) {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const row = document.getElementById(`link-row-${rowId}`);
+        if (row) {
+            const urlInput = row.querySelector('.link-url-input');
+            if (urlInput) {
+                urlInput.value = e.target.result; // Menyimpan Base64 file langsung ke URL input manual
+                alert(`File "${file.name}" berhasil diunggah secara lokal ke sistem!`);
+            }
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 /* ========================================================
@@ -1281,7 +1297,7 @@ function executeRedeemReward(rew) {
 }
 
 /* ========================================================
-   UPLOAD & MANAJEMEN SCRIPT (LINK MANUAL DINAMIS)
+   UPLOAD & MANAJEMEN SCRIPT
    ======================================================== */
 function setSubmitEditMode(val) { activeEditModeAction = 'edit'; }
 function setSubmitUpdateMode(val) { activeEditModeAction = 'update'; }
@@ -1431,9 +1447,6 @@ function closeCustomConfirm() {
     pendingDeleteId = null;
 }
 
-/* ========================================================
-   POIN 4: FITUR KOMPARASI & PETUNJUK DIJADIKAN SATU KE MODE BACA SAJA
-   ======================================================== */
 function openReaderMode() {
     const res = resources.find(r => r.id === activeResourceId);
     if (!res) return;
@@ -1442,7 +1455,7 @@ function openReaderMode() {
 }
 
 function openVersionComparison() {
-    openReaderMode(); // Diarahkan langsung ke mode baca tunggal terintegrasi
+    openReaderMode();
 }
 
 function closeReaderMode() {
@@ -1745,14 +1758,6 @@ function renderResources() {
     });
 }
 
-function copyDirectLinkFromModal() {
-    if (!activeResourceId) return;
-    const res = resources.find(r => r.id === activeResourceId);
-    if (!res || !res.links || res.links.length === 0) return;
-    navigator.clipboard.writeText(res.links[0].url);
-    alert(`Tautan utama "${res.name}" berhasil disalin ke clipboard!`);
-}
-
 function calculateAverageRating(res) {
     if (!res.ratings || Object.keys(res.ratings).length === 0) return '0.0';
     let totalScore = 0;
@@ -1810,13 +1815,12 @@ function checkUserHasCleanLinkAccess(res) {
 }
 
 /* ========================================================
-   POIN 2: PROTEKSI AKSES POSTINGAN KHUSUS & DETAIL
+   DETAIL POSTINGAN DENGAN FITUR SALIN LINK & LAPOR LINK RUSAK DI SETIAP TOMBOL
    ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
     if (!res) return;
 
-    // Validasi Akses Postingan Khusus
     if (res.isSpecialAccess && currentUser && currentUser.role !== 'admin') {
         let unlockedArr = userUnlockedPosts[currentUser.username] || [];
         let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
@@ -1868,31 +1872,47 @@ function openDetail(id, openModalWindow = true) {
     if (isBroken) alertBox.classList.remove('hidden');
     else alertBox.classList.add('hidden');
 
-    // Render Tautan Sesuai Poin 1 (Free / VVIP Clean / Direct)
+    // RENDER TOMBOL DOWNLOAD + TOMBOL SALIN LINK & LAPOR LINK RUSAK DI BAWAHNYA
     const dynamicLinksList = document.getElementById('modal-dynamic-links-list');
     dynamicLinksList.innerHTML = '';
 
     if (res.links && res.links.length > 0) {
-        res.links.forEach(l => {
+        res.links.forEach((l, index) => {
             let isVipLink = l.name.toLowerCase().includes('vvip') || l.name.toLowerCase().includes('tanpa iklan') || l.name.toLowerCase().includes('direct');
             let canAccess = !isVipLink || checkUserHasCleanLinkAccess(res);
 
             let btnBg = isVipLink ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20' : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20';
             let iconType = isVipLink ? 'fa-shield-halved' : 'fa-cloud-arrow-down';
 
+            let actionButtonHtml = '';
             if (canAccess) {
-                dynamicLinksList.innerHTML += `
+                actionButtonHtml = `
                     <a href="${l.url}" target="_blank" onclick="recordDownload(event, '${l.name}')" class="w-full py-3 ${btnBg} font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer text-xs">
                         <i class="fa-solid ${iconType}"></i> ${l.name} (${res.fileSize || 'Files'})
                     </a>
                 `;
             } else {
-                dynamicLinksList.innerHTML += `
+                actionButtonHtml = `
                     <button onclick="alert('Akses Ditolak! Tautan VVIP ini memerlukan VVIP aktif atau membuka akses postingan khusus.'); switchMainView('profile'); closeModal();" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs border border-slate-700">
                         <i class="fa-solid fa-lock text-amber-400"></i> ${l.name} [VVIP Diperlukan]
                     </button>
                 `;
             }
+
+            // Tambahan tombol salin link & lapor link rusak persis di bawah setiap tombol unduhan
+            dynamicLinksList.innerHTML += `
+                <div class="space-y-1.5 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+                    ${actionButtonHtml}
+                    <div class="flex items-center gap-2 pt-1">
+                        <button onclick="copySpecificLink('${encodeURIComponent(l.url)}', '${l.name}')" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-800">
+                            <i class="fa-regular fa-copy text-cyan-400"></i> Salin Link (${l.name})
+                        </button>
+                        <button onclick="reportSpecificLink('${res.name}', '${l.name}')" class="py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-rose-500/20" title="Laporkan link rusak">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Lapor Rusak
+                        </button>
+                    </div>
+                </div>
+            `;
         });
     } else {
         dynamicLinksList.innerHTML = `<p class="text-xs text-slate-500">Tidak ada tautan tersedia.</p>`;
@@ -1901,9 +1921,6 @@ function openDetail(id, openModalWindow = true) {
     const iconDiv = document.getElementById('modal-file-icon');
     iconDiv.innerHTML = `<i class="${res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400'}"></i>`;
 
-    /* ========================================================
-       POIN 5: HILANGKAN FORM RATING JIKA USER SUDAH MEMBERIKAN RATING
-       ======================================================== */
     let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
     const ratingSectionBox = document.getElementById('modal-rating-form-container') || document.getElementById('btn-submit-rating')?.parentElement?.parentElement;
     
@@ -1936,6 +1953,34 @@ function openDetail(id, openModalWindow = true) {
         res.comments.forEach(c => {
             commentList.innerHTML += `<div class="bg-slate-950 border border-slate-800/60 p-3 rounded-xl text-xs space-y-1"><span class="font-bold text-cyan-400">${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
         });
+    }
+}
+
+function copySpecificLink(encodedUrl, linkName) {
+    let decodedUrl = decodeURIComponent(encodedUrl);
+    navigator.clipboard.writeText(decodedUrl).then(() => {
+        alert(`Tautan "${linkName}" berhasil disalin ke clipboard!`);
+    }).catch(err => {
+        console.error('Gagal menyalin:', err);
+    });
+}
+
+function reportSpecificLink(resName, linkName) {
+    if (!currentUser) {
+        alert('Silakan login terlebih dahulu.');
+        return;
+    }
+    let reportText = `${resName} (${linkName})`;
+    if (!brokenReports.some(rep => rep.resName === reportText && rep.user === currentUser.username)) {
+        brokenReports.push({ resName: reportText, user: currentUser.username });
+        localStorage.setItem('frh_broken_reports', JSON.stringify(brokenReports));
+        addNotification(`Laporan link rusak untuk ${reportText} diteruskan ke admin.`, 'danger');
+        addPoints(currentUser.username, 5);
+        logUserAction(currentUser.username, `Melaporkan link rusak: ${reportText}`);
+        alert(`Laporan link rusak untuk "${linkName}" berhasil diteruskan (+5 Poin).`);
+        renderResources();
+    } else {
+        alert('Anda sudah melaporkan tautan ini sebelumnya.');
     }
 }
 
@@ -1999,20 +2044,12 @@ function recordDownload(e, linkName) {
 }
 
 function reportBrokenLink() {
-    if (!activeResourceId) return;
-    let res = resources.find(r => r.id === activeResourceId);
-    if (!brokenReports.some(rep => rep.resName === res.name && rep.user === currentUser.username)) {
-        brokenReports.push({ resName: res.name, user: currentUser.username });
-        localStorage.setItem('frh_broken_reports', JSON.stringify(brokenReports));
-        addNotification(`Laporan link rusak diteruskan ke admin: ${res.name}`, 'danger');
-        addPoints(currentUser.username, 5);
-        logUserAction(currentUser.username, `Melaporkan link rusak: ${res.name}`);
-        alert('Laporan link rusak berhasil diteruskan (+5 Poin).');
-        openDetail(activeResourceId, false);
-        renderResources();
-    } else {
-        alert('Anda sudah melaporkan link ini sebelumnya.');
-    }
+    reportBrokenLink = function() {
+        if (!activeResourceId) return;
+        let res = resources.find(r => r.id === activeResourceId);
+        reportSpecificLink(res.name, 'Semua Tautan');
+    };
+    reportBrokenLink();
 }
 
 function closeModal() {
@@ -2061,9 +2098,6 @@ function handleChangeUserPassword(e) {
     }
 }
 
-/* ========================================================
-   POIN 3: 20 MISI QUEST LENGKAP DARI MUDAH HINGGA SULIT
-   ======================================================== */
 const profileQuestsDefinition = [
     { id: 'q1', title: 'Sukai 1 Script', reward: 10, target: 1, type: 'like' },
     { id: 'q2', title: 'Sukai 3 Script', reward: 25, target: 3, type: 'like' },
@@ -2184,7 +2218,7 @@ function renderProfilePage() {
                         <span class="font-bold text-white block">${q.title}</span>
                         <span class="text-amber-400 text-[10px]">Hadiah: +${q.reward} Poin & EXP</span>
                     </div>
-                    <div>${btnHtml}</div>
+                    <div>${btnHtml}</span></div>
                 </div>
             `;
         });
