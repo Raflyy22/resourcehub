@@ -4,7 +4,7 @@ let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0
 let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
 
 let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
-let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di RapzResource HUB v18. Pembaruan kustomisasi link, pembersihan tombol redundan, dan riwayat profil lengkap!" };
+let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di Gudang Script Mobile Legends & Free Fire." };
 
 let categoryConfig = JSON.parse(localStorage.getItem('frh_category_config')) || {
     "Script Mobile Legends": ["Script Skin", "Script Anti Lag", "Script Booster", "Game Booster"],
@@ -44,7 +44,7 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
 ];
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
-    { id: 1, title: "Pembaruan RapzResource HUB v18", content: "Kustomisasi Nama Link, Pembersihan Fitur Redundan, dan Riwayat Profil Komprehensif.", date: "12 Agustus 2026" }
+    { id: 1, title: "Pembaruan Gudang Script", content: "Kustomisasi Nama Link, Pembersihan Fitur Redundan, dan Riwayat Profil Komprehensif.", date: "12 Agustus 2026" }
 ];
 
 let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
@@ -74,7 +74,7 @@ let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || [];
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
 let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di RapzResource HUB v18!", type: 'info', read: false, time: "Baru saja" }
+    { id: 1, text: "Selamat datang di Gudang Script Mobile Legends & Free Fire", type: 'info', read: false, time: "Baru saja" }
 ];
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
@@ -316,7 +316,7 @@ function sendTelegramNotification(text) {
     let url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
     let data = {
         chat_id: telegramConfig.chatId,
-        text: `🤖 [RapzResource HUB v18]\n${text}`,
+        text: `🤖 [Gudang Script Mobile Legends & Free Fire]\n${text}`,
         parse_mode: 'HTML'
     };
     fetch(url, {
