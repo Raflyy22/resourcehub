@@ -92,6 +92,9 @@
                 </div>
                 
                 <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button onclick="handleDailyClaim()" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold transition-all cursor-pointer text-amber-400 border border-amber-500/30">
+                        <i class="fa-solid fa-gift"></i> Daily Claim
+                    </button>
                     <button onclick="switchMainView('livechat')" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-xs font-semibold transition-all cursor-pointer text-cyan-400 border border-cyan-500/30">
                         <i class="fa-solid fa-headset"></i> Live Chat
                     </button>
@@ -176,9 +179,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Sub Kategori</label>
-                            <select id="up-subcategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer">
-                                <!-- Diisi dinamis via JS -->
-                            </select>
+                            <select id="up-subcategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer"></select>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Jenis Upload</label>
@@ -202,10 +203,8 @@
                                 <label class="block text-xs font-bold text-cyan-400"><i class="fa-solid fa-link"></i> Daftar Tautan Unduhan (Kelola Manual)</label>
                                 <button type="button" onclick="addCustomLinkRow()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-xs rounded-lg cursor-pointer"><i class="fa-solid fa-plus"></i> Tambah Link Manual</button>
                             </div>
-                            <p class="text-[11px] text-slate-400">Masukkan nama tautan secara manual (misal: "Link Iklan Free", "Link Tanpa Iklan VVIP", "Direct File VVIP", atau "Direct Aplikasi VVIP"), beserta URL-nya.</p>
-                            <div id="dynamic-links-container" class="space-y-2">
-                                <!-- Baris link dinamis ditambahkan lewat JS -->
-                            </div>
+                            <p class="text-[11px] text-slate-400">Masukkan nama tautan, pilih tipe Free/VVIP, dan masukkan URL-nya.</p>
+                            <div id="dynamic-links-container" class="space-y-2"></div>
                         </div>
 
                         <div class="flex flex-col gap-2 pt-2 md:col-span-2">
@@ -244,7 +243,6 @@
                 <!-- Kelola Kategori & Sub-Kategori Manual Section -->
                 <div id="admin-categories-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
                     <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Atur Kategori & Sub-Kategori Manual</h3>
-                    <p class="text-xs text-slate-400">Tambahkan atau hapus sub-kategori untuk Script Mobile Legends dan Script Free Fire sesuai kebutuhan Anda.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                             <h4 class="font-bold text-sm text-cyan-400">Sub-Kategori: Script Mobile Legends</h4>
@@ -268,29 +266,26 @@
                 <!-- Kelola Script Section -->
                 <div id="admin-manage-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Kelola Script Game Komunitas</h3>
-                    <p class="text-xs text-slate-400">Atur postingan khusus, edit, atau hapus script.</p>
                     <div id="admin-manage-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
 
                 <!-- Kontrol Akun User Section -->
                 <div id="admin-users-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User & Akses Postingan Khusus</h3>
-                    <p class="text-xs text-slate-400">Hapus akun, reset, blokir fleksibel, tambah/kurangi poin, VVIP, dan centang akses post.</p>
                     <div id="admin-users-list" class="space-y-3"></div>
                 </div>
 
                 <!-- Broadcast Dashboard Section -->
                 <div id="admin-broadcast-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4 max-w-xl">
                     <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-bullhorn"></i> Pengaturan Broadcast Pesan User</h3>
-                    <p class="text-xs text-slate-400">Kirim pengumuman berjalan dengan judul di atas dan pesan memanjang berjalan di bawah.</p>
                     <form onsubmit="handleSaveBroadcast(event)" class="space-y-4 pt-2">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Judul Broadcast (Di Atas)</label>
-                            <input type="text" id="bc-title" required placeholder="Cth: PENGUMUMAN PENTING" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-bold">
+                            <input type="text" id="bc-title" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-bold">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Pesan / Isi Berjalan (Memanjang di Bawah)</label>
-                            <textarea id="bc-content" rows="4" required placeholder="Tulis isi pesan berjalan..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs focus:outline-none focus:border-cyan-500"></textarea>
+                            <textarea id="bc-content" rows="4" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs"></textarea>
                         </div>
                         <button type="submit" class="py-3 px-6 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Publikasikan Broadcast</button>
                     </form>
@@ -299,15 +294,14 @@
                 <!-- Konfigurasi Bot Telegram Section -->
                 <div id="admin-telegram-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4 max-w-xl">
                     <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-brands fa-telegram"></i> Konfigurasi Bot Telegram</h3>
-                    <p class="text-xs text-slate-400">Atur Bot Token dan Chat/Channel ID untuk mengirim notifikasi pusat logs & livechat ke Telegram.</p>
                     <form onsubmit="handleSaveTelegramConfig(event)" class="space-y-4 pt-2">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Telegram Bot Token</label>
-                            <input type="text" id="tg-token" placeholder="Cth: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-mono">
+                            <input type="text" id="tg-token" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-mono">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Channel / Chat ID (Pusat Logs & Livechat)</label>
-                            <input type="text" id="tg-chatid" placeholder="Cth: -1001234567890 atau @channelname" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-mono">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Channel / Chat ID</label>
+                            <input type="text" id="tg-chatid" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs font-mono">
                         </div>
                         <button type="submit" class="py-3 px-6 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Simpan Konfigurasi Telegram</button>
                     </form>
@@ -317,9 +311,7 @@
                 <div id="admin-logs-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
                         <h3 class="text-lg font-bold flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-file-lines"></i> Pusat Logs Sistem</h3>
-                        <div class="flex items-center gap-3">
-                            <button onclick="resetAllLogs()" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-bold text-xs rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-trash-can"></i> Reset All Logs</button>
-                        </div>
+                        <button onclick="resetAllLogs()" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-bold text-xs rounded-lg transition-all cursor-pointer"><i class="fa-solid fa-trash-can"></i> Reset All Logs</button>
                     </div>
                     <div class="flex flex-wrap gap-1.5 text-xs pb-2 border-b border-slate-800/60">
                         <button onclick="filterLogsCategory('all')" id="log-btn-all" class="px-3 py-1 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer">Semua</button>
@@ -359,7 +351,6 @@
                 <!-- Kustom Reward Redeem Section -->
                 <div id="admin-rewards-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6">
                     <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-gift"></i> Pengaturan Kustom Reward Redeem Poin & Batasan Kuota</h3>
-                    <p class="text-xs text-slate-400">Atur batasan redeem per user serta kuota total tersisa untuk kategori akses atau saldo.</p>
                     <form onsubmit="handleSaveReward(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
                         <input type="text" id="rew-name" required placeholder="Nama Hadiah..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
                         <input type="number" id="rew-cost" required placeholder="Poin..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
@@ -379,7 +370,6 @@
                 <!-- Admin Laporan Link Rusak Section -->
                 <div id="admin-requests-section" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> Daftar Laporan Link Rusak dari Komunitas</h3>
-                    <p class="text-xs text-slate-400">Daftar laporan link rusak yang diteruskan secara otomatis dari tombol lapor link rusak oleh user.</p>
                     <div id="admin-requests-list" class="space-y-3"></div>
                 </div>
 
@@ -504,7 +494,7 @@
                         </div>
                     </div>
 
-                    <!-- SUB-KATEGORI CONTAINER (Tampil jika memilih salah satu game) -->
+                    <!-- SUB-KATEGORI CONTAINER -->
                     <div id="sub-category-bar" class="hidden flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80">
                         <span class="text-[11px] font-bold text-slate-400 mr-2 uppercase tracking-wider">Sub Kategori:</span>
                         <div id="sub-category-buttons-wrapper" class="flex flex-wrap gap-2"></div>
@@ -547,7 +537,6 @@
                                 <p id="profile-level-label" class="text-xs text-cyan-400 font-bold">Level: 1 (EXP: 0/50)</p>
                             </div>
                             <div id="profile-vip-status" class="text-xs text-emerald-400 font-bold mt-1"></div>
-                            <div id="profile-trophies" class="flex flex-wrap gap-1.5 mt-2"></div>
                         </div>
                     </div>
                     <button onclick="togglePasswordForm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer">Ubah Password</button>
@@ -574,7 +563,6 @@
                 <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                         <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Redeem Poin</h3>
-                        <span class="text-xs text-slate-400">Tukarkan poin Anda dengan akses VVIP atau saldo e-wallet</span>
                     </div>
                     <div id="user-redeem-rewards-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
@@ -591,7 +579,7 @@
                 </div>
             </div>
 
-            <!-- FAQ / PANDUAN UNDUH VIEW -->
+            <!-- FAQ VIEW -->
             <div id="faq-panel" class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto">
                 <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
                     <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
@@ -603,17 +591,6 @@
                             <p class="text-xs text-slate-400">Panduan lengkap cara mengunduh script Mobile Legends dan Free Fire.</p>
                         </div>
                     </div>
-
-                    <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                            <h3 class="font-bold text-cyan-400 text-sm"><i class="fa-solid fa-cloud-arrow-down"></i> 1. Link dengan Iklan (Free)</h3>
-                            <p>Unduh script secara gratis melalui tautan iklan yang tersedia.</p>
-                        </div>
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                            <h3 class="font-bold text-cyan-400 text-sm"><i class="fa-solid fa-shield-halved"></i> 2. Link Tanpa Iklan & Direct File/Aplikasi (VVIP)</h3>
-                            <p>Nikmati link direct kecepatan tinggi tanpa iklan dengan berlangganan VVIP atau menukarkan poin.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </main>
@@ -623,28 +600,20 @@
         </footer>
     </div>
 
-    <!-- FLOATING SUPPORT CHAT ICON (BOTTOM RIGHT) -->
+    <!-- FLOATING SUPPORT CHAT -->
     <div class="fixed bottom-6 right-6 z-50">
-        <button onclick="toggleSupportChatModal()" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center text-xl shadow-2xl hover:scale-105 transition-all cursor-pointer animate-bounce" title="Bantuan & Request Chat">
+        <button onclick="toggleSupportChatModal()" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center text-xl shadow-2xl hover:scale-105 transition-all cursor-pointer animate-bounce">
             <i class="fa-solid fa-headset"></i>
         </button>
     </div>
 
-    <!-- SUPPORT CHAT SELECTION MODAL -->
+    <!-- SUPPORT CHAT MODAL -->
     <div id="support-chat-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-6 rounded-2xl shadow-2xl space-y-4 text-center">
-            <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-xl mx-auto flex items-center justify-center text-xl">
-                <i class="fa-solid fa-headset"></i>
-            </div>
             <h3 class="font-bold text-base text-white">Pusat Layanan Bantuan & Request</h3>
-            <p class="text-xs text-slate-400">Silakan pilih jenis layanan yang Anda perlukan untuk terhubung langsung dengan admin:</p>
             <div class="space-y-2 pt-2">
-                <button onclick="selectSupportCategory('Bantuan')" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs cursor-pointer shadow-md">
-                    <i class="fa-solid fa-circle-question mr-1"></i> Bantuan / Kendala Akun & Transaksi
-                </button>
-                <button onclick="selectSupportCategory('Request')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold rounded-xl text-xs cursor-pointer">
-                    <i class="fa-solid fa-hands-holding-child mr-1"></i> Request Script Baru
-                </button>
+                <button onclick="selectSupportCategory('Bantuan')" class="w-full py-3 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Bantuan / Kendala Akun & Transaksi</button>
+                <button onclick="selectSupportCategory('Request')" class="w-full py-3 bg-slate-800 text-cyan-400 font-bold rounded-xl text-xs cursor-pointer">Request Script Baru</button>
             </div>
             <button onclick="toggleSupportChatModal()" class="text-slate-500 text-xs hover:underline pt-2 block w-full">Tutup</button>
         </div>
@@ -653,29 +622,22 @@
     <!-- MODAL REDEEM PILIH POSTINGAN KHUSUS -->
     <div id="redeem-post-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
-            <h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Pilih Postingan untuk Akses Khusus</h3>
-            <p class="text-xs text-slate-400">Silakan pilih postingan dengan akses khusus (hanya bisa 1x redeem per postingan):</p>
+            <h3 class="font-bold text-sm text-amber-400">Pilih Postingan untuk Akses Khusus</h3>
             <div id="redeem-post-selection-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
-            <button onclick="closeRedeemPostModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+            <button onclick="closeRedeemPostModal()" class="w-full py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
         </div>
     </div>
 
-    <!-- MODAL TAMBAH REQUEST SCRIPT KOMUNITAS -->
-    <div class="fixed bottom-24 right-6 z-50">
-    <button onclick="handleDailyClaim()" class="w-14 h-14 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse">
-        <i class="fa-solid fa-gift"></i>
-    </button>
-</div>
-
+    <!-- MODAL TAMBAH REQUEST SCRIPT -->
     <div id="request-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
-            <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-hands-holding-child"></i> Ajukan Request Script Baru</h3>
+            <h3 class="font-bold text-sm text-cyan-400">Ajukan Request Script Baru</h3>
             <form onsubmit="handlePostRequest(event)" class="space-y-3">
-                <input type="text" id="req-title" required placeholder="Judul Script / Hero / Fitur yang Diminta..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500">
-                <textarea id="req-desc" rows="3" required placeholder="Jelaskan detail script yang diinginkan..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs focus:outline-none focus:border-cyan-500"></textarea>
+                <input type="text" id="req-title" required placeholder="Judul Script..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs">
+                <textarea id="req-desc" rows="3" required placeholder="Jelaskan detail..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs"></textarea>
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 py-2.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Kirim Request</button>
-                    <button type="button" onclick="closeRequestModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Kirim</button>
+                    <button type="button" onclick="closeRequestModal()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
                 </div>
             </form>
         </div>
@@ -684,26 +646,12 @@
     <!-- CUSTOM MODAL KONFIRMASI HAPUS -->
     <div id="custom-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center space-y-4">
-            <div class="w-12 h-12 bg-rose-500/10 text-rose-500 rounded-xl mx-auto flex items-center justify-center text-xl">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
             <h3 class="font-bold text-base text-white">Konfirmasi Hapus</h3>
-            <p id="confirm-msg" class="text-xs text-slate-400">Apakah Anda yakin ingin menghapus resource ini?</p>
+            <p id="confirm-msg" class="text-xs text-slate-400">Apakah Anda yakin?</p>
             <div class="flex gap-2 pt-2">
-                <button id="confirm-btn-yes" class="flex-1 py-2.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Ya, Hapus</button>
-                <button onclick="closeCustomConfirm()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
+                <button id="confirm-btn-yes" class="flex-1 py-2.5 bg-rose-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Ya, Hapus</button>
+                <button onclick="closeCustomConfirm()" class="flex-1 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">Batal</button>
             </div>
-        </div>
-    </div>
-
-    <!-- CUSTOM MODAL READER MODE -->
-    <div id="reader-mode-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 hidden animate-fadeIn">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-code-compare"></i> Petunjuk Pemasangan & Detail Versi</h3>
-                <button onclick="closeReaderMode()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div id="reader-content" class="text-sm text-slate-300 leading-relaxed overflow-y-auto pr-2 whitespace-pre-line flex-1 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono"></div>
         </div>
     </div>
 
@@ -717,7 +665,7 @@
                         <div class="flex items-center gap-2">
                             <h3 id="modal-title" class="font-bold text-base text-white"></h3>
                             <span id="modal-version-badge" class="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-cyan-400 font-bold"></span>
-                            <span id="modal-verified-badge" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/35"><i class="fa-solid fa-shield-check"></i> Aman & Teruji</span>
+                            <span id="modal-verified-badge" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold"><i class="fa-solid fa-shield-check"></i> Aman & Teruji</span>
                         </div>
                         <div class="flex items-center gap-2 mt-0.5">
                             <span id="modal-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold"></span>
@@ -725,29 +673,22 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
             <div class="p-6 overflow-y-auto space-y-6 flex-1">
                 <div id="modal-broken-alert" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center gap-2">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Perhatian: Script ini telah dilaporkan mengalami link rusak oleh pengguna.</span>
+                    <span>Script ini telah dilaporkan mengalami link rusak.</span>
                 </div>
 
                 <div id="modal-screenshot-container" class="hidden">
-                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Tangkapan Layar (Screenshot)</h4>
                     <img id="modal-screenshot-img" src="" alt="Screenshot" class="w-full max-h-52 object-cover rounded-xl border border-slate-800 shadow-md">
                 </div>
 
                 <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Deskripsi & Petunjuk Pemasangan</h4>
-                        <div class="flex gap-3">
-                            <button onclick="openVersionComparison()" class="text-[11px] text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-code-compare"></i> Komparasi</button>
-                            <button onclick="openReaderMode()" class="text-[11px] text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-expand"></i> Mode Baca</button>
-                        </div>
-                    </div>
-                    <p id="modal-desc" class="text-sm text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800/60 p-4 rounded-xl whitespace-pre-line line-clamp-4"></p>
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Deskripsi & Petunjuk</h4>
+                    <p id="modal-desc" class="text-sm text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800/60 p-4 rounded-xl whitespace-pre-line"></p>
                 </div>
 
                 <!-- Form Beri Rating & Ulasan -->
@@ -764,38 +705,592 @@
                             </div>
                             <span id="rating-selected-text" class="text-xs text-amber-400 font-bold">Pilih Bintang (1-5)</span>
                         </div>
-                        <input type="text" id="review-input" required placeholder="Tulis ulasan Anda tentang script ini..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <button type="submit" id="btn-submit-rating" class="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all cursor-pointer">Kirim Rating & Ulasan</button>
+                        <input type="text" id="review-input" required placeholder="Tulis ulasan Anda..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs">
+                        <button type="submit" id="btn-submit-rating" class="w-full py-2 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Kirim Rating & Ulasan</button>
                     </form>
                 </div>
 
-                <!-- Daftar Ulasan Pengguna -->
+                <!-- Daftar Ulasan -->
                 <div class="space-y-3 pt-2">
-                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i> Ulasan Pengguna (<span id="review-count">0</span>)</h4>
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Ulasan Pengguna (<span id="review-count">0</span>)</h4>
                     <div id="review-list" class="space-y-3 max-h-48 overflow-y-auto pr-2"></div>
                 </div>
 
-                <!-- CONTAINER LINK UNDUHAN DINAMIS MANUAL DI MODAL DETAIL -->
+                <!-- TAUTAN UNDUHAN -->
                 <div class="space-y-3 pt-2">
-                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-down text-cyan-400"></i> Tautan Unduhan Tersedia</h4>
-                    <div id="modal-dynamic-links-list" class="space-y-2">
-                        <!-- Diisi dinamis via JS -->
-                    </div>
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Tautan Unduhan Tersedia</h4>
+                    <div id="modal-dynamic-links-list" class="space-y-2"></div>
                 </div>
 
                 <div class="space-y-4 pt-4 border-t border-slate-800">
-                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-regular fa-comments text-cyan-400"></i> Diskusi & Komentar (<span id="comment-count">0</span>)</h4>
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Komentar (<span id="comment-count">0</span>)</h4>
                     <div id="comment-list" class="space-y-3 max-h-48 overflow-y-auto pr-2"></div>
 
                     <form onsubmit="handlePostComment(event)" class="flex gap-2 pt-2">
-                        <input type="text" id="comment-input" required placeholder="Tulis komentar bermanfaat..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500">
-                        <button type="submit" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer">Kirim</button>
+                        <input type="text" id="comment-input" required placeholder="Tulis komentar..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs">
+                        <button type="submit" class="px-5 py-2.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Kirim</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- EMBEDDED JAVASCRIPT LOGIC -->
+    <script>
+        let currentUser = JSON.parse(localStorage.getItem('frh_current_user')) || null;
+        let adminCreds = JSON.parse(localStorage.getItem('frh_admin_creds')) || { user: 'superadmin', pass: 'securepass99', pin: '8888' };
+        let adminFailedAttempts = parseInt(localStorage.getItem('frh_admin_fails')) || 0;
+        let adminLockUntil = parseInt(localStorage.getItem('frh_admin_lock')) || 0;
+
+        let telegramConfig = JSON.parse(localStorage.getItem('frh_telegram_config')) || { token: '', chatId: '' };
+        let currentBroadcast = JSON.parse(localStorage.getItem('frh_broadcast')) || { title: "PENGUMUMAN PENTING", content: "Selamat datang di Gudang Script Mobile Legends & Free Fire." };
+
+        let categoryConfig = JSON.parse(localStorage.getItem('frh_category_config')) || {
+            "Script Mobile Legends": ["Script Skin", "Script Anti Lag", "Script Booster", "Game Booster"],
+            "Script Free Fire": ["Script Skin", "Script Anti Lag", "Script Aimbot"]
+        };
+
+        let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
+            {
+                id: 1,
+                name: "Script Skin Epic MLBB v1",
+                category: "Script Mobile Legends",
+                subcategory: "Script Skin",
+                typeUpload: "link",
+                version: "v1.0",
+                links: [
+                    { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1", type: "free" },
+                    { name: "Link Tanpa Iklan (VVIP)", url: "https://drive.google.com/ml1-clean", type: "vvip" }
+                ],
+                paidUnlockedUsers: [],
+                isSpecialAccess: true,
+                description: "Script skin epic permanen anti ban work 100% di mode ranked.",
+                fileSize: "25.4 MB",
+                screenshot: "",
+                verified: true,
+                uploader: "superadmin",
+                likes: 15,
+                views: 210,
+                likedBy: [],
+                savedBy: [],
+                ratings: { 5: 5, 4: 1 },
+                ratedUsers: {},
+                reviews: [{ user: "Budi", rating: 5, text: "Mantap work!" }],
+                comments: [{ user: "Budi", text: "Aman gais." }],
+                editStatus: null
+            }
+        ];
+
+        let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [];
+        let communityRequests = JSON.parse(localStorage.getItem('frh_community_requests')) || [];
+        let liveChatConversations = JSON.parse(localStorage.getItem('frh_livechat_conversations')) || {};
+        let activeChatUser = null;
+
+        let redeemRewards = JSON.parse(localStorage.getItem('frh_redeem_rewards')) || [
+            { id: 1, name: "Akses VVIP Tanpa Iklan (1 Bulan)", cost: 50, type: "vip", limitPerUser: 1, quota: 100, claimedCount: 0 },
+            { id: 2, name: "Akses Postingan Khusus Satuan", cost: 25, type: "post_access", limitPerUser: 5, quota: 200, claimedCount: 0 },
+            { id: 3, name: "Saldo Dana Rp 25.000", cost: 100, type: "dana", limitPerUser: 1, quota: 50, claimedCount: 0 }
+        ];
+
+        let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) || {};
+        let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
+        let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {}; 
+        let userQuestClaims = JSON.parse(localStorage.getItem('frh_user_quest_claims')) || {};
+        let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; 
+        let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {}; 
+        let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || []; 
+        let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
+        let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
+        let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
+            { id: 1, text: "Selamat datang di Gudang Script Mobile Legends & Free Fire", type: 'script', read: false, time: "Baru saja" }
+        ];
+        let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
+        let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
+
+        let userLoginHistory = JSON.parse(localStorage.getItem('frh_user_login_history')) || {};
+        let userQuestHistory = JSON.parse(localStorage.getItem('frh_user_quest_history')) || {};
+        let userRedeemLogHistory = JSON.parse(localStorage.getItem('frh_user_redeem_log_history')) || {};
+        let userReportHistory = JSON.parse(localStorage.getItem('frh_user_report_history')) || {};
+        let userPasswordHistory = JSON.parse(localStorage.getItem('frh_user_password_history')) || {};
+
+        let currentMainCategory = 'All';
+        let currentSubCategory = 'All';
+        let activeResourceId = null;
+        let currentSelectedStar = 5;
+        let adminSessionTimer = null;
+        let currentLogFilter = 'all';
+        let activeEditModeAction = null;
+
+        function handleDailyClaim() {
+            if (!currentUser) {
+                showToast('Silakan login terlebih dahulu.', 'warning');
+                return;
+            }
+            let uname = currentUser.username;
+            let lastClaimDate = localStorage.getItem(`frh_last_claim_date_${uname}`);
+            let todayDateStr = new Date().toDateString();
+
+            if (lastClaimDate === todayDateStr) {
+                showToast('Anda sudah melakukan Daily Claim hari ini. Reset pada jam 00.00.', 'warning');
+                return;
+            }
+
+            let randomPts = Math.floor(Math.random() * 100) + 1;
+            addPoints(uname, randomPts);
+            localStorage.setItem(`frh_last_claim_date_${uname}`, todayDateStr);
+            
+            addNotification(`Daily Claim berhasil! Anda mendapatkan ${randomPts} Poin.`, 'reward');
+            showToast(`Selamat! Anda mendapatkan ${randomPts} Poin dari Daily Claim.`, 'success');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkVipExpiration();
+            checkBanExpiration();
+            checkAuthState();
+            checkAdminLockState();
+            renderNotifications();
+            renderBroadcastBanner();
+            updateSubCategories();
+            addCustomLinkRow(); 
+            ensureToastContainerExists();
+
+            const userInp = document.getElementById('uni-user');
+            const passInp = document.getElementById('uni-pass');
+            [userInp, passInp].forEach(el => {
+                if (el) el.addEventListener('input', checkUnifiedAdminTrigger);
+            });
+        });
+
+        function ensureToastContainerExists() {
+            if (!document.getElementById('toast-container-hub')) {
+                let container = document.createElement('div');
+                container.id = 'toast-container-hub';
+                container.className = "fixed bottom-5 right-5 z-[99999] flex flex-col gap-3 pointer-events-none";
+                document.body.appendChild(container);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            ensureToastContainerExists();
+            const container = document.getElementById('toast-container-hub');
+            const toastId = Date.now();
+            let bgCol = 'bg-slate-900/95 border-cyan-500/40 text-cyan-400';
+            let iconClass = 'fa-circle-check text-cyan-400';
+            if (type === 'error') { bgCol = 'bg-slate-900/95 border-rose-500/40 text-rose-400'; iconClass = 'fa-circle-exclamation text-rose-400'; }
+            if (type === 'warning') { bgCol = 'bg-slate-900/95 border-amber-500/40 text-amber-400'; iconClass = 'fa-triangle-exclamation text-amber-400'; }
+
+            let toastEl = document.createElement('div');
+            toastEl.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl border ${bgCol} shadow-2xl backdrop-blur-xl text-xs font-bold animate-fadeIn`;
+            toastEl.innerHTML = `<i class="fa-solid ${iconClass} text-base"></i> <span class="text-slate-200">${message}</span>`;
+            container.appendChild(toastEl);
+            setTimeout(() => toastEl.remove(), 3200);
+        }
+
+        function updateSubCategories() {
+            const mainCatSelect = document.getElementById('up-category');
+            const subCatSelect = document.getElementById('up-subcategory');
+            if (!mainCatSelect || !subCatSelect) return;
+            subCatSelect.innerHTML = '';
+            (categoryConfig[mainCatSelect.value] || []).forEach(sub => {
+                subCatSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+            });
+        }
+
+        function renderAdminCategoriesConfig() {
+            const mlList = document.getElementById('admin-ml-sub-list');
+            const ffList = document.getElementById('admin-ff-sub-list');
+            if (!mlList || !ffList) return;
+            mlList.innerHTML = '';
+            ffList.innerHTML = '';
+            (categoryConfig["Script Mobile Legends"] || []).forEach((sub, idx) => {
+                mlList.innerHTML += `<div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs"><span>${sub}</span><button onclick="removeSubCategory('Script Mobile Legends', ${idx})" class="text-rose-400"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+            (categoryConfig["Script Free Fire"] || []).forEach((sub, idx) => {
+                ffList.innerHTML += `<div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs"><span>${sub}</span><button onclick="removeSubCategory('Script Free Fire', ${idx})" class="text-rose-400"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+        }
+
+        function addNewSubCategory(mainCat) {
+            let inputId = mainCat === 'Script Mobile Legends' ? 'new-ml-sub-input' : 'new-ff-sub-input';
+            let val = document.getElementById(inputId).value.trim();
+            if (!val) return;
+            if (!categoryConfig[mainCat]) categoryConfig[mainCat] = [];
+            categoryConfig[mainCat].push(val);
+            localStorage.setItem('frh_category_config', JSON.stringify(categoryConfig));
+            document.getElementById(inputId).value = '';
+            renderAdminCategoriesConfig();
+            updateSubCategories();
+            showToast('Sub-kategori ditambahkan.', 'success');
+        }
+
+        function removeSubCategory(mainCat, idx) {
+            categoryConfig[mainCat].splice(idx, 1);
+            localStorage.setItem('frh_category_config', JSON.stringify(categoryConfig));
+            renderAdminCategoriesConfig();
+            updateSubCategories();
+            showToast('Sub-kategori dihapus.', 'success');
+        }
+
+        function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '', typeVal = 'free') {
+            const container = document.getElementById('dynamic-links-container');
+            if (!container) return;
+            const rowId = Date.now() + Math.random();
+            let div = document.createElement('div');
+            div.className = "flex flex-col sm:flex-row items-center gap-2 bg-slate-900 p-3 rounded-xl border border-slate-800";
+            div.id = `link-row-${rowId}`;
+            div.innerHTML = `
+                <input type="text" placeholder="Nama..." value="${nameVal}" class="w-full sm:w-40 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs link-name-input text-cyan-400 font-bold" required>
+                <select class="link-type-select bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200">
+                    <option value="free" ${typeVal === 'free' ? 'selected' : ''}>Free</option>
+                    <option value="vvip" ${typeVal === 'vvip' ? 'selected' : ''}>VVIP</option>
+                </select>
+                <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs link-url-input text-slate-200" required>
+                <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2 bg-rose-500/10 text-rose-400 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function checkVipExpiration() {
+            let now = Date.now();
+            for (let uname in userVipSubscriptions) {
+                if (now > userVipSubscriptions[uname]) delete userVipSubscriptions[uname];
+            }
+        }
+
+        function checkBanExpiration() {
+            let now = Date.now();
+            for (let uname in userBans) {
+                if (userBans[uname] !== 'permanent' && now > userBans[uname]) delete userBans[uname];
+            }
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+            icon.className = input.type === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        }
+
+        function handleSaveBroadcast(e) {
+            e.preventDefault();
+            currentBroadcast = { title: document.getElementById('bc-title').value, content: document.getElementById('bc-content').value };
+            localStorage.setItem('frh_broadcast', JSON.stringify(currentBroadcast));
+            showToast('Broadcast disimpan!', 'success');
+            renderBroadcastBanner();
+        }
+
+        function renderBroadcastBanner() {
+            const bannerBox = document.getElementById('broadcast-banner-container');
+            if (!bannerBox || !currentBroadcast.content) return;
+            bannerBox.innerHTML = `<div class="bg-slate-900 border border-cyan-500/30 rounded-xl p-3 text-xs text-cyan-400 font-bold">${currentBroadcast.title}: ${currentBroadcast.content}</div>`;
+        }
+
+        function handleSaveTelegramConfig(e) {
+            e.preventDefault();
+            telegramConfig.token = document.getElementById('tg-token').value;
+            telegramConfig.chatId = document.getElementById('tg-chatid').value;
+            localStorage.setItem('frh_telegram_config', JSON.stringify(telegramConfig));
+            showToast('Telegram disimpan!', 'success');
+        }
+
+        function addNotification(text, type = 'script') {
+            if (!['script', 'quest', 'reward'].includes(type)) return;
+            notifications.unshift({ id: Date.now(), text, type, read: false, time: "Baru saja" });
+            localStorage.setItem('frh_notifications', JSON.stringify(notifications));
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notif-list');
+            const badge = document.getElementById('notif-badge');
+            if (!list || !badge) return;
+            list.innerHTML = '';
+            let unread = notifications.filter(n => !n.read).length;
+            if (unread > 0) { badge.textContent = unread; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+            notifications.forEach(n => {
+                list.innerHTML += `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300"><span>${n.text}</span></div>`;
+            });
+        }
+
+        function clearNotifications() {
+            notifications.forEach(n => n.read = true);
+            localStorage.setItem('frh_notifications', JSON.stringify(notifications));
+            renderNotifications();
+        }
+
+        function addPoints(username, amount) {
+            userPoints[username] = (userPoints[username] || 0) + amount;
+            localStorage.setItem('frh_user_points', JSON.stringify(userPoints));
+        }
+
+        function addExpAndLevelProgress(username, amount = 1) {
+            if (!userLevels[username]) userLevels[username] = { level: 1, exp: 0 };
+            let uData = userLevels[username];
+            uData.exp += amount;
+            let targetExp = uData.level * 50;
+            if (uData.exp >= targetExp) {
+                uData.exp -= targetExp;
+                uData.level++;
+                addNotification(`Level Anda naik ke Level ${uData.level}!`, 'reward');
+            }
+            localStorage.setItem('frh_user_levels', JSON.stringify(userLevels));
+        }
+
+        function formatFileSizeInput(el) {
+            if (el.value && !el.value.toLowerCase().includes('mb')) el.value += " MB";
+        }
+
+        function switchAuthTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('form-login-unified').classList.remove('hidden');
+                document.getElementById('form-reg-unified').classList.add('hidden');
+            } else {
+                document.getElementById('form-login-unified').classList.add('hidden');
+                document.getElementById('form-reg-unified').classList.remove('hidden');
+            }
+        }
+
+        function checkUnifiedAdminTrigger() {
+            const uVal = document.getElementById('uni-user').value.trim();
+            const pVal = document.getElementById('uni-pass').value;
+            const pinContainer = document.getElementById('container-admin-pin');
+            if (uVal === adminCreds.user && pVal === adminCreds.pass) pinContainer.classList.remove('hidden');
+            else pinContainer.classList.add('hidden');
+        }
+
+        function handleUnifiedLogin(e) {
+            e.preventDefault();
+            const uVal = document.getElementById('uni-user').value.trim();
+            const pVal = document.getElementById('uni-pass').value;
+            const pinVal = document.getElementById('uni-pin').value;
+
+            if (uVal === adminCreds.user && pVal === adminCreds.pass) {
+                if (pinVal === adminCreds.pin) {
+                    currentUser = { username: 'Super Administrator', role: 'admin' };
+                } else {
+                    showToast('PIN Super Admin Salah!', 'error');
+                    return;
+                }
+            } else {
+                let users = JSON.parse(localStorage.getItem('frh_users')) || [];
+                const validUser = users.find(u => u.username === uVal && u.password === pVal);
+                if (!validUser) {
+                    showToast('Username atau Password salah!', 'error');
+                    return;
+                }
+                currentUser = { username: uVal, role: 'user' };
+            }
+            localStorage.setItem('frh_current_user', JSON.stringify(currentUser));
+            checkAuthState();
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            let users = JSON.parse(localStorage.getItem('frh_users')) || [];
+            if (users.some(u => u.username === username)) {
+                showToast('Username sudah terdaftar!', 'warning');
+                return;
+            }
+            users.push({ username, password });
+            localStorage.setItem('frh_users', JSON.stringify(users));
+            showToast('Registrasi berhasil!', 'success');
+            switchAuthTab('login');
+        }
+
+        function checkAdminLockState() {}
+
+        function logout() {
+            localStorage.removeItem('frh_current_user');
+            currentUser = null;
+            checkAuthState();
+        }
+
+        function checkAuthState() {
+            const authModal = document.getElementById('auth-modal');
+            const mainApp = document.getElementById('main-app');
+            if (!currentUser) {
+                authModal.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            } else {
+                authModal.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                document.getElementById('user-display-name').textContent = currentUser.username;
+                document.getElementById('user-role-badge').textContent = currentUser.role === 'admin' ? 'Super Admin' : getUserBadge(currentUser.username);
+
+                if (currentUser.role === 'admin') {
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    document.getElementById('user-panel').classList.add('hidden');
+                    renderAdminDashboard();
+                } else {
+                    document.getElementById('admin-panel').classList.add('hidden');
+                    document.getElementById('user-panel').classList.remove('hidden');
+                    renderResources();
+                }
+            }
+        }
+
+        function getUserBadge(username) {
+            let pts = userPoints[username] || 0;
+            if (pts >= 1000) return 'Grandmaster Elite 👑🔥';
+            if (pts >= 500) return 'Legendary Contributor ⚡';
+            return 'Member Baru 🌱';
+        }
+
+        function switchMainView(view) {
+            ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            if (view === 'home') { document.getElementById('user-panel').classList.remove('hidden'); renderResources(); }
+            else if (view === 'profile') { document.getElementById('profile-panel').classList.remove('hidden'); renderProfilePage(); }
+            else if (view === 'faq') { document.getElementById('faq-panel').classList.remove('hidden'); }
+            else if (view === 'leaderboard') { document.getElementById('leaderboard-panel').classList.remove('hidden'); renderLeaderboardPage(); }
+            else if (view === 'requests') { document.getElementById('requests-panel').classList.remove('hidden'); }
+            else if (view === 'livechat') { document.getElementById('livechat-panel').classList.remove('hidden'); }
+        }
+
+        function toggleSupportChatModal() { document.getElementById('support-chat-modal').classList.toggle('hidden'); }
+        function selectSupportCategory(cat) { toggleSupportChatModal(); switchMainView('livechat'); }
+        function openRequestModal() { document.getElementById('request-modal').classList.remove('hidden'); }
+        function closeRequestModal() { document.getElementById('request-modal').classList.add('hidden'); }
+        function handlePostRequest(e) {
+            e.preventDefault();
+            closeRequestModal();
+            showToast('Request terkirim!', 'success');
+        }
+
+        function renderLeaderboardPage() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = `<div class="p-3 bg-slate-950 rounded-xl text-xs">Peringkat Aktif</div>`;
+        }
+
+        function switchAdminTab(type) {
+            ['upload', 'manage', 'categories', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
+                let sec = document.getElementById(`admin-${t}-section`);
+                if(sec) sec.classList.add('hidden');
+            });
+            let target = document.getElementById(`admin-${type}-section`);
+            if(target) target.classList.remove('hidden');
+            if(type === 'manage') renderAdminManageList();
+            if(type === 'categories') renderAdminCategoriesConfig();
+        }
+
+        function renderAdminManageList() {
+            const list = document.getElementById('admin-manage-list');
+            list.innerHTML = '';
+            resources.forEach(res => {
+                list.innerHTML += `<div class="bg-slate-950 p-4 rounded-xl text-xs"><span class="font-bold">${res.name}</span></div>`;
+            });
+        }
+
+        function renderAdminDashboard() {
+            renderAdminManageList();
+            renderAdminCategoriesConfig();
+        }
+
+        function filterMainCategory(cat) {
+            currentMainCategory = cat;
+            renderResources();
+        }
+
+        function filterSaved() {
+            currentMainCategory = 'Saved';
+            renderResources();
+        }
+
+        function handleSearchInput() { renderResources(); }
+
+        function renderResources() {
+            const grid = document.getElementById('resource-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            resources.forEach(res => {
+                grid.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <h3 onclick="openDetail(${res.id})" class="font-bold text-base cursor-pointer hover:text-cyan-400">${res.name}</h3>
+                            <p class="text-xs text-slate-300 mt-2">${res.description}</p>
+                        </div>
+                        <button onclick="openDetail(${res.id})" class="mt-4 py-2 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer">Detail</button>
+                    </div>
+                `;
+            });
+        }
+
+        function calculateAverageRating(res) { return '5.0'; }
+
+        function openDetail(id) {
+            const res = resources.find(r => r.id === id);
+            if (!res) return;
+            activeResourceId = id;
+            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('modal-title').textContent = res.name;
+            document.getElementById('modal-desc').textContent = res.description;
+            
+            const linksList = document.getElementById('modal-dynamic-links-list');
+            linksList.innerHTML = '';
+            res.links.forEach(l => {
+                linksList.innerHTML += `<a href="${l.url}" target="_blank" class="block py-2 px-3 bg-cyan-500 text-slate-950 rounded-xl text-xs font-bold text-center">${l.name}</a>`;
+            });
+        }
+
+        function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+        function selectRatingStar(star) { currentSelectedStar = star; }
+        function handlePostRatingAndReview(e) { e.preventDefault(); showToast('Ulasan terkirim!', 'success'); }
+        function handlePostComment(e) { e.preventDefault(); showToast('Komentar terkirim!', 'success'); }
+        function togglePasswordForm() { document.getElementById('profile-password-box').classList.toggle('hidden'); }
+        function handleChangeUserPassword(e) { e.preventDefault(); showToast('Password diubah!', 'success'); togglePasswordForm(); }
+
+        const profileQuestsDefinition = [
+            { id: 'q1', title: 'Sukai 1 Script', reward: 10, target: 1, type: 'like' },
+            { id: 'q2', title: 'Rating Bintang 5', reward: 15, target: 1, type: 'rate5' }
+        ];
+
+        function checkQuestRealProgress(type) {
+            let uname = currentUser.username;
+            if (type === 'like') return resources.filter(r => r.likedBy && r.likedBy.includes(uname)).length;
+            if (type === 'rate5') return resources.filter(r => r.ratedUsers && r.ratedUsers[uname] === 5).length;
+            return 0;
+        }
+
+        function claimProfileQuest(questId, target, type, reward) {
+            let uname = currentUser.username;
+            if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
+            if (userQuestClaims[uname][questId]) { showToast('Sudah diklaim!', 'warning'); return; }
+            
+            let currentProgress = checkQuestRealProgress(type);
+            if (currentProgress < target) {
+                showToast(`Syarat belum terpenuhi (${currentProgress}/${target}).`, 'error');
+                return;
+            }
+
+            userQuestClaims[uname][questId] = true;
+            localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
+            addPoints(uname, reward);
+            showToast(`Quest selesai! +${reward} Poin.`, 'success');
+            renderProfilePage();
+        }
+
+        function renderProfilePage() {
+            let uname = currentUser.username;
+            document.getElementById('profile-username').textContent = uname;
+            document.getElementById('profile-points-label').textContent = `Poin: ${userPoints[uname] || 0} Pts`;
+            
+            const questList = document.getElementById('profile-quests-list');
+            if (questList) {
+                questList.innerHTML = '';
+                profileQuestsDefinition.forEach(q => {
+                    let isClaimed = (userQuestClaims[uname] && userQuestClaims[uname][q.id]) || false;
+                    let prog = checkQuestRealProgress(q.type);
+                    let canClaim = prog >= q.target && !isClaimed;
+                    
+                    let btnHtml = isClaimed ? `<span class="text-emerald-400 font-bold text-xs">Selesai</span>` : (canClaim ? `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3 py-1 bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs">Klaim</button>` : `<span class="text-slate-500 text-xs">${prog}/${q.target}</span>`);
+
+                    questList.innerHTML += `<div class="bg-slate-950 p-3 rounded-xl flex justify-between items-center text-xs"><span>${q.title}</span><div>${btnHtml}</div></div>`;
+                });
+            }
+        }
+    </script>
 </body>
 </html>
