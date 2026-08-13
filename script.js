@@ -252,10 +252,14 @@ function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '') {
     let div = document.createElement('div');
     div.className = "flex flex-col sm:flex-row items-center gap-3 bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-lg animate-fadeIn";
     div.id = `link-row-${rowId}`;
+    // Tambahkan select ke dalam innerHTML row
     div.innerHTML = `
-        <input type="text" placeholder="Nama Link (Cth: VVIP Server 1)..." value="${nameVal}" class="w-full sm:w-52 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
-        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
-        <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl transition-all text-xs cursor-pointer shadow-md"><i class="fa-solid fa-trash"></i></button>
+    <input type="text" ... class="link-name-input" ...>
+    <select class="link-type-select bg-slate-950 border border-slate-800 rounded-xl px-2 text-xs">
+        <option value="free">Free (Iklan)</option>
+        <option value="vvip">VVIP (Tanpa Iklan)</option>
+    </select>
+    <input type="url" ... class="link-url-input" ...>
     `;
     container.appendChild(div);
 }
@@ -391,6 +395,8 @@ function recordSystemLog(logType, detailText, uname = null) {
 }
 
 function addNotification(text, type = 'info') {
+    // HANYA TERIMA tipe script, quest, reward
+    if (!['script', 'quest', 'reward'].includes(type)) return;
     notifications.unshift({ id: Date.now(), text, type, read: false, time: "Baru saja" });
     localStorage.setItem('frh_notifications', JSON.stringify(notifications));
     renderNotifications();
@@ -2237,12 +2243,14 @@ function checkQuestRealProgress(type) {
 }
 
 function claimProfileQuest(questId, target, type, reward) {
-    let uname = currentUser.username;
-    if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
-    if (userQuestClaims[uname][questId]) {
-        showToast('Quest sudah diklaim!', 'warning');
+    let currentProgress = checkQuestRealProgress(type);
+    // Validasi ketat
+    if (currentProgress < target) {
+        showToast('Quest belum terpenuhi! Progress: ' + currentProgress + '/' + target, 'error');
         return;
     }
+    // ... lanjutkan proses klaim ...
+}
 
     let currentProgress = checkQuestRealProgress(type);
     if (currentProgress >= target) {
@@ -2419,4 +2427,17 @@ function renderAdditionalUserHistories(uname) {
             </div>
         </div>
     `;
+}
+
+function handleDailyClaim() {
+    let uname = currentUser.username;
+    let last = localStorage.getItem(`frh_last_claim_${uname}`);
+    if (last === new Date().toDateString()) {
+        showToast('Sudah diklaim hari ini! Reset jam 00:00.', 'warning');
+        return;
+    }
+    let pts = Math.floor(Math.random() * 100) + 1;
+    addPoints(uname, pts);
+    localStorage.setItem(`frh_last_claim_${uname}`, new Date().toDateString());
+    showToast(`Selamat! Anda mendapatkan ${pts} poin.`, 'success');
 }
