@@ -40,3 +40,232 @@
 @media (max-width: 640px) {
   #daily-claim-btn, #support-chat-modal + * { touch-action: manipulation; }
 }
+
+
+/* ============================================================
+   GUDANG SCRIPT — PREMIUM UI SYSTEM v2
+   Minimal • Elegant • Modern • Mobile First
+   ============================================================ */
+:root{
+  --gs-bg:#060a11;
+  --gs-surface:#0b111b;
+  --gs-surface-2:#0f1724;
+  --gs-surface-3:#121c2b;
+  --gs-border:rgba(148,163,184,.12);
+  --gs-border-strong:rgba(148,163,184,.20);
+  --gs-text:#f8fafc;
+  --gs-muted:#94a3b8;
+  --gs-primary:#22d3ee;
+  --gs-primary-2:#3b82f6;
+  --gs-success:#34d399;
+  --gs-warning:#fbbf24;
+  --gs-danger:#fb7185;
+  --gs-radius:18px;
+  --gs-shadow:0 18px 50px rgba(0,0,0,.22);
+  --gs-nav-height:72px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(900px 420px at 10% -10%,rgba(34,211,238,.075),transparent 55%),
+    radial-gradient(800px 400px at 100% 0%,rgba(59,130,246,.055),transparent 52%),
+    var(--gs-bg)!important;
+  color:var(--gs-text);
+}
+::selection{background:rgba(34,211,238,.25);color:#fff}
+*{scrollbar-width:thin;scrollbar-color:#26364b transparent}
+*::-webkit-scrollbar{width:7px;height:7px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:#26364b;border-radius:999px}
+button,input,select,textarea{font:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid rgba(34,211,238,.7);
+  outline-offset:2px;
+}
+
+/* Premium surfaces */
+.bg-slate-900{background-color:rgba(11,17,27,.88)!important}
+.bg-slate-950{background-color:var(--gs-bg)!important}
+.bg-slate-800{background-color:rgba(18,28,43,.82)!important}
+.border-slate-800,.border-slate-800\/80,.border-slate-800\/60{
+  border-color:var(--gs-border)!important
+}
+.rounded-2xl{border-radius:var(--gs-radius)!important}
+.shadow-xl,.shadow-2xl{box-shadow:var(--gs-shadow)!important}
+
+header{
+  background:rgba(6,10,17,.78)!important;
+  border-color:var(--gs-border)!important;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+header .max-w-7xl{min-height:64px}
+
+/* Cards become quieter and more premium */
+main .bg-slate-900,
+main .bg-slate-900\/50,
+main .bg-slate-900\/30{
+  box-shadow:0 10px 35px rgba(0,0,0,.12);
+}
+main .bg-slate-900:hover{
+  border-color:rgba(34,211,238,.16)!important;
+}
+
+/* Inputs */
+input:not([type="checkbox"]):not([type="radio"]),select,textarea{
+  border-color:var(--gs-border)!important;
+  background:rgba(6,10,17,.72)!important;
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+input:not([type="checkbox"]):not([type="radio"]):focus,select:focus,textarea:focus{
+  border-color:rgba(34,211,238,.48)!important;
+  box-shadow:0 0 0 3px rgba(34,211,238,.07);
+}
+
+/* Buttons: subtle lift, not excessive animation */
+button,a[class*="bg-cyan"],a[class*="bg-blue"]{
+  transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease,border-color .18s ease;
+}
+button:not(:disabled):hover{transform:translateY(-1px)}
+button:disabled{cursor:not-allowed}
+button[class*="bg-cyan-500"]{
+  box-shadow:0 8px 24px rgba(34,211,238,.10);
+}
+
+/* Resource cards */
+.resource-card,.script-card,[data-resource-card]{
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+.resource-card:hover,.script-card:hover,[data-resource-card]:hover{
+  transform:translateY(-3px);
+  border-color:rgba(34,211,238,.22)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.18);
+}
+
+/* Badges */
+[class*="rounded-full"][class*="text-cyan"],
+[class*="rounded-xl"][class*="text-cyan"]{letter-spacing:.01em}
+
+/* Page title hierarchy */
+main h1{letter-spacing:-.025em}
+main h2{letter-spacing:-.02em}
+main h3{letter-spacing:-.015em}
+
+/* Floating controls */
+#daily-claim-btn{
+  box-shadow:0 14px 35px rgba(245,158,11,.18)!important;
+}
+#daily-claim-btn:hover{transform:translateY(-2px) scale(1.02)}
+body[data-page]:not([data-page="index"]) .fixed.bottom-6.right-6{
+  transition:bottom .2s ease;
+}
+
+/* ============================================================
+   MOBILE BOTTOM NAV
+   ============================================================ */
+#gs-mobile-nav{
+  display:none;
+}
+@media (max-width:767px){
+  body:not([data-page="index"]) #gs-mobile-nav{
+    display:grid;
+  }
+  #gs-mobile-nav{
+    position:fixed;
+    z-index:45;
+    left:10px;
+    right:10px;
+    bottom:10px;
+    height:var(--gs-nav-height);
+    grid-template-columns:repeat(5,1fr);
+    align-items:center;
+    padding:7px;
+    background:rgba(9,15,24,.88);
+    border:1px solid rgba(148,163,184,.14);
+    border-radius:22px;
+    box-shadow:0 18px 45px rgba(0,0,0,.38);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+  }
+  #gs-mobile-nav a{
+    min-width:0;
+    height:58px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    color:#718096;
+    border-radius:16px;
+    text-decoration:none;
+    font-size:10px;
+    font-weight:700;
+    transition:background .18s ease,color .18s ease,transform .18s ease;
+  }
+  #gs-mobile-nav a i{font-size:16px}
+  #gs-mobile-nav a.active{
+    color:#67e8f9;
+    background:rgba(34,211,238,.09);
+  }
+  #gs-mobile-nav a:hover{transform:none}
+  #gs-mobile-nav .nav-avatar{
+    width:28px;height:28px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(34,211,238,.08);
+  }
+
+  /* Keep floating actions above the navigation */
+  body:not([data-page="index"]) .fixed.bottom-6.right-6{
+    bottom:94px!important;
+    right:16px!important;
+  }
+  body:not([data-page="index"]) .fixed.bottom-24.right-6{
+    bottom:162px!important;
+    right:16px!important;
+  }
+  main{padding-bottom:105px!important}
+  footer{padding-bottom:95px!important}
+}
+
+/* Admin pages: compact sidebar-style navigation when present */
+[data-page^="admin"] .admin-nav,
+[data-page="admin-dashboard"] .admin-nav{
+  border-color:var(--gs-border);
+}
+
+/* Loading shimmer utility */
+.gs-skeleton{
+  position:relative;
+  overflow:hidden;
+  background:#111a28;
+  border-radius:12px;
+}
+.gs-skeleton::after{
+  content:"";
+  position:absolute;inset:0;
+  transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);
+  animation:gsShimmer 1.5s infinite;
+}
+@keyframes gsShimmer{100%{transform:translateX(100%)}}
+
+/* Toast / modal polish */
+.animate-fadeIn{animation:fadeIn .22s ease-out both}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(7px) scale(.99)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
+
+/* Desktop breathing room */
+@media (min-width:1024px){
+  main{padding-top:30px!important}
+}

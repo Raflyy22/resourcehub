@@ -760,5 +760,18 @@
 </div>
 </div>
 <script src="script.js"></script>
+
+<!-- PREMIUM MOBILE NAVIGATION -->
+<nav id="gs-mobile-nav" aria-label="Navigasi utama mobile">
+  <a href="dashboard.html" data-nav-page="dashboard"><i class="fa-solid fa-house"></i><span>Home</span></a>
+  <a href="scripts.html" data-nav-page="scripts"><i class="fa-solid fa-box-open"></i><span>Script</span></a>
+  <a href="profile.html#quest" data-nav-page="profile"><i class="fa-solid fa-bullseye"></i><span>Quest</span></a>
+  <a href="leaderboard.html" data-nav-page="leaderboard"><i class="fa-solid fa-trophy"></i><span>Ranking</span></a>
+  <a href="profile.html" data-nav-page="profile-main"><span class="nav-avatar"><i class="fa-regular fa-user"></i></span><span>Profil</span></a>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{const p=document.body.dataset.page;document.querySelectorAll('#gs-mobile-nav a').forEach(a=>{const n=a.dataset.navPage;if(n===p||(p==='profile'&&n==='profile-main'))a.classList.add('active');});});
+</script>
 </body>
 </html>
