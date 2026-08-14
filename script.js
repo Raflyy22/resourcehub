@@ -20,8 +20,9 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
         typeUpload: "link",
         version: "v1.0",
         links: [
-            { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1", type: "free" },
-            { name: "Link Tanpa Iklan (VVIP)", url: "https://drive.google.com/ml1-clean", type: "vvip" }
+            { name: "Link Iklan (Free)", url: "https://safelink-sample.com/ml1" },
+            { name: "Link Tanpa Iklan (VVIP)", url: "https://drive.google.com/ml1-clean" },
+            { name: "Direct File (VVIP)", url: "https://direct-download.com/ml1" }
         ],
         paidUnlockedUsers: [],
         isSpecialAccess: true,
@@ -41,6 +42,18 @@ let resources = JSON.parse(localStorage.getItem('frh_resources')) || [
         editStatus: null
     }
 ];
+
+function normalizeDownloadLinkType(link) {
+    if (!link) return link;
+    if (link.type) return link;
+    const name = String(link.name || '').toLowerCase();
+    if (name.includes('vvip') || name.includes('tanpa iklan') || name.includes('direct')) link.type = 'vvip';
+    else if (name.includes('script')) link.type = 'script';
+    else link.type = 'free';
+    return link;
+}
+resources.forEach(r => { if (Array.isArray(r.links)) r.links = r.links.map(normalizeDownloadLinkType); });
+localStorage.setItem('frh_resources', JSON.stringify(resources));
 
 let announcements = JSON.parse(localStorage.getItem('frh_announcements')) || [
     { id: 1, title: "Pembaruan Gudang Script", content: "Kustomisasi Nama Link, Pembersihan Fitur Redundan, dan Riwayat Profil Komprehensif.", date: "12 Agustus 2026" }
@@ -66,15 +79,16 @@ let userViewHistory = JSON.parse(localStorage.getItem('frh_user_view_history')) 
 let userPoints = JSON.parse(localStorage.getItem('frh_user_points')) || {};
 let userLevels = JSON.parse(localStorage.getItem('frh_user_levels')) || {}; 
 let userQuestClaims = JSON.parse(localStorage.getItem('frh_user_quest_claims')) || {};
+let customQuests = JSON.parse(localStorage.getItem('frh_custom_quests')) || [];
+let dailyClaimState = JSON.parse(localStorage.getItem('frh_daily_claim_state')) || {};
 let userVipSubscriptions = JSON.parse(localStorage.getItem('frh_user_vip_subs')) || {}; 
 let userUnlockedPosts = JSON.parse(localStorage.getItem('frh_user_unlocked_posts')) || {}; 
 let userAuditLogs = JSON.parse(localStorage.getItem('frh_user_audit_logs')) || {};
 let systemLogs = JSON.parse(localStorage.getItem('frh_system_logs')) || []; 
 let brokenReports = JSON.parse(localStorage.getItem('frh_broken_reports')) || [];
 let userRecentSearches = JSON.parse(localStorage.getItem('frh_recent_searches')) || [];
-let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [
-    { id: 1, text: "Selamat datang di Gudang Script Mobile Legends & Free Fire", type: 'script', read: false, time: "Baru saja" }
-];
+let notifications = JSON.parse(localStorage.getItem('frh_notifications')) || [];
+notifications = notifications.filter(n => ['script','quest','reward'].includes(n.category || n.type));
 let userRedeemHistory = JSON.parse(localStorage.getItem('frh_user_redeem_history')) || {}; 
 let userBans = JSON.parse(localStorage.getItem('frh_user_bans')) || {}; 
 
@@ -94,30 +108,6 @@ let adminSessionTimer = null;
 let currentLogFilter = 'all';
 let activeEditModeAction = null;
 
-// POIN 5: DAILY CLAIM SYSTEM (Reset setiap jam 00.00 / tanggal berganti, random 1-100 poin)
-function handleDailyClaim() {
-    if (!currentUser) {
-        showToast('Silakan login terlebih dahulu untuk melakukan Daily Claim.', 'warning');
-        return;
-    }
-    let uname = currentUser.username;
-    let lastClaimDate = localStorage.getItem(`frh_last_claim_date_${uname}`);
-    let todayDateStr = new Date().toDateString();
-
-    if (lastClaimDate === todayDateStr) {
-        showToast('Anda sudah melakukan Daily Claim hari ini. Reset pada jam 00.00.', 'warning');
-        return;
-    }
-
-    let randomPts = Math.floor(Math.random() * 100) + 1;
-    addPoints(uname, randomPts);
-    localStorage.setItem(`frh_last_claim_date_${uname}`, todayDateStr);
-    
-    addNotification(`Daily Claim berhasil! Anda mendapatkan ${randomPts} Poin.`, 'reward');
-    recordSystemLog('daily_claim', `User @${uname} mengklaim ${randomPts} poin dari Daily Claim harian.`, uname);
-    showToast(`Selamat! Anda mendapatkan ${randomPts} Poin dari Daily Claim.`, 'success');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     checkVipExpiration();
     checkBanExpiration();
@@ -128,6 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSubCategories();
     addCustomLinkRow(); 
     ensureToastContainerExists();
+    renderAdminQuestsList();
+    updateDailyClaimButton();
+    setInterval(updateDailyClaimButton, 60000);
 
     const userInp = document.getElementById('uni-user');
     const passInp = document.getElementById('uni-pass');
@@ -265,23 +258,24 @@ function removeSubCategory(mainCat, idx) {
 }
 
 /* ========================================================
-   POIN 3: MANAJEMEN TAUTAN DENGAN NAMA & TIPE (FREE / VVIP)
+   POIN 1: FITUR KUSTOMISASI NAMA LINK BEBAS
    ======================================================== */
-function addCustomLinkRow(nameVal = 'Link Iklan (Free)', urlVal = '', typeVal = 'free') {
+function addCustomLinkRow(nameVal = 'Nama File / Link', urlVal = '', typeVal = 'free') {
     const container = document.getElementById('dynamic-links-container');
     if (!container) return;
     const rowId = Date.now() + Math.random();
-
-    let div = document.createElement('div');
-    div.className = "flex flex-col sm:flex-row items-center gap-3 bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-lg animate-fadeIn";
+    const safeType = ['free','vvip','script'].includes(typeVal) ? typeVal : 'free';
+    const div = document.createElement('div');
+    div.className = "flex flex-col lg:flex-row items-center gap-3 bg-slate-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-lg animate-fadeIn";
     div.id = `link-row-${rowId}`;
     div.innerHTML = `
-        <input type="text" placeholder="Nama Link (Cth: VVIP Server 1)..." value="${nameVal}" class="w-full sm:w-44 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
-        <select class="link-type-select bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 text-slate-200 font-semibold cursor-pointer">
-            <option value="free" ${typeVal === 'free' ? 'selected' : ''}>Free (Dengan Iklan)</option>
-            <option value="vvip" ${typeVal === 'vvip' ? 'selected' : ''}>VVIP (Tanpa Iklan)</option>
+        <input type="text" placeholder="Nama file / link..." value="${String(nameVal).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}" class="w-full lg:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-name-input text-cyan-400 font-bold shadow-inner" required>
+        <select class="w-full lg:w-52 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-type-input cursor-pointer">
+            <option value="free" ${safeType==='free'?'selected':''}>Free + Iklan</option>
+            <option value="vvip" ${safeType==='vvip'?'selected':''}>VVIP Tanpa Iklan</option>
+            <option value="script" ${safeType==='script'?'selected':''}>Link Script</option>
         </select>
-        <input type="url" placeholder="https://..." value="${urlVal}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
+        <input type="url" placeholder="https://..." value="${String(urlVal).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}" class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500 link-url-input shadow-inner text-slate-200" required>
         <button type="button" onclick="document.getElementById('link-row-${rowId}').remove()" class="px-3 py-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl transition-all text-xs cursor-pointer shadow-md"><i class="fa-solid fa-trash"></i></button>
     `;
     container.appendChild(div);
@@ -295,7 +289,7 @@ function checkVipExpiration() {
         if (typeof expireTime === 'number' && now > expireTime) {
             delete userVipSubscriptions[uname];
             updated = true;
-            addNotification(`Masa aktif VVIP 1 bulan Anda telah otomatis berakhir.`, 'reward');
+            addNotification(`Masa aktif VVIP 1 bulan Anda telah otomatis berakhir.`, 'system');
             recordSystemLog('redeem_point', `Masa aktif VVIP 1 bulan untuk akun @${uname} telah otomatis berakhir.`, uname);
         }
     }
@@ -417,14 +411,12 @@ function recordSystemLog(logType, detailText, uname = null) {
     sendTelegramNotification(`<b>[LOGS: ${logType.toUpperCase()}]</b>\nDetail: ${detailText}\nUser: @${logItem.user}\nWaktu: ${logItem.time}`);
 }
 
-/* ========================================================
-   POIN 2: HANYA NOTIFIKASI SCRIPT TERBARU, QUEST TERBARU, REWARD TERBARU
-   ======================================================== */
-function addNotification(text, type = 'script') {
-    const allowedTypes = ['script', 'quest', 'reward'];
-    if (!allowedTypes.includes(type)) return;
-
-    notifications.unshift({ id: Date.now(), text, type, read: false, time: "Baru saja" });
+function addNotification(text, type = 'info') {
+    const allowed = ['script', 'quest', 'reward'];
+    if (!allowed.includes(type)) return;
+    notifications = notifications.filter(n => allowed.includes(n.category || n.type));
+    notifications.unshift({ id: Date.now(), text, type, category: type, read: false, time: "Baru saja" });
+    if (notifications.length > 50) notifications = notifications.slice(0, 50);
     localStorage.setItem('frh_notifications', JSON.stringify(notifications));
     renderNotifications();
 }
@@ -435,6 +427,7 @@ function renderNotifications() {
     if (!list || !badge) return;
     list.innerHTML = '';
     
+    notifications = notifications.filter(n => ['script','quest','reward'].includes(n.category || n.type));
     let unreadCount = notifications.filter(n => !n.read).length;
     if (unreadCount > 0) {
         badge.textContent = unreadCount;
@@ -450,9 +443,9 @@ function renderNotifications() {
 
     notifications.forEach(n => {
         let borderColor = 'border-cyan-500/30';
-        let iconCol = 'text-cyan-400 fa-gamepad';
-        if (n.type === 'quest') { borderColor = 'border-emerald-500/30'; iconCol = 'text-emerald-400 fa-flag-checkered'; }
-        if (n.type === 'reward') { borderColor = 'border-amber-500/30'; iconCol = 'text-amber-400 fa-gift'; }
+        let iconCol = 'text-cyan-400 fa-circle-info';
+        if (n.type === 'admin') { borderColor = 'border-amber-500/30'; iconCol = 'text-amber-400 fa-triangle-exclamation'; }
+        if (n.type === 'danger') { borderColor = 'border-rose-500/30'; iconCol = 'text-rose-400 fa-circle-exclamation'; }
 
         list.innerHTML += `
             <div class="bg-slate-950/90 backdrop-blur-md p-3 rounded-2xl border ${borderColor} text-xs space-y-1 shadow-md transition-all hover:scale-[1.01] ${n.read ? 'opacity-60' : ''}">
@@ -493,7 +486,7 @@ function addExpAndLevelProgress(username, amount = null) {
         uData.exp -= targetExp;
         uData.level++;
         targetExp = getTargetExpForLevel(uData.level);
-        addNotification(`Selamat! Akun Anda naik ke Level ${uData.level}!`, 'reward');
+        addNotification(`Selamat! Akun Anda naik ke Level ${uData.level}!`, 'system');
         recordSystemLog('naik_level', `User @${username} naik level ke Level ${uData.level}.`, username);
     }
 
@@ -594,6 +587,7 @@ function handleUnifiedLogin(e) {
         logUserAction(uVal, 'Masuk ke sistem');
         recordSystemLog('akun_login', `User @${uVal} berhasil masuk ke akun.`, uVal);
 
+        // Poin 5: Rekam Riwayat Login User
         if (!userLoginHistory[uVal]) userLoginHistory[uVal] = [];
         userLoginHistory[uVal].unshift({ time: new Date().toLocaleString('id-ID'), status: 'Berhasil Masuk' });
         if (userLoginHistory[uVal].length > 15) userLoginHistory[uVal].pop();
@@ -833,7 +827,7 @@ function renderLeaderboardPage() {
 }
 
 function switchAdminTab(type) {
-    ['upload', 'manage', 'categories', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
+    ['upload', 'manage', 'categories', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'quests', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
         if(sec) sec.classList.add('hidden');
@@ -858,6 +852,7 @@ function switchAdminTab(type) {
     if (type === 'logs') renderAdminLogsList();
     if (type === 'livechat') renderAdminLiveChatUsers();
     if (type === 'rewards') renderAdminRewardsList();
+    if (type === 'quests') renderAdminQuestsList();
     if (type === 'requests') renderCommunityRequests();
     if (type === 'analytics') renderAdminAnalytics();
 }
@@ -1227,7 +1222,7 @@ function handleSaveReward(e) {
     localStorage.setItem('frh_redeem_rewards', JSON.stringify(redeemRewards));
     e.target.reset();
     renderAdminRewardsList();
-    addNotification(`Reward baru ditambahkan: ${name}`, 'reward');
+    addNotification(`Reward terbaru: ${name}`, 'reward');
     showToast('Reward redeem baru berhasil ditambahkan!', 'success');
 }
 
@@ -1347,6 +1342,7 @@ function executeRedeemReward(rew) {
         localStorage.setItem('frh_user_vip_subs', JSON.stringify(userVipSubscriptions));
     }
 
+    // Poin 5: Rekam Riwayat Redeem Berhasil
     if (!userRedeemLogHistory[uname]) userRedeemLogHistory[uname] = [];
     userRedeemLogHistory[uname].unshift({ name: rew.name, cost: rew.cost, time: new Date().toLocaleString('id-ID') });
     if (userRedeemLogHistory[uname].length > 15) userRedeemLogHistory[uname].pop();
@@ -1376,14 +1372,10 @@ function handleSaveResource(e) {
     let links = [];
     document.querySelectorAll('#dynamic-links-container > div').forEach(row => {
         let nInput = row.querySelector('.link-name-input');
-        let tSelect = row.querySelector('.link-type-select');
+        let tInput = row.querySelector('.link-type-input');
         let uInput = row.querySelector('.link-url-input');
-        if (nInput && uInput && nInput.value && uInput.value) {
-            links.push({ 
-                name: nInput.value.trim(), 
-                type: tSelect ? tSelect.value : 'free', 
-                url: uInput.value.trim() 
-            });
+        if (nInput && tInput && uInput && nInput.value.trim() && uInput.value.trim()) {
+            links.push({ name: nInput.value.trim(), type: tInput.value, url: uInput.value.trim() });
         }
     });
 
@@ -1428,7 +1420,7 @@ function handleSaveResource(e) {
             editStatus: null
         };
         resources.unshift(newRes);
-        addNotification(`Script baru dirilis: ${name}`, 'script');
+        addNotification(`Script terbaru: ${name}`, 'script');
         showToast('Script berhasil dipublikasikan!', 'success');
         e.target.reset();
         document.getElementById('dynamic-links-container').innerHTML = '';
@@ -1460,7 +1452,7 @@ function editResource(id) {
     const container = document.getElementById('dynamic-links-container');
     container.innerHTML = '';
     if (res.links && res.links.length > 0) {
-        res.links.forEach(l => addCustomLinkRow(l.name, l.url, l.type || 'free'));
+        res.links.forEach(l => addCustomLinkRow(l.name, l.url, normalizeDownloadLinkType(l).type));
     } else {
         addCustomLinkRow();
     }
@@ -1495,6 +1487,7 @@ function deleteResource(id) {
     document.getElementById('confirm-btn-yes').onclick = executeDeleteResource;
 }
 
+// Poin 4: Sinkronisasi riwayat jika postingan dihapus oleh admin
 function executeDeleteResource() {
     if (pendingDeleteId) {
         let deletedRes = resources.find(r => r.id === pendingDeleteId);
@@ -1536,6 +1529,8 @@ function renderAdminManageList() {
                     <span class="font-extrabold text-white text-sm block flex items-center gap-2"><i class="fa-solid fa-gamepad text-cyan-400"></i> ${res.name} (${res.version || 'v1.0'})</span>
                     <span class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 font-bold inline-block mt-2"><i class="fa-solid fa-folder"></i> ${res.category} (${res.subcategory})</span>
                     ${res.isSpecialAccess ? '<span class="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-400 font-extrabold inline-block ml-1.5 border border-amber-500/30"><i class="fa-solid fa-key"></i> Khusus</span>' : ''}
+                    ${res.editStatus === 'Edited' ? '<span class="px-2.5 py-1 rounded-xl bg-blue-500/20 text-blue-400 font-extrabold inline-block ml-1.5 border border-blue-500/30">Edited</span>' : ''}
+                    ${res.editStatus === 'Updated' ? '<span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 font-extrabold inline-block ml-1.5 border border-emerald-500/30">Updated</span>' : ''}
                 </div>
                 <div class="flex items-center justify-between pt-3 border-t border-slate-900">
                     <label class="flex items-center gap-2 text-[11px] text-amber-400 cursor-pointer font-bold">
@@ -1818,6 +1813,11 @@ function renderResources() {
             const iconClass = res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400';
             const avgRating = calculateAverageRating(res);
 
+            // Poin 4: Sinkronisasi pembersihan jika postingan yang disimpan dihapus admin
+            if (isSaved && !resources.some(r => r.id === res.id)) {
+                // handled by filtering
+            }
+
             grid.innerHTML += `
                 <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-xl border ${isBroken ? 'border-rose-500/50' : 'border-slate-800/80'} rounded-3xl p-5 flex flex-col justify-between hover:border-cyan-500/50 transition-all duration-300 shadow-xl group hover:-translate-y-1">
                     <div>
@@ -1828,6 +1828,8 @@ function renderResources() {
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap justify-end">
                                 ${res.isSpecialAccess ? '<span class="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20 shadow-sm flex items-center gap-1"><i class="fa-solid fa-key"></i> Khusus</span>' : ''}
+                                ${res.editStatus === 'Edited' ? '<span class="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-500/20">Edited</span>' : ''}
+                                ${res.editStatus === 'Updated' ? '<span class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">Updated</span>' : ''}
                                 ${isBroken ? '<span class="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-xl border border-rose-500/20">Rusak</span>' : ''}
                                 <span class="text-[11px] text-amber-400 font-extrabold bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20 flex items-center gap-1 shadow-sm"><i class="fa-solid fa-star"></i> ${avgRating}</span>
                             </div>
@@ -1899,6 +1901,7 @@ function toggleSave(id) {
         showToast('Script dihapus dari daftar tersimpan.', 'warning');
     } else {
         res.savedBy.push(currentUser.username);
+        logUserAction(currentUser.username, `Menyimpan script: ${res.name}`);
         showToast('Script berhasil disimpan!', 'success');
     }
     localStorage.setItem('frh_resources', JSON.stringify(resources));
@@ -1917,7 +1920,7 @@ function checkUserHasCleanLinkAccess(res) {
 }
 
 /* ========================================================
-   POIN 1: PEMBERSIHAN DETAIL (Tanpa Salin & Lapor Global)
+   POIN 2 & 3: DETAIL POSTINGAN (Tanpa Tombol Salin/Lapor Utama & Tanpa Mode Baca)
    ======================================================== */
 function openDetail(id, openModalWindow = true) {
     const res = resources.find(r => r.id === id);
@@ -1927,7 +1930,7 @@ function openDetail(id, openModalWindow = true) {
         let unlockedArr = userUnlockedPosts[currentUser.username] || [];
         let isVip = userVipSubscriptions[currentUser.username] && Date.now() < userVipSubscriptions[currentUser.username];
         if (!unlockedArr.includes(res.id) && !isVip) {
-            showToast('Akses Ditolak! Postingan ini khusus VVIP.', 'error');
+            showToast('Akses Ditolak! Postingan ini merupakan Postingan Khusus VVIP.', 'error');
             switchMainView('profile');
             return;
         }
@@ -1969,23 +1972,17 @@ function openDetail(id, openModalWindow = true) {
         screenshotBox.classList.add('hidden');
     }
 
-    const isBroken = brokenReports.some(rep => rep.resName.includes(res.name));
-    const alertBox = document.getElementById('modal-broken-alert');
-    if (alertBox) {
-        if (isBroken) alertBox.classList.remove('hidden');
-        else alertBox.classList.add('hidden');
-    }
-
     const dynamicLinksList = document.getElementById('modal-dynamic-links-list');
     dynamicLinksList.innerHTML = '';
 
     if (res.links && res.links.length > 0) {
         res.links.forEach((l) => {
-            let isVipLink = l.type === 'vvip' || l.name.toLowerCase().includes('vvip') || l.name.toLowerCase().includes('tanpa iklan');
+            l = normalizeDownloadLinkType(l);
+            let isVipLink = l.type === 'vvip';
             let canAccess = !isVipLink || checkUserHasCleanLinkAccess(res);
 
             let btnBg = isVipLink ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20' : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-slate-950 shadow-cyan-500/20';
-            let iconType = isVipLink ? 'fa-shield-halved' : 'fa-cloud-arrow-down';
+            let iconType = isVipLink ? 'fa-shield-halved' : (l.type === 'script' ? 'fa-code' : 'fa-cloud-arrow-down');
 
             let actionButtonHtml = '';
             if (canAccess) {
@@ -1996,7 +1993,7 @@ function openDetail(id, openModalWindow = true) {
                 `;
             } else {
                 actionButtonHtml = `
-                    <button onclick="showToast('Akses Ditolak! Tautan VVIP memerlukan VVIP aktif.', 'warning'); switchMainView('profile'); closeModal();" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-400 font-extrabold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs border border-slate-800 shadow-md">
+                    <button onclick="showToast('Akses Ditolak! Tautan VVIP ini memerlukan VVIP aktif.', 'warning'); switchMainView('profile'); closeModal();" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-400 font-extrabold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs border border-slate-800 shadow-md">
                         <i class="fa-solid fa-lock text-amber-400 text-sm"></i> ${l.name} [VVIP Diperlukan]
                     </button>
                 `;
@@ -2006,7 +2003,7 @@ function openDetail(id, openModalWindow = true) {
                 <div class="space-y-2 bg-slate-950/80 backdrop-blur-md p-3.5 rounded-3xl border border-slate-800/90 shadow-xl">
                     ${actionButtonHtml}
                     <div class="flex items-center gap-2 pt-1">
-                        <button onclick="copySpecificLink('${encodeURIComponent(l.url)}', '${l.name}')" class="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border border-slate-800 shadow-md">
+                        <button onclick="copySpecificLink('${encodeURIComponent(l.url)}', '${l.name}')" class="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer border border-slate-800 shadow-md hover:border-cyan-500/40">
                             <i class="fa-regular fa-copy text-cyan-400"></i> Salin Link
                         </button>
                         <button onclick="reportSpecificLink('${res.name}', '${l.name}')" class="py-2 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-rose-500/20 shadow-md" title="Laporkan link rusak">
@@ -2024,9 +2021,12 @@ function openDetail(id, openModalWindow = true) {
     if (iconDiv) iconDiv.innerHTML = `<i class="${res.category === 'Script Mobile Legends' ? 'fa-solid fa-shield-halved text-cyan-400' : 'fa-solid fa-fire text-amber-400'}"></i>`;
 
     let hasRated = res.ratedUsers && res.ratedUsers[currentUser.username];
-    const ratingSectionBox = document.getElementById('btn-submit-rating')?.parentElement?.parentElement;
-    if (hasRated && ratingSectionBox) {
-        ratingSectionBox.innerHTML = `<div class="bg-slate-950 p-4 rounded-2xl text-center text-xs text-emerald-400 font-extrabold shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-circle-check"></i> Anda sudah memberikan ulasan & rating.</div>`;
+    const ratingSectionBox = document.getElementById('modal-rating-form-container') || document.getElementById('btn-submit-rating')?.parentElement?.parentElement;
+    
+    if (hasRated) {
+        if (ratingSectionBox) {
+            ratingSectionBox.innerHTML = `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl text-center text-xs text-emerald-400 font-extrabold shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-circle-check text-base"></i> Anda sudah memberikan ulasan & rating untuk script ini. Terima kasih!</div>`;
+        }
     }
 
     const reviewList = document.getElementById('review-list');
@@ -2034,10 +2034,13 @@ function openDetail(id, openModalWindow = true) {
         document.getElementById('review-count').textContent = res.reviews ? res.reviews.length : 0;
         reviewList.innerHTML = '';
         if (!res.reviews || res.reviews.length === 0) {
-            reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada ulasan.</p>`;
+            reviewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comment-dots"></i> Belum ada ulasan.</p>`;
         } else {
             res.reviews.forEach(rv => {
-                reviewList.innerHTML += `<div class="bg-slate-950 p-3.5 rounded-2xl text-xs space-y-1"><span class="font-extrabold text-cyan-400">${rv.user}</span><p class="text-slate-300">${rv.text}</p></div>`;
+                let starsHtml = '<span class="text-amber-400">';
+                for(let i=0; i<rv.rating; i++) starsHtml += '<i class="fa-solid fa-star"></i>';
+                starsHtml += '</span>';
+                reviewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><div class="flex justify-between items-center"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${rv.user}</span> ${starsHtml}</div><p class="text-slate-300">${rv.text}</p></div>`;
             });
         }
     }
@@ -2047,10 +2050,10 @@ function openDetail(id, openModalWindow = true) {
         document.getElementById('comment-count').textContent = res.comments ? res.comments.length : 0;
         commentList.innerHTML = '';
         if (!res.comments || res.comments.length === 0) {
-            commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada komentar.</p>`;
+            commentList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-comments"></i> Belum ada komentar.</p>`;
         } else {
             res.comments.forEach(c => {
-                commentList.innerHTML += `<div class="bg-slate-950 p-3.5 rounded-2xl text-xs space-y-1"><span class="font-extrabold text-cyan-400">${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
+                commentList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl text-xs space-y-1.5 shadow-md"><span class="font-extrabold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user-circle"></i> ${c.user}</span><p class="text-slate-300">${c.text}</p></div>`;
             });
         }
     }
@@ -2059,7 +2062,9 @@ function openDetail(id, openModalWindow = true) {
 function copySpecificLink(encodedUrl, linkName) {
     let decodedUrl = decodeURIComponent(encodedUrl);
     navigator.clipboard.writeText(decodedUrl).then(() => {
-        showToast(`Tautan "${linkName}" berhasil disalin!`, 'success');
+        showToast(`Tautan "${linkName}" berhasil disalin ke clipboard!`, 'success');
+    }).catch(err => {
+        console.error('Gagal menyalin:', err);
     });
 }
 
@@ -2072,9 +2077,18 @@ function reportSpecificLink(resName, linkName) {
     if (!brokenReports.some(rep => rep.resName === reportText && rep.user === currentUser.username)) {
         brokenReports.push({ resName: reportText, user: currentUser.username });
         localStorage.setItem('frh_broken_reports', JSON.stringify(brokenReports));
-        addNotification(`Laporan link rusak untuk ${reportText} dikirim.`, 'quest');
+        addNotification(`Laporan link rusak untuk ${reportText} diteruskan ke admin.`, 'system');
         addPoints(currentUser.username, 5);
-        showToast(`Laporan link rusak untuk "${linkName}" diteruskan (+5 Poin).`, 'success');
+        logUserAction(currentUser.username, `Melaporkan link rusak: ${reportText}`);
+
+        // Poin 5: Rekam Riwayat Laporan Link Rusak
+        let uname = currentUser.username;
+        if (!userReportHistory[uname]) userReportHistory[uname] = [];
+        userReportHistory[uname].unshift({ reportText, time: new Date().toLocaleString('id-ID') });
+        if (userReportHistory[uname].length > 15) userReportHistory[uname].pop();
+        localStorage.setItem('frh_user_report_history', JSON.stringify(userReportHistory));
+
+        showToast(`Laporan link rusak untuk "${linkName}" berhasil diteruskan (+5 Poin).`, 'success');
         renderResources();
     } else {
         showToast('Anda sudah melaporkan tautan ini sebelumnya.', 'warning');
@@ -2085,8 +2099,13 @@ function selectRatingStar(star) {
     currentSelectedStar = star;
     const ratingTextEl = document.getElementById('rating-selected-text');
     if (ratingTextEl) ratingTextEl.textContent = `${star} Bintang Dipilih`;
-    document.querySelectorAll('#star-container button').forEach((btn, idx) => {
-        btn.className = (idx + 1) <= star ? "text-amber-400 cursor-pointer scale-110" : "text-slate-600 hover:text-amber-400 cursor-pointer";
+    const starBtns = document.querySelectorAll('#star-container button');
+    starBtns.forEach((btn, idx) => {
+        if ((idx + 1) <= star) {
+            btn.className = "text-amber-400 cursor-pointer scale-110 transition-transform";
+        } else {
+            btn.className = "text-slate-600 hover:text-amber-400 cursor-pointer transition-transform";
+        }
     });
 }
 
@@ -2112,6 +2131,9 @@ function handlePostRatingAndReview(e) {
 
     addPoints(currentUser.username, 10);
     addExpAndLevelProgress(currentUser.username); 
+    logUserAction(currentUser.username, `Memberi rating & ulasan pada ${res.name}`);
+    recordSystemLog('rating_post', `User @${currentUser.username} memberi rating pada "${res.name}".`, currentUser.username);
+
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     
     showToast('Ulasan & rating berhasil dikirim (+10 Poin & EXP).', 'success');
@@ -2123,15 +2145,18 @@ function handlePostRatingAndReview(e) {
 function recordDownload(e, linkName) {
     if (!currentUser) {
         e.preventDefault();
-        showToast('Anda wajib login sebelum mengunduh.', 'warning');
+        showToast('Anda wajib login terlebih dahulu sebelum mengunduh.', 'warning');
         document.getElementById('auth-modal').classList.remove('hidden');
         return;
     }
+
     addPoints(currentUser.username, 5);
+    logUserAction(currentUser.username, `Mengunduh script via ${linkName}`);
 }
 
 function closeModal() {
-    document.getElementById('detail-modal').classList.add('hidden');
+    const modal = document.getElementById('detail-modal');
+    if (modal) modal.classList.add('hidden');
     activeResourceId = null;
 }
 
@@ -2147,6 +2172,9 @@ function handlePostComment(e) {
     
     addPoints(currentUser.username, 5);
     addExpAndLevelProgress(currentUser.username); 
+    logUserAction(currentUser.username, `Mengomentari script: ${res.name}`);
+    recordSystemLog('komentar_post', `User @${currentUser.username} berkomentar pada "${res.name}".`, currentUser.username);
+
     localStorage.setItem('frh_resources', JSON.stringify(resources));
     input.value = '';
     showToast('Komentar berhasil dikirim (+5 Poin & EXP).', 'success');
@@ -2154,7 +2182,8 @@ function handlePostComment(e) {
 }
 
 function togglePasswordForm() {
-    document.getElementById('profile-password-box').classList.toggle('hidden');
+    const box = document.getElementById('profile-password-box');
+    if (box) box.classList.toggle('hidden');
 }
 
 function handleChangeUserPassword(e) {
@@ -2165,75 +2194,185 @@ function handleChangeUserPassword(e) {
     if (userObj) {
         userObj.password = newPass;
         localStorage.setItem('frh_users', JSON.stringify(users));
+
+        // Poin 5: Rekam Riwayat Ubah Password
+        let uname = currentUser.username;
+        if (!userPasswordHistory[uname]) userPasswordHistory[uname] = [];
+        userPasswordHistory[uname].unshift({ time: new Date().toLocaleString('id-ID'), info: 'Password berhasil diubah' });
+        if (userPasswordHistory[uname].length > 10) userPasswordHistory[uname].pop();
+        localStorage.setItem('frh_user_password_history', JSON.stringify(userPasswordHistory));
+
         showToast('Password berhasil diubah!', 'success');
         document.getElementById('new-user-pass').value = '';
         togglePasswordForm();
     }
 }
 
-/* ========================================================
-   POIN 4: VALIDASI KETAT PADA QUEST MANUAL
-   ======================================================== */
 const profileQuestsDefinition = [
-    { id: 'q1', title: 'Sukai 1 Script', reward: 10, target: 1, type: 'like' },
-    { id: 'q2', title: 'Sukai 3 Script', reward: 25, target: 3, type: 'like' },
-    { id: 'q6', title: 'Rating Bintang 5 untuk 1 Script', reward: 15, target: 1, type: 'rate5' },
-    { id: 'q11', title: 'Kirim 1 Komentar', reward: 10, target: 1, type: 'comment' },
-    { id: 'q16', title: 'Lihat 5 Script Berbeda', reward: 15, target: 5, type: 'view' }
+    { id: 'q1', title: 'Sukai 1 Script', reward: 10, target: 1, type: 'like', builtin: true },
+    { id: 'q2', title: 'Sukai 3 Script', reward: 25, target: 3, type: 'like', builtin: true },
+    { id: 'q3', title: 'Sukai 5 Script', reward: 40, target: 5, type: 'like', builtin: true },
+    { id: 'q4', title: 'Sukai 10 Script', reward: 75, target: 10, type: 'like', builtin: true },
+    { id: 'q5', title: 'Sukai 25 Script', reward: 150, target: 25, type: 'like', builtin: true },
+    { id: 'q6', title: 'Rating Bintang 5 untuk 1 Script', reward: 15, target: 1, type: 'rate5', builtin: true },
+    { id: 'q7', title: 'Rating Bintang 5 untuk 3 Script', reward: 35, target: 3, type: 'rate5', builtin: true },
+    { id: 'q8', title: 'Rating Bintang 5 untuk 5 Script', reward: 60, target: 5, type: 'rate5', builtin: true },
+    { id: 'q9', title: 'Rating Bintang 5 untuk 10 Script', reward: 120, target: 10, type: 'rate5', builtin: true },
+    { id: 'q10', title: 'Rating Bintang 5 untuk 25 Script', reward: 250, target: 25, type: 'rate5', builtin: true },
+    { id: 'q11', title: 'Kirim 1 Komentar', reward: 10, target: 1, type: 'comment', builtin: true },
+    { id: 'q12', title: 'Kirim 5 Komentar', reward: 30, target: 5, type: 'comment', builtin: true },
+    { id: 'q13', title: 'Kirim 10 Komentar', reward: 60, target: 10, type: 'comment', builtin: true },
+    { id: 'q14', title: 'Kirim 25 Komentar', reward: 130, target: 25, type: 'comment', builtin: true },
+    { id: 'q15', title: 'Kirim 50 Komentar', reward: 250, target: 50, type: 'comment', builtin: true },
+    { id: 'q16', title: 'Lihat 5 Script Berbeda', reward: 15, target: 5, type: 'view', builtin: true },
+    { id: 'q17', title: 'Lihat 15 Script Berbeda', reward: 40, target: 15, type: 'view', builtin: true },
+    { id: 'q18', title: 'Lihat 30 Script Berbeda', reward: 80, target: 30, type: 'view', builtin: true },
+    { id: 'q19', title: 'Lihat 50 Script Berbeda', reward: 150, target: 50, type: 'view', builtin: true },
+    { id: 'q20', title: 'Lihat 100 Script Berbeda', reward: 300, target: 100, type: 'view', builtin: true }
 ];
 
+function getAllQuests() {
+    return [...profileQuestsDefinition, ...customQuests];
+}
+
+function getQuestTypeLabel(type) {
+    return ({ like: 'Like Postingan', view: 'Lihat Postingan', comment: 'Komentar Postingan', rating: 'Rating Postingan', rate5: 'Rating 5 Bintang' })[type] || type;
+}
+
 function checkQuestRealProgress(type) {
-    let uname = currentUser.username;
-    if (type === 'like') {
-        return resources.filter(r => r.likedBy && r.likedBy.includes(uname)).length;
-    }
-    if (type === 'rate5') {
-        return resources.filter(r => r.ratedUsers && r.ratedUsers[uname] === 5).length;
-    }
-    if (type === 'comment') {
-        let count = 0;
-        resources.forEach(r => {
-            if (r.comments && r.comments.some(c => c.user === uname)) count++;
-        });
-        return count;
-    }
+    if (!currentUser) return 0;
+    const uname = currentUser.username;
+    if (type === 'like') return resources.filter(r => Array.isArray(r.likedBy) && r.likedBy.includes(uname)).length;
+    if (type === 'rate5') return resources.filter(r => r.ratedUsers && r.ratedUsers[uname] === 5).length;
+    if (type === 'rating') return resources.filter(r => r.ratedUsers && Number(r.ratedUsers[uname]) >= 1 && Number(r.ratedUsers[uname]) <= 5).length;
+    if (type === 'comment') return resources.reduce((sum, r) => sum + ((r.comments || []).filter(c => c.user === uname).length), 0);
     if (type === 'view') {
-        return (userViewHistory[uname] || []).length;
+        const views = Array.isArray(userViewHistory[uname]) ? userViewHistory[uname] : [];
+        return [...new Set(views)].filter(name => resources.some(r => r.name === name)).length;
     }
     return 0;
 }
 
-function claimProfileQuest(questId, target, type, reward) {
-    let uname = currentUser.username;
+function claimProfileQuest(questId) {
+    if (!currentUser) { showToast('Silakan login terlebih dahulu.', 'warning'); return; }
+    const uname = currentUser.username;
+    const quest = getAllQuests().find(q => String(q.id) === String(questId));
+    if (!quest) { showToast('Quest tidak ditemukan.', 'error'); return; }
+    if (!Number.isInteger(Number(quest.target)) || Number(quest.target) < 1 || !Number.isInteger(Number(quest.reward)) || Number(quest.reward) < 1) {
+        showToast('Konfigurasi quest tidak valid.', 'error'); return;
+    }
     if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
-    if (userQuestClaims[uname][questId]) {
-        showToast('Quest sudah diklaim!', 'warning');
+    if (userQuestClaims[uname][quest.id]) { showToast('Quest sudah diklaim!', 'warning'); return; }
+    const currentProgress = checkQuestRealProgress(quest.type);
+    if (currentProgress < quest.target) {
+        showToast(`Belum memenuhi syarat. Progress tervalidasi: ${currentProgress}/${quest.target}.`, 'warning');
         return;
     }
-
-    let currentProgress = checkQuestRealProgress(type);
-    
-    // Validasi Ketat Sesuai Instruksi
-    if (currentProgress < target) {
-        showToast(`Validasi Gagal: Syarat quest belum terpenuhi (${currentProgress}/${target}).`, 'error');
-        return;
-    }
-
-    userQuestClaims[uname][questId] = true;
+    // Tandai hanya setelah progres dihitung ulang dari sumber aktivitas aktual.
+    userQuestClaims[uname][quest.id] = { claimedAt: Date.now(), verifiedProgress: currentProgress };
     localStorage.setItem('frh_user_quest_claims', JSON.stringify(userQuestClaims));
-    addPoints(uname, reward);
-    addExpAndLevelProgress(uname, 25); 
-
+    addPoints(uname, Number(quest.reward));
+    addExpAndLevelProgress(uname, 25);
     if (!userQuestHistory[uname]) userQuestHistory[uname] = [];
-    let qDef = profileQuestsDefinition.find(q => q.id === questId);
-    userQuestHistory[uname].unshift({ title: qDef ? qDef.title : questId, reward, time: new Date().toLocaleString('id-ID') });
+    userQuestHistory[uname].unshift({ title: quest.title, reward: Number(quest.reward), time: new Date().toLocaleString('id-ID') });
+    if (userQuestHistory[uname].length > 15) userQuestHistory[uname].pop();
     localStorage.setItem('frh_user_quest_history', JSON.stringify(userQuestHistory));
-
-    addNotification(`Quest "${qDef ? qDef.title : questId}" berhasil diselesaikan!`, 'quest');
-    showToast(`Quest selesai! +${reward} Poin & EXP didapatkan.`, 'success');
+    addNotification(`Quest selesai: ${quest.title} (+${quest.reward} Poin & EXP)`, 'quest');
+    recordSystemLog('selesai_quest', `User @${uname} menyelesaikan quest "${quest.title}" (+${quest.reward} Poin).`, uname);
+    showToast(`Quest selesai! Anda mendapatkan +${quest.reward} Poin & EXP.`, 'success');
     renderProfilePage();
 }
 
+function handleSaveCustomQuest(e) {
+    e.preventDefault();
+    if (!currentUser || currentUser.role !== 'admin') return;
+    const title = document.getElementById('quest-name').value.trim();
+    const type = document.getElementById('quest-type').value;
+    const target = Number(document.getElementById('quest-target').value);
+    const reward = Number(document.getElementById('quest-reward').value);
+    if (title.length < 3 || title.length > 80 || !['like','view','comment','rating'].includes(type) || !Number.isInteger(target) || target < 1 || target > 100000 || !Number.isInteger(reward) || reward < 1 || reward > 100000) {
+        showToast('Data quest tidak valid. Periksa nama, tipe, target, dan point.', 'warning'); return;
+    }
+    const quest = { id: `custom_${Date.now()}`, title, type, target, reward, createdAt: Date.now(), createdBy: currentUser.username };
+    customQuests.unshift(quest);
+    localStorage.setItem('frh_custom_quests', JSON.stringify(customQuests));
+    addNotification(`Quest terbaru: ${title}`, 'quest');
+    recordSystemLog('quest_baru', `Admin @${currentUser.username} membuat quest "${title}" (${getQuestTypeLabel(type)}, target ${target}, reward ${reward}).`, currentUser.username);
+    e.target.reset();
+    renderAdminQuestsList();
+    renderProfilePage();
+    showToast('Quest custom berhasil ditambahkan.', 'success');
+}
+
+function deleteCustomQuest(id) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    if (!confirm('Hapus quest custom ini? Klaim user yang sudah tersimpan tidak akan dibatalkan.')) return;
+    customQuests = customQuests.filter(q => q.id !== id);
+    localStorage.setItem('frh_custom_quests', JSON.stringify(customQuests));
+    renderAdminQuestsList();
+    renderProfilePage();
+    showToast('Quest custom dihapus.', 'success');
+}
+
+function renderAdminQuestsList() {
+    const list = document.getElementById('admin-quests-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!customQuests.length) {
+        list.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Belum ada quest custom.</p>';
+        return;
+    }
+    customQuests.forEach(q => {
+        list.innerHTML += `<div class="bg-slate-950/90 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row justify-between gap-3 shadow-lg">
+            <div><span class="font-extrabold text-white text-sm block"><i class="fa-solid fa-list-check text-cyan-400 mr-1"></i>${q.title}</span>
+            <span class="text-[10px] text-slate-400 mt-1 block">${getQuestTypeLabel(q.type)} · Target ${q.target} · Hadiah ${q.reward} Poin</span></div>
+            <button onclick="deleteCustomQuest('${q.id}')" class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-slate-950 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-trash"></i> Hapus</button>
+        </div>`;
+    });
+}
+
+function getLocalDateKey(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function updateDailyClaimButton() {
+    const btn = document.getElementById('daily-claim-btn');
+    const dot = document.getElementById('daily-claim-dot');
+    if (!btn || !dot) return;
+    if (!currentUser) { btn.disabled = true; btn.classList.add('opacity-40'); dot.classList.add('hidden'); return; }
+    const key = getLocalDateKey();
+    const claimed = dailyClaimState[currentUser.username]?.date === key;
+    btn.disabled = claimed;
+    btn.classList.toggle('opacity-50', claimed);
+    btn.classList.toggle('grayscale', claimed);
+    dot.classList.toggle('hidden', claimed);
+    btn.title = claimed ? 'Daily Claim sudah diambil hari ini' : 'Klaim 1–100 Poin hari ini';
+}
+
+function claimDailyPoints() {
+    if (!currentUser) { showToast('Silakan login terlebih dahulu.', 'warning'); return; }
+    const uname = currentUser.username;
+    const today = getLocalDateKey();
+    const previous = dailyClaimState[uname];
+    if (previous && previous.date === today) { showToast('Daily Claim sudah diambil hari ini. Coba lagi setelah 00.00.', 'warning'); updateDailyClaimButton(); return; }
+    const points = Math.floor(Math.random() * 100) + 1;
+    dailyClaimState[uname] = { date: today, points, claimedAt: Date.now() };
+    localStorage.setItem('frh_daily_claim_state', JSON.stringify(dailyClaimState));
+    addPoints(uname, points);
+    addExpAndLevelProgress(uname, Math.max(1, Math.floor(points / 10)));
+    logUserAction(uname, `Daily Claim +${points} Poin`);
+    recordSystemLog('daily_claim', `User @${uname} mengambil Daily Claim +${points} Poin.`, uname);
+    showToast(`Daily Claim berhasil! Anda mendapatkan +${points} Poin.`, 'success');
+    updateDailyClaimButton();
+    if (document.getElementById('profile-panel') && !document.getElementById('profile-panel').classList.contains('hidden')) renderProfilePage();
+}
+
+/* ========================================================
+   POIN 5: RENDER RIWAYAT LENGKAP DI PROFIL USER
+   ======================================================== */
 function renderProfilePage() {
     let uname = currentUser.username;
     document.getElementById('profile-username').textContent = uname;
@@ -2245,35 +2384,142 @@ function renderProfilePage() {
     let reqExp = getTargetExpForLevel(uLvlData.level);
     document.getElementById('profile-level-label').textContent = `Level: ${uLvlData.level} (EXP: ${uLvlData.exp}/${reqExp})`;
 
+    let isVip = userVipSubscriptions[uname] && Date.now() < userVipSubscriptions[uname];
+    document.getElementById('profile-vip-status').innerHTML = isVip ? `<span class="px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl font-bold flex items-center gap-1.5 shadow-lg"><i class="fa-solid fa-crown"></i> VVIP Tanpa Iklan Aktif (1 Bulan)</span>` : `<span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-user"></i> Status: Member Free (Dengan Iklan)</span>`;
+
+    const trophyBox = document.getElementById('profile-trophies');
+    trophyBox.innerHTML = '';
+    let badgeStr = getUserBadge(uname);
+    if (!badgeStr.includes('Member Baru')) {
+        trophyBox.innerHTML += `<span class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-md"><i class="fa-solid fa-trophy"></i> ${badgeStr}</span>`;
+    }
+
     const questList = document.getElementById('profile-quests-list');
     if (questList) {
         questList.innerHTML = '';
         if (!userQuestClaims[uname]) userQuestClaims[uname] = {};
 
-        profileQuestsDefinition.forEach(q => {
-            let isClaimed = userQuestClaims[uname][q.id] || false;
+        getAllQuests().forEach(q => {
+            let isClaimed = Boolean(userQuestClaims[uname][q.id]);
             let currentProg = checkQuestRealProgress(q.type);
             let canClaim = currentProg >= q.target && !isClaimed;
 
             let btnHtml = '';
             if (isClaimed) {
-                btnHtml = `<span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20"><i class="fa-solid fa-check"></i> Selesai</span>`;
+                btnHtml = `<span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 flex items-center gap-1"><i class="fa-solid fa-check"></i> Selesai</span>`;
             } else if (canClaim) {
-                btnHtml = `<button onclick="claimProfileQuest('${q.id}', ${q.target}, '${q.type}', ${q.reward})" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-950 font-extrabold rounded-xl cursor-pointer shadow-lg"><i class="fa-solid fa-gift"></i> Klaim (+${q.reward})</button>`;
+                btnHtml = `<button onclick="claimProfileQuest('${q.id}')" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-extrabold rounded-xl cursor-pointer shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1"><i class="fa-solid fa-gift"></i> Klaim (+${q.reward})</button>`;
             } else {
-                btnHtml = `<span class="text-slate-500 text-[10px] bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">Progress: ${currentProg}/${q.target}</span>`;
+                btnHtml = `<span class="text-slate-500 text-[10px] font-semibold bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">Progress: ${currentProg}/${q.target}</span>`;
             }
 
             questList.innerHTML += `
-                <div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl flex items-center justify-between text-xs shadow-lg">
+                <div class="bg-slate-950/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl flex items-center justify-between text-xs shadow-lg transition-all hover:border-cyan-500/30">
                     <div>
-                        <span class="font-extrabold text-white block text-sm">${q.title}</span>
-                        <span class="text-amber-400 text-[10px] font-bold mt-1 inline-block">Hadiah: +${q.reward} Poin</span>
+                        <span class="font-extrabold text-white block text-sm flex items-center gap-2"><i class="fa-solid fa-circle-check text-cyan-400"></i> ${q.title}</span>
+                        <span class="text-amber-400 text-[10px] font-bold mt-1 inline-block flex items-center gap-1"><i class="fa-solid fa-coins"></i> Hadiah: +${q.reward} Poin & EXP · ${getQuestTypeLabel(q.type)}</span>
                     </div>
                     <div>${btnHtml}</div>
                 </div>
             `;
         });
     }
+
     renderUserRedeemRewardsList();
+
+    // Poin 4 & 5: Sinkronisasi Riwayat Lihat Post (hapus jika post aslinya dihapus admin)
+    const viewList = document.getElementById('profile-view-history-list');
+    if (viewList) {
+        viewList.innerHTML = '';
+        let myViews = userViewHistory[uname] || [];
+        let validViews = myViews.filter(vName => resources.some(r => r.name === vName));
+        userViewHistory[uname] = validViews;
+        localStorage.setItem('frh_user_view_history', JSON.stringify(userViewHistory));
+
+        if (validViews.length === 0) {
+            viewList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-clock"></i> Belum ada riwayat lihat post.</p>`;
+        } else {
+            validViews.forEach(name => {
+                viewList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center gap-2.5 shadow-md"><i class="fa-solid fa-eye text-cyan-400"></i> <span class="font-bold">${name}</span></div>`;
+            });
+        }
+    }
+
+    // Poin 4 & 5: Sinkronisasi Riwayat Post Disimpan (hapus jika post aslinya dihapus admin)
+    const savedList = document.getElementById('profile-saved-list');
+    if (savedList) {
+        savedList.innerHTML = '';
+        let mySaved = resources.filter(r => r.savedBy && r.savedBy.includes(uname));
+        
+        if (mySaved.length === 0) {
+            savedList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4"><i class="fa-regular fa-bookmark"></i> Belum ada script disimpan.</p>`;
+        } else {
+            mySaved.forEach(res => {
+                savedList.innerHTML += `<div class="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl text-xs text-slate-300 border border-slate-800 flex items-center justify-between shadow-md"><span class="font-bold flex items-center gap-2"><i class="fa-solid fa-gamepad text-amber-400"></i> ${res.name}</span><button onclick="openDetail(${res.id})" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500 text-cyan-400 hover:text-slate-950 font-bold rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-1"><i class="fa-solid fa-arrow-right"></i> Buka</button></div>`;
+            });
+        }
+    }
+
+    // Render Riwayat Tambahan Sesuai Poin 5 di Profil
+    renderAdditionalUserHistories(uname);
+}
+
+function renderAdditionalUserHistories(uname) {
+    // Buat container riwayat lengkap tambahan jika belum ada di DOM profile
+    let profileExtraContainer = document.getElementById('profile-extra-histories');
+    if (!profileExtraContainer) {
+        const parentProfile = document.getElementById('profile-panel');
+        if (parentProfile) {
+            let div = document.createElement('div');
+            div.id = 'profile-extra-histories';
+            div.className = "mt-6 grid grid-cols-1 md:grid-cols-2 gap-6";
+            parentProfile.appendChild(div);
+            profileExtraContainer = div;
+        }
+    }
+
+    if (!profileExtraContainer) return;
+
+    let logins = userLoginHistory[uname] || [];
+    let quests = userQuestHistory[uname] || [];
+    let redeems = userRedeemLogHistory[uname] || [];
+    let reports = userReportHistory[uname] || [];
+    let passwords = userPasswordHistory[uname] || [];
+
+    profileExtraContainer.innerHTML = `
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-right-to-bracket text-cyan-400"></i> Riwayat Login</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${logins.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat login.</p>' : logins.map(l => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${l.status}</span><span class="text-slate-500">${l.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-flag-checkered text-emerald-400"></i> Riwayat Quest Selesai</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${quests.length === 0 ? '<p class="text-xs text-slate-500">Belum ada quest selesai.</p>' : quests.map(q => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${q.title} (+${q.reward} Pts)</span><span class="text-slate-500">${q.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-gift text-amber-400"></i> Riwayat Redeem Poin Berhasil</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${redeems.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat redeem.</p>' : redeems.map(r => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${r.name} (-${r.cost} Pts)</span><span class="text-slate-500">${r.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Riwayat Laporan Link Rusak</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${reports.length === 0 ? '<p class="text-xs text-slate-500">Belum ada laporan link.</p>' : reports.map(rp => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${rp.reportText}</span><span class="text-slate-500">${rp.time}</span></div>`).join('')}
+            </div>
+        </div>
+
+        <div class="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-5 rounded-3xl space-y-3 shadow-xl md:col-span-2">
+            <h4 class="font-extrabold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-key text-blue-400"></i> Riwayat Ubah Password</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                ${passwords.length === 0 ? '<p class="text-xs text-slate-500">Belum ada riwayat ubah password.</p>' : passwords.map(p => `<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex justify-between"><span>${p.info}</span><span class="text-slate-500">${p.time}</span></div>`).join('')}
+            </div>
+        </div>
+    `;
 }

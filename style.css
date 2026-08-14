@@ -32,3 +32,11 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #334155;
 }
+
+/* Modern floating action helpers */
+#daily-claim-btn { position: relative; }
+#daily-claim-btn:disabled { cursor: not-allowed; }
+#dynamic-links-container .link-type-input { font-weight: 700; }
+@media (max-width: 640px) {
+  #daily-claim-btn, #support-chat-modal + * { touch-action: manipulation; }
+}
