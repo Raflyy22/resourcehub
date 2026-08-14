@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gudang Script — Requests</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="style.css" rel="stylesheet"/>
+</head>
+<body class="bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans'] min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white" data-page="requests">
+<!-- AUTH SECTION (UNIFIED LOGIN & REGISTER) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 transition-all duration-300" id="auth-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-md p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+<div class="text-center mb-8">
+<div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-cyan-500/10 text-cyan-400 mb-4 text-2xl shadow-inner">
+<i class="fa-solid fa-gamepad"></i>
+</div>
+<h1 class="text-2xl font-bold tracking-tight">Gudang Script</h1>
+<p class="text-slate-400 text-sm mt-1">Silakan masuk atau daftar terlebih dahulu untuk melanjutkan</p>
+</div>
+<div class="flex rounded-xl bg-slate-950 p-1 mb-6 border border-slate-800/60">
+<button class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-cyan-400 bg-slate-800 shadow-sm cursor-pointer" id="tab-login" onclick="switchAuthTab('login')">Masuk Akun</button>
+<button class="flex-1 py-2.5 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200 cursor-pointer" id="tab-reg" onclick="switchAuthTab('reg')">Daftar Baru</button>
+</div>
+<!-- Unified Login Form -->
+<form class="space-y-4" id="form-login-unified" onsubmit="handleUnifiedLogin(event)">
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Username</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-user"></i></span>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" id="uni-user" placeholder="Masukkan username..." required="" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-lock"></i></span>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:border-cyan-500" id="uni-pass" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 cursor-pointer" onclick="togglePasswordVisibility('uni-pass', 'eye-icon-login')" type="button">
+<i class="fa-regular fa-eye" id="eye-icon-login"></i>
+</button>
+</div>
+</div>
+<div class="hidden space-y-1.5 animate-fadeIn" id="container-admin-pin">
+<label class="block text-xs font-medium text-amber-400 mb-1.5"><i class="fa-solid fa-key"></i> PIN Khusus Super Admin</label>
+<input class="w-full bg-slate-950 border border-amber-500/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500" id="uni-pin" placeholder="Masukkan PIN khusus admin..." type="password"/>
+</div>
+<div class="text-rose-400 text-xs font-semibold text-center hidden" id="admin-lock-warning"></div>
+<button class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer mt-2" id="uni-submit-btn" type="submit">Masuk Website</button>
+</form>
+<!-- Register Form -->
+<form class="space-y-4 hidden" id="form-reg-unified" onsubmit="handleRegister(event)">
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Username Baru</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-user-plus"></i></span>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-cyan-500" id="reg-username" placeholder="Buat username..." required="" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-regular fa-lock"></i></span>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:border-cyan-500" id="reg-password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 cursor-pointer" onclick="togglePasswordVisibility('reg-password', 'eye-icon-reg')" type="button">
+<i class="fa-regular fa-eye" id="eye-icon-reg"></i>
+</button>
+</div>
+</div>
+<button class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer mt-2" type="submit">Daftar Sekarang</button>
+</form>
+</div>
+</div>
+<!-- MAIN APP INTERFACE -->
+<div class="hidden flex-col min-h-screen" id="main-app">
+<header class="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<div class="flex items-center space-x-3 cursor-pointer" onclick="switchMainView('home')">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
+<i class="fa-solid fa-gamepad text-white"></i>
+</div>
+<span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Gudang Script</span>
+</div>
+<div class="flex items-center space-x-2 sm:space-x-3">
+<button class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-xs font-semibold transition-all cursor-pointer text-cyan-400 border border-cyan-500/30" onclick="switchMainView('livechat')">
+<i class="fa-solid fa-headset"></i> Live Chat
+                    </button>
+<button class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer text-cyan-400" onclick="switchMainView('requests')">
+<i class="fa-solid fa-hands-holding-child"></i> Request Script
+                    </button>
+<button class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer text-amber-400" onclick="switchMainView('leaderboard')">
+<i class="fa-solid fa-trophy"></i> Leaderboard
+                    </button>
+<div class="relative">
+<button class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer relative" onclick="toggleNotificationDropdown()" title="Notifikasi">
+<i class="fa-regular fa-bell text-xs"></i>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] flex items-center justify-center font-bold hidden" id="notif-badge">0</span>
+</button>
+<div class="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl hidden z-50 p-4 space-y-3" id="notif-dropdown">
+<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+<span class="font-bold text-xs text-white">Pusat Notifikasi</span>
+<button class="text-[10px] text-cyan-400 hover:underline" onclick="clearNotifications()">Tandai Dibaca</button>
+</div>
+<div class="space-y-2 max-h-60 overflow-y-auto pr-1" id="notif-list"></div>
+</div>
+</div>
+<button class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer text-amber-400" onclick="switchMainView('faq')">
+<i class="fa-solid fa-circle-question"></i> Panduan
+                    </button>
+<button class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all cursor-pointer" id="nav-profile-btn" onclick="switchMainView('profile')">
+<i class="fa-regular fa-user-circle text-cyan-400"></i> Profile
+                    </button>
+<div class="text-right hidden md:block border-l border-slate-800 pl-3">
+<div class="text-xs font-bold text-cyan-400" id="user-display-name"></div>
+<div class="text-[10px] text-slate-300 uppercase tracking-wider" id="user-role-badge"></div>
+</div>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs transition-all cursor-pointer" onclick="logout()" title="Log Out">
+<i class="fa-solid fa-right-from-bracket"></i> Log Out
+                    </button>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+<!-- ADMIN PANEL VIEW -->
+<div class="hidden space-y-8 animate-fadeIn" id="admin-panel">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 p-6 rounded-2xl shadow-lg">
+<div>
+<h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge-high text-amber-400"></i> Dashboard Super Administrator</h2>
+<p class="text-slate-300 text-sm mt-1">Kelola script game, kategori/sub-kategori, user, broadcast, bot Telegram, dan laporan link rusak.</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md" id="btn-tab-upload" onclick="switchAdminTab('upload')">Form Upload</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-manage" onclick="switchAdminTab('manage')">Kelola Script</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-categories" onclick="switchAdminTab('categories')">Atur Kategori &amp; Sub</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-users" onclick="switchAdminTab('users')">Kontrol User &amp; Poin</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-broadcast" onclick="switchAdminTab('broadcast')">Broadcast</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-telegram" onclick="switchAdminTab('telegram')">Bot Telegram</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-logs" onclick="switchAdminTab('logs')">Pusat Logs</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-livechat" onclick="switchAdminTab('livechat')">Live Chat</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-rewards" onclick="switchAdminTab('rewards')">Kustom Reward</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-quests" onclick="switchAdminTab('quests')">Kustom Quest</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-requests" onclick="switchAdminTab('requests')">Laporan Link Rusak</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-analytics" onclick="switchAdminTab('analytics')">Statistik</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-backup" onclick="switchAdminTab('backup')">Backup</button>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer" id="btn-tab-settings" onclick="switchAdminTab('settings')">Pengaturan</button>
+</div>
+</div>
+<!-- Form Upload / Edit Script -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl" id="admin-upload-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400" id="form-upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> Tambah Script Game Baru</h3>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-6" onsubmit="handleSaveResource(event)">
+<input id="edit-resource-id" type="hidden" value=""/>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Nama Script / Judul</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="up-name" placeholder="Contoh: Script Skin Epic MLBB v1" required="" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Kategori Utama</label>
+<select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer" id="up-category" onchange="updateSubCategories()">
+<option value="Script Mobile Legends">Script Mobile Legends</option>
+<option value="Script Free Fire">Script Free Fire</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Sub Kategori</label>
+<select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer" id="up-subcategory">
+<!-- Diisi dinamis via JS -->
+</select>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Jenis Upload</label>
+<select class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer" id="up-type-upload">
+<option value="file">File (Script / Arsip)</option>
+<option value="aplikasi">Aplikasi / APK Booster</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Nomor Versi (Cth: v1.0)</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="up-version" placeholder="Contoh: v1.0" required="" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Ukuran File / App</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="up-link-size" onblur="formatFileSizeInput(this)" placeholder="Contoh: 15 MB" required="" type="text"/>
+</div>
+<!-- MANAJEMEN LINK DINAMIS MANUAL -->
+<div class="md:col-span-2 bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3">
+<div class="flex items-center justify-between">
+<label class="block text-xs font-bold text-cyan-400"><i class="fa-solid fa-link"></i> Daftar Tautan Unduhan (Kelola Manual)</label>
+<button class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-xs rounded-lg cursor-pointer" onclick="addCustomLinkRow()" type="button"><i class="fa-solid fa-plus"></i> Tambah Link Manual</button>
+</div>
+<p class="text-[11px] text-slate-400">Tambahkan tautan secara manual. Tentukan nama file/link, tipe akses <b class="text-cyan-400">Free + Iklan</b>, <b class="text-amber-400">VVIP Tanpa Iklan</b>, atau <b class="text-emerald-400">Link Script</b>, lalu masukkan URL.</p>
+<div class="space-y-2" id="dynamic-links-container">
+<!-- Baris link dinamis ditambahkan lewat JS -->
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-2 md:col-span-2">
+<div class="flex items-center gap-2">
+<input class="w-4 h-4 accent-cyan-500 rounded cursor-pointer" id="up-verified" type="checkbox"/>
+<label class="text-xs font-medium text-emerald-400 cursor-pointer" for="up-verified"><i class="fa-solid fa-shield-check"></i> Berikan Label Verifikasi "Aman &amp; Teruji"</label>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-4 h-4 accent-amber-500 rounded cursor-pointer" id="up-special-access" type="checkbox"/>
+<label class="text-xs font-medium text-amber-400 cursor-pointer" for="up-special-access"><i class="fa-solid fa-key"></i> Jadikan Postingan Akses Khusus</label>
+</div>
+</div>
+<div class="md:col-span-2">
+<label class="block text-xs font-medium text-slate-300 mb-1.5">URL Gambar Screenshot (Opsional)</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="up-screenshot" placeholder="https://image-url.com/sample.png" type="url"/>
+</div>
+<div class="md:col-span-2">
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Deskripsi Lengkap / Petunjuk Pemasangan Script</label>
+<textarea class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:outline-none focus:border-cyan-500" id="up-desc" placeholder="Detail fitur dan cara pasang..." required="" rows="4"></textarea>
+</div>
+<div class="md:col-span-2 flex flex-wrap gap-4">
+<button class="flex-1 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2" id="btn-submit-resource" type="submit">
+<i class="fa-solid fa-upload"></i> Publikasikan Script Game
+                            </button>
+<button class="hidden flex-1 py-3.5 bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer items-center justify-center gap-2" id="btn-submit-edit" onclick="setSubmitEditMode(true)" type="submit">
+<i class="fa-solid fa-pen-to-square"></i> Simpan Selesai Edit (Edited)
+                            </button>
+<button class="hidden flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer items-center justify-center gap-2" id="btn-submit-update" onclick="setSubmitUpdateMode(true)" type="submit">
+<i class="fa-solid fa-rotate"></i> Simpan Selesai Update (Updated)
+                            </button>
+<button class="hidden px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all cursor-pointer" id="btn-cancel-edit" onclick="resetUploadForm()" type="button">Batal</button>
+</div>
+</form>
+</div>
+<!-- Kelola Kategori & Sub-Kategori Manual Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6" id="admin-categories-section">
+<h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Atur Kategori &amp; Sub-Kategori Manual</h3>
+<p class="text-xs text-slate-400">Tambahkan atau hapus sub-kategori untuk Script Mobile Legends dan Script Free Fire sesuai kebutuhan Anda.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+<h4 class="font-bold text-sm text-cyan-400">Sub-Kategori: Script Mobile Legends</h4>
+<div class="space-y-2" id="admin-ml-sub-list"></div>
+<div class="flex gap-2 pt-2">
+<input class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500" id="new-ml-sub-input" placeholder="Sub-kategori baru..." type="text"/>
+<button class="px-4 py-2 bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer" onclick="addNewSubCategory('Script Mobile Legends')">Tambah</button>
+</div>
+</div>
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+<h4 class="font-bold text-sm text-amber-400">Sub-Kategori: Script Free Fire</h4>
+<div class="space-y-2" id="admin-ff-sub-list"></div>
+<div class="flex gap-2 pt-2">
+<input class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500" id="new-ff-sub-input" placeholder="Sub-kategori baru..." type="text"/>
+<button class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer" onclick="addNewSubCategory('Script Free Fire')">Tambah</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Kelola Script Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-manage-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-folder-tree"></i> Kelola Script Game Komunitas</h3>
+<p class="text-xs text-slate-400">Atur postingan khusus, edit, atau hapus script.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="admin-manage-list"></div>
+</div>
+<!-- Kontrol Akun User Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-users-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-users-gear"></i> Kontrol Akun User &amp; Akses Postingan Khusus</h3>
+<p class="text-xs text-slate-400">Hapus akun, reset, blokir fleksibel, tambah/kurangi poin, VVIP, dan centang akses post.</p>
+<div class="space-y-3" id="admin-users-list"></div>
+</div>
+<!-- Broadcast Dashboard Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4 max-w-xl" id="admin-broadcast-section">
+<h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-bullhorn"></i> Pengaturan Broadcast Pesan User</h3>
+<p class="text-xs text-slate-400">Kirim pengumuman berjalan dengan judul di atas dan pesan memanjang berjalan di bawah.</p>
+<form class="space-y-4 pt-2" onsubmit="handleSaveBroadcast(event)">
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1">Judul Broadcast (Di Atas)</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-bold" id="bc-title" placeholder="Cth: PENGUMUMAN PENTING" required="" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1">Pesan / Isi Berjalan (Memanjang di Bawah)</label>
+<textarea class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs focus:outline-none focus:border-cyan-500" id="bc-content" placeholder="Tulis isi pesan berjalan..." required="" rows="4"></textarea>
+</div>
+<button class="py-3 px-6 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" type="submit">Publikasikan Broadcast</button>
+</form>
+</div>
+<!-- Konfigurasi Bot Telegram Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4 max-w-xl" id="admin-telegram-section">
+<h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-brands fa-telegram"></i> Konfigurasi Bot Telegram</h3>
+<p class="text-xs text-slate-400">Atur Bot Token dan Chat/Channel ID untuk mengirim notifikasi pusat logs &amp; livechat ke Telegram.</p>
+<form class="space-y-4 pt-2" onsubmit="handleSaveTelegramConfig(event)">
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1">Telegram Bot Token</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-mono" id="tg-token" placeholder="Cth: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ..." type="text"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1">Channel / Chat ID (Pusat Logs &amp; Livechat)</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500 font-mono" id="tg-chatid" placeholder="Cth: -1001234567890 atau @channelname" type="text"/>
+</div>
+<button class="py-3 px-6 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" type="submit">Simpan Konfigurasi Telegram</button>
+</form>
+</div>
+<!-- Admin Logs Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-logs-section">
+<div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+<h3 class="text-lg font-bold flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-file-lines"></i> Pusat Logs Sistem</h3>
+<div class="flex items-center gap-3">
+<button class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-bold text-xs rounded-lg transition-all cursor-pointer" onclick="resetAllLogs()"><i class="fa-solid fa-trash-can"></i> Reset All Logs</button>
+</div>
+</div>
+<div class="flex flex-wrap gap-1.5 text-xs pb-2 border-b border-slate-800/60">
+<button class="px-3 py-1 bg-cyan-500 text-slate-950 font-bold rounded-lg cursor-pointer" id="log-btn-all" onclick="filterLogsCategory('all')">Semua</button>
+<button class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer" id="log-btn-naik_level" onclick="filterLogsCategory('naik_level')">Naik Level</button>
+<button class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer" id="log-btn-redeem_point" onclick="filterLogsCategory('redeem_point')">Redeem Point</button>
+<button class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg cursor-pointer" id="log-btn-selesai_quest" onclick="filterLogsCategory('selesai_quest')">Selesai Quest</button>
+</div>
+<div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 font-mono text-xs" id="admin-logs-list"></div>
+</div>
+<!-- Admin Live Chat Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-livechat-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-headset"></i> Live Chat Real-Time dengan Semua User</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 h-[60vh]">
+<div class="bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-y-auto space-y-2">
+<h4 class="text-xs font-bold text-slate-400 uppercase">Daftar Chat User</h4>
+<div class="space-y-1" id="admin-chat-user-list"></div>
+</div>
+<div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+<div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+<div class="text-xs font-bold text-cyan-400" id="admin-active-chat-header">Pilih user untuk memulai chat real-time</div>
+<button class="px-3 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-bold text-[10px] rounded-lg transition-all cursor-pointer" onclick="adminEndLiveChat()"><i class="fa-solid fa-circle-xmark"></i> Akhiri Chat</button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs font-mono" id="admin-chat-messages"></div>
+<form class="flex gap-2 pt-3 border-t border-slate-800 mt-2" onsubmit="handleAdminSendChat(event)">
+<input class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-500" id="admin-chat-input" placeholder="Ketik balasan chat..." required="" type="text"/>
+<label class="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-cyan-400 text-xs cursor-pointer flex items-center" title="Kirim Foto">
+<i class="fa-regular fa-image"></i>
+<input accept="image/*" class="hidden" onchange="handleAdminUploadImage(event)" type="file"/>
+</label>
+<button class="px-4 py-2 bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer" type="submit">Kirim</button>
+</form>
+</div>
+</div>
+</div>
+<!-- Kustom Reward Redeem Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6" id="admin-rewards-section">
+<h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-amber-400"><i class="fa-solid fa-gift"></i> Pengaturan Kustom Reward Redeem Poin &amp; Batasan Kuota</h3>
+<p class="text-xs text-slate-400">Atur batasan redeem per user serta kuota total tersisa untuk kategori akses atau saldo.</p>
+<form class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800" onsubmit="handleSaveReward(event)">
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="rew-name" placeholder="Nama Hadiah..." required="" type="text"/>
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="rew-cost" placeholder="Poin..." required="" type="number"/>
+<select class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer" id="rew-type">
+<option value="vip">Kategori Akses (VVIP 1 Bulan)</option>
+<option value="post_access">Kategori Akses (Post Khusus)</option>
+<option value="dana">Kategori Saldo (Dana)</option>
+<option value="gopay">Kategori Saldo (Gopay)</option>
+</select>
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="rew-limit-user" placeholder="Max/User (Cth: 1)" type="number"/>
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="rew-quota" placeholder="Kuota Total (Cth: 50)" type="number"/>
+<button class="lg:col-span-5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs py-2.5 cursor-pointer" type="submit">Tambah Reward Baru</button>
+</form>
+<div class="space-y-2" id="admin-rewards-list"></div>
+</div>
+<!-- Admin Kustom Quest Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6" id="admin-quests-section">
+<div>
+<h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-list-check"></i> Kustom Quest User</h3>
+<p class="text-xs text-slate-400">Buat quest manual dengan validasi progres berdasarkan aktivitas nyata user. Klaim tidak memakai angka dari tombol/DOM, tetapi dihitung ulang dari data aktivitas tersimpan.</p>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800" onsubmit="handleSaveCustomQuest(event)">
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="quest-name" maxlength="80" minlength="3" placeholder="Nama Quest..." required="" type="text"/>
+<select class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer" id="quest-type" required="">
+<option value="like">Like Postingan</option>
+<option value="view">Lihat Postingan</option>
+<option value="comment">Komentar Postingan</option>
+<option value="rating">Rating Postingan</option>
+</select>
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="quest-target" max="100000" min="1" placeholder="Target Aktivitas" required="" type="number"/>
+<input class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="quest-reward" max="100000" min="1" placeholder="Point Hadiah" required="" type="number"/>
+<button class="md:col-span-2 lg:col-span-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold rounded-xl text-xs py-3 cursor-pointer" type="submit"><i class="fa-solid fa-plus"></i> Tambah Quest</button>
+</form>
+<div class="space-y-2" id="admin-quests-list"></div>
+</div>
+<!-- Admin Laporan Link Rusak Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-requests-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> Daftar Laporan Link Rusak dari Komunitas</h3>
+<p class="text-xs text-slate-400">Daftar laporan link rusak yang diteruskan secara otomatis dari tombol lapor link rusak oleh user.</p>
+<div class="space-y-3" id="admin-requests-list"></div>
+</div>
+<!-- Admin Analytics Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-6" id="admin-analytics-section">
+<h3 class="text-lg font-bold flex items-center gap-2 text-amber-400"><i class="fa-solid fa-chart-line"></i> Statistik &amp; Monitor Kesehatan Script</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+<span class="text-xs text-slate-400">Total Script Game Dipublikasikan</span>
+<h4 class="text-2xl font-bold text-cyan-400 mt-1" id="stat-total-res">0</h4>
+</div>
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+<span class="text-xs text-slate-400">Total Akun Pengguna Terdaftar</span>
+<h4 class="text-2xl font-bold text-amber-400 mt-1" id="stat-total-users">0</h4>
+</div>
+</div>
+</div>
+<!-- Admin Backup Data Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-backup-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-database"></i> Cadangan &amp; Ekspor Data Website</h3>
+<button class="py-3 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2" onclick="exportDataBackup()">
+<i class="fa-solid fa-download"></i> Unduh Berkas Cadangan (.json)
+                    </button>
+</div>
+<!-- Admin Settings Section -->
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden space-y-4" id="admin-settings-section">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-cyan-400"><i class="fa-solid fa-shield-halved"></i> Pengaturan Kredensial Super Admin</h3>
+<form class="space-y-4 max-w-md" onsubmit="handleUpdateAdminCredentials(event)">
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Username Admin Baru</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="set-admin-user" required="" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Password Admin Baru</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="set-admin-pass" required="" type="password"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">PIN Rahasia Khusus Baru</label>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500" id="set-admin-pin" required="" type="password"/>
+</div>
+<button class="py-3 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer" type="submit">Simpan Kredensial Super Admin</button>
+</form>
+</div>
+</div>
+<!-- LIVE CHAT REAL-TIME USER VIEW -->
+<div class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto" id="livechat-panel">
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col h-[70vh]">
+<div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-lg">
+<i class="fa-solid fa-headset"></i>
+</div>
+<div>
+<h2 class="text-base font-bold text-white">Live Chat Real-Time dengan Admin</h2>
+<p class="text-xs text-slate-400">Kirim pesan teks atau gambar/foto bukti transaksi atau konsultasi langsung dengan admin.</p>
+</div>
+</div>
+<button class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-bold text-xs rounded-lg transition-all cursor-pointer" onclick="userEndLiveChat()"><i class="fa-solid fa-circle-xmark"></i> Akhiri Chat</button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-2 font-mono text-xs" id="user-livechat-messages"></div>
+<form class="flex gap-2 pt-4 border-t border-slate-800 mt-2" onsubmit="handleUserSendChat(event)">
+<input class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500" id="user-chat-input" placeholder="Ketik pesan ke admin..." required="" type="text"/>
+<label class="px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-cyan-400 text-xs cursor-pointer flex items-center" title="Kirim Foto">
+<i class="fa-regular fa-image text-sm"></i>
+<input accept="image/*" class="hidden" onchange="handleUserUploadImage(event)" type="file"/>
+</label>
+<button class="px-6 py-3 bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer" type="submit">Kirim</button>
+</form>
+</div>
+</div>
+<!-- USER REQUEST BOARD VIEW -->
+<div class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto" id="requests-panel">
+<div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
+<div class="flex items-center justify-between border-b border-slate-800 pb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl">
+<i class="fa-solid fa-hands-holding-child"></i>
+</div>
+<div>
+<h2 class="text-xl font-bold text-white">Board Request Script Komunitas</h2>
+<p class="text-xs text-slate-400">Ajukan permohonan script Mobile Legends atau Free Fire yang Anda butuhkan kepada admin.</p>
+</div>
+</div>
+<button class="px-4 py-2.5 bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer" onclick="openRequestModal()">Buat Request Baru</button>
+</div>
+<div class="space-y-3" id="user-requests-list"></div>
+</div>
+</div>
+<!-- USER HOME VIEW -->
+<div class="space-y-8 animate-fadeIn" id="user-panel">
+<!-- BROADCAST RUNNING CONTAINER -->
+<div id="broadcast-banner-container"></div>
+<!-- NAVIGATION KATEGORI UTAMA & SUB-KATEGORI INTERAKTIF -->
+<div class="bg-slate-900/60 border border-slate-800/80 p-5 rounded-2xl backdrop-blur-md space-y-4">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 transition-all cursor-pointer shadow-md" id="main-cat-btn-All" onclick="filterMainCategory('All')">Semua Script</button>
+<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-2" id="main-cat-btn-Script Mobile Legends" onclick="filterMainCategory('Script Mobile Legends')"><i class="fa-solid fa-shield-halved text-cyan-400"></i> Script Mobile Legends</button>
+<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-2" id="main-cat-btn-Script Free Fire" onclick="filterMainCategory('Script Free Fire')"><i class="fa-solid fa-fire text-amber-400"></i> Script Free Fire</button>
+<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1.5" id="cat-btn-Saved" onclick="filterSaved()"><i class="fa-solid fa-bookmark"></i> Disimpan</button>
+</div>
+<div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+<select class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer" id="sort-select" onchange="renderResources()">
+<option value="newest">Terbaru</option>
+<option value="popular">Paling Disukai</option>
+<option value="views">Dilihat Terbanyak</option>
+<option value="rating">Rating Tertinggi</option>
+<option value="size">Ukuran File</option>
+</select>
+<div class="w-full md:w-52 relative">
+<span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-magnifying-glass"></i></span>
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:border-cyan-500" id="search-input" oninput="handleSearchInput()" placeholder="Cari script..." type="text"/>
+<div class="absolute top-full left-0 right-0 bg-slate-900 border border-slate-800 rounded-xl mt-1 hidden shadow-2xl z-30 p-2 space-y-1" id="recent-search-box"></div>
+</div>
+</div>
+</div>
+<!-- SUB-KATEGORI CONTAINER (Tampil jika memilih salah satu game) -->
+<div class="hidden flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80" id="sub-category-bar">
+<span class="text-[11px] font-bold text-slate-400 mr-2 uppercase tracking-wider">Sub Kategori:</span>
+<div class="flex flex-wrap gap-2" id="sub-category-buttons-wrapper"></div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="resource-grid"></div>
+</div>
+<!-- LEADERBOARD VIEW -->
+<div class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto" id="leaderboard-panel">
+<div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
+<div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+<div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl">
+<i class="fa-solid fa-trophy"></i>
+</div>
+<div>
+<h2 class="text-xl font-bold text-white">Papan Peringkat Kontributor Bulanan</h2>
+<p class="text-xs text-slate-400">Daftar anggota komunitas paling aktif berdasarkan perolehan Poin.</p>
+</div>
+</div>
+<div class="space-y-3" id="leaderboard-list"></div>
+</div>
+</div>
+<!-- USER PROFILE VIEW -->
+<div class="hidden space-y-6 animate-fadeIn" id="profile-panel">
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-2xl font-bold">
+<i class="fa-solid fa-user"></i>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="text-xl font-bold text-white" id="profile-username"></h2>
+<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" id="profile-badge-label"></span>
+</div>
+<div class="flex items-center gap-3 mt-1">
+<p class="text-xs text-amber-400 font-semibold" id="profile-points-label">Poin: 0 Pts</p>
+<p class="text-xs text-cyan-400 font-bold" id="profile-level-label">Level: 1 (EXP: 0/50)</p>
+</div>
+<div class="text-xs text-emerald-400 font-bold mt-1" id="profile-vip-status"></div>
+<div class="flex flex-wrap gap-1.5 mt-2" id="profile-trophies"></div>
+</div>
+</div>
+<button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer" onclick="togglePasswordForm()">Ubah Password</button>
+</div>
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md hidden space-y-4" id="profile-password-box">
+<h3 class="font-bold text-sm text-cyan-400">Ganti Password Akun</h3>
+<form class="space-y-3" onsubmit="handleChangeUserPassword(event)">
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="new-user-pass" placeholder="Password Baru..." required="" type="password"/>
+<button class="px-4 py-2 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" type="submit">Simpan Password</button>
+</form>
+</div>
+<!-- MENU QUEST DI PROFIL SAYA (20 MISI) -->
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-flag-checkered"></i> Daftar Quest (20 Misi)</h3>
+<span class="text-xs text-slate-400">Selesaikan untuk klaim poin &amp; EXP</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto pr-2" id="profile-quests-list"></div>
+</div>
+<!-- MENU REDEEM POIN -->
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Redeem Poin</h3>
+<span class="text-xs text-slate-400">Tukarkan poin Anda dengan akses VVIP atau saldo e-wallet</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="user-redeem-rewards-list"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+<h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-eye"></i> Riwayat Lihat Post</h3>
+<div class="space-y-2 max-h-64 overflow-y-auto pr-2" id="profile-view-history-list"></div>
+</div>
+<div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+<h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-bookmark"></i> Script Disimpan</h3>
+<div class="space-y-3 max-h-64 overflow-y-auto pr-2" id="profile-saved-list"></div>
+</div>
+</div>
+</div>
+<!-- FAQ / PANDUAN UNDUH VIEW -->
+<div class="hidden space-y-6 animate-fadeIn max-w-4xl mx-auto" id="faq-panel">
+<div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl space-y-6 shadow-xl">
+<div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+<div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl">
+<i class="fa-solid fa-circle-question"></i>
+</div>
+<div>
+<h2 class="text-xl font-bold text-white">Pusat Panduan &amp; FAQ Unduhan Script</h2>
+<p class="text-xs text-slate-400">Panduan lengkap cara mengunduh script Mobile Legends dan Free Fire.</p>
+</div>
+</div>
+<div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+<h3 class="font-bold text-cyan-400 text-sm"><i class="fa-solid fa-cloud-arrow-down"></i> 1. Link dengan Iklan (Free)</h3>
+<p>Unduh script secara gratis melalui tautan iklan yang tersedia.</p>
+</div>
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+<h3 class="font-bold text-cyan-400 text-sm"><i class="fa-solid fa-shield-halved"></i> 2. Link Tanpa Iklan &amp; Direct File/Aplikasi (VVIP)</h3>
+<p>Nikmati link direct kecepatan tinggi tanpa iklan dengan berlangganan VVIP atau menukarkan poin.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="border-t border-slate-800/80 bg-slate-900/30 py-6 mt-auto text-center text-xs text-slate-500">
+<p>© 2026 Gudang Script. Secured &amp; Powered by Razpedia Team.</p>
+</footer>
+</div>
+<!-- DAILY CLAIM POINT (ABOVE SUPPORT CHAT) -->
+<div class="fixed bottom-24 right-6 z-50">
+<button class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center text-xl shadow-2xl hover:scale-105 transition-all cursor-pointer" id="daily-claim-btn" onclick="claimDailyPoints()" title="Daily Claim Point">
+<i class="fa-solid fa-calendar-check"></i>
+<span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-slate-950" id="daily-claim-dot"></span>
+</button>
+</div>
+<!-- FLOATING SUPPORT CHAT ICON (BOTTOM RIGHT) -->
+<div class="fixed bottom-6 right-6 z-50">
+<button class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center text-xl shadow-2xl hover:scale-105 transition-all cursor-pointer animate-bounce" onclick="toggleSupportChatModal()" title="Bantuan &amp; Request Chat">
+<i class="fa-solid fa-headset"></i>
+</button>
+</div>
+<!-- SUPPORT CHAT SELECTION MODAL -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn" id="support-chat-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-6 rounded-2xl shadow-2xl space-y-4 text-center">
+<div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-xl mx-auto flex items-center justify-center text-xl">
+<i class="fa-solid fa-headset"></i>
+</div>
+<h3 class="font-bold text-base text-white">Pusat Layanan Bantuan &amp; Request</h3>
+<p class="text-xs text-slate-400">Silakan pilih jenis layanan yang Anda perlukan untuk terhubung langsung dengan admin:</p>
+<div class="space-y-2 pt-2">
+<button class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs cursor-pointer shadow-md" onclick="selectSupportCategory('Bantuan')">
+<i class="fa-solid fa-circle-question mr-1"></i> Bantuan / Kendala Akun &amp; Transaksi
+                </button>
+<button class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold rounded-xl text-xs cursor-pointer" onclick="selectSupportCategory('Request')">
+<i class="fa-solid fa-hands-holding-child mr-1"></i> Request Script Baru
+                </button>
+</div>
+<button class="text-slate-500 text-xs hover:underline pt-2 block w-full" onclick="toggleSupportChatModal()">Tutup</button>
+</div>
+</div>
+<!-- MODAL REDEEM PILIH POSTINGAN KHUSUS -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn" id="redeem-post-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
+<h3 class="font-bold text-sm text-amber-400 flex items-center gap-2"><i class="fa-solid fa-gift"></i> Pilih Postingan untuk Akses Khusus</h3>
+<p class="text-xs text-slate-400">Silakan pilih postingan dengan akses khusus (hanya bisa 1x redeem per postingan):</p>
+<div class="space-y-2 max-h-60 overflow-y-auto pr-1" id="redeem-post-selection-list"></div>
+<button class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer" onclick="closeRedeemPostModal()">Batal</button>
+</div>
+</div>
+<!-- MODAL TAMBAH REQUEST SCRIPT KOMUNITAS -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn" id="request-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4">
+<h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-hands-holding-child"></i> Ajukan Request Script Baru</h3>
+<form class="space-y-3" onsubmit="handlePostRequest(event)">
+<input class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500" id="req-title" placeholder="Judul Script / Hero / Fitur yang Diminta..." required="" type="text"/>
+<textarea class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs focus:outline-none focus:border-cyan-500" id="req-desc" placeholder="Jelaskan detail script yang diinginkan..." required="" rows="3"></textarea>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 py-2.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" type="submit">Kirim Request</button>
+<button class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer" onclick="closeRequestModal()" type="button">Batal</button>
+</div>
+</form>
+</div>
+</div>
+<!-- CUSTOM MODAL KONFIRMASI HAPUS -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn" id="custom-confirm-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center space-y-4">
+<div class="w-12 h-12 bg-rose-500/10 text-rose-500 rounded-xl mx-auto flex items-center justify-center text-xl">
+<i class="fa-solid fa-triangle-exclamation"></i>
+</div>
+<h3 class="font-bold text-base text-white">Konfirmasi Hapus</h3>
+<p class="text-xs text-slate-400" id="confirm-msg">Apakah Anda yakin ingin menghapus resource ini?</p>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 py-2.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl text-xs cursor-pointer" id="confirm-btn-yes">Ya, Hapus</button>
+<button class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer" onclick="closeCustomConfirm()">Batal</button>
+</div>
+</div>
+</div>
+<!-- CUSTOM MODAL READER MODE -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 hidden animate-fadeIn" id="reader-mode-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
+<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<h3 class="font-bold text-sm text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-code-compare"></i> Petunjuk Pemasangan &amp; Detail Versi</h3>
+<button class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center" onclick="closeReaderMode()"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div class="text-sm text-slate-300 leading-relaxed overflow-y-auto pr-2 whitespace-pre-line flex-1 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono" id="reader-content"></div>
+</div>
+</div>
+<!-- DETAIL MODAL & RATING -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden animate-fadeIn" id="detail-modal">
+<div class="bg-slate-900 border border-slate-800 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+<div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl" id="modal-file-icon"></div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-base text-white" id="modal-title"></h3>
+<span class="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-cyan-400 font-bold" id="modal-version-badge"></span>
+<span class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/35" id="modal-verified-badge"><i class="fa-solid fa-shield-check"></i> Aman &amp; Teruji</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold" id="modal-badge"></span>
+<span class="text-[11px] text-amber-400 font-bold" id="modal-avg-rating"><i class="fa-solid fa-star"></i> 0.0</span>
+</div>
+</div>
+</div>
+<button class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div class="p-6 overflow-y-auto space-y-6 flex-1">
+<div class="hidden" id="modal-screenshot-container">
+<h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Tangkapan Layar (Screenshot)</h4>
+<img alt="Screenshot" class="w-full max-h-52 object-cover rounded-xl border border-slate-800 shadow-md" id="modal-screenshot-img" src=""/>
+</div>
+<div>
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Deskripsi &amp; Petunjuk Pemasangan</h4>
+<div class="flex gap-3">
+<button class="text-[11px] text-amber-400 hover:underline flex items-center gap-1 cursor-pointer" onclick="openVersionComparison()"><i class="fa-solid fa-code-compare"></i> Komparasi</button>
+<button class="text-[11px] text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer" onclick="openReaderMode()"><i class="fa-solid fa-expand"></i> Mode Baca</button>
+</div>
+</div>
+<p class="text-sm text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800/60 p-4 rounded-xl whitespace-pre-line line-clamp-4" id="modal-desc"></p>
+</div>
+<!-- Form Beri Rating & Ulasan -->
+<div class="bg-slate-950 border border-slate-800/60 p-4 rounded-xl space-y-3">
+<span class="text-xs font-semibold text-slate-300 block">Beri Rating &amp; Ulasan Script Ini (+10 Poin &amp; EXP):</span>
+<form class="space-y-3" onsubmit="handlePostRatingAndReview(event)">
+<div class="flex items-center justify-between">
+<div class="flex gap-1 text-xl text-slate-600" id="star-container">
+<button class="hover:text-amber-400 cursor-pointer" onclick="selectRatingStar(1)" type="button"><i class="fa-solid fa-star"></i></button>
+<button class="hover:text-amber-400 cursor-pointer" onclick="selectRatingStar(2)" type="button"><i class="fa-solid fa-star"></i></button>
+<button class="hover:text-amber-400 cursor-pointer" onclick="selectRatingStar(3)" type="button"><i class="fa-solid fa-star"></i></button>
+<button class="hover:text-amber-400 cursor-pointer" onclick="selectRatingStar(4)" type="button"><i class="fa-solid fa-star"></i></button>
+<button class="hover:text-amber-400 cursor-pointer" onclick="selectRatingStar(5)" type="button"><i class="fa-solid fa-star"></i></button>
+</div>
+<span class="text-xs text-amber-400 font-bold" id="rating-selected-text">Pilih Bintang (1-5)</span>
+</div>
+<input class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="review-input" placeholder="Tulis ulasan Anda tentang script ini..." required="" type="text"/>
+<button class="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all cursor-pointer" id="btn-submit-rating" type="submit">Kirim Rating &amp; Ulasan</button>
+</form>
+</div>
+<!-- Daftar Ulasan Pengguna -->
+<div class="space-y-3 pt-2">
+<h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i> Ulasan Pengguna (<span id="review-count">0</span>)</h4>
+<div class="space-y-3 max-h-48 overflow-y-auto pr-2" id="review-list"></div>
+</div>
+<!-- CONTAINER LINK UNDUHAN DINAMIS MANUAL DI MODAL DETAIL -->
+<div class="space-y-3 pt-2">
+<h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-down text-cyan-400"></i> Tautan Unduhan Tersedia</h4>
+<div class="space-y-2" id="modal-dynamic-links-list">
+<!-- Diisi dinamis via JS -->
+</div>
+</div>
+<div class="space-y-4 pt-4 border-t border-slate-800">
+<h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-regular fa-comments text-cyan-400"></i> Diskusi &amp; Komentar (<span id="comment-count">0</span>)</h4>
+<div class="space-y-3 max-h-48 overflow-y-auto pr-2" id="comment-list"></div>
+<form class="flex gap-2 pt-2" onsubmit="handlePostComment(event)">
+<input class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-cyan-500" id="comment-input" placeholder="Tulis komentar bermanfaat..." required="" type="text"/>
+<button class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer" type="submit">Kirim</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

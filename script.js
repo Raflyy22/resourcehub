@@ -651,35 +651,48 @@ function logout() {
     checkAuthState();
 }
 
-function checkAuthState() {
-    const authModal = document.getElementById('auth-modal');
-    const mainApp = document.getElementById('main-app');
-    if (!currentUser) {
-        authModal.classList.remove('hidden');
-        mainApp.classList.add('hidden');
-    } else {
-        authModal.classList.add('hidden');
-        mainApp.classList.remove('hidden');
-        document.getElementById('user-display-name').textContent = currentUser.username;
-        document.getElementById('user-role-badge').textContent = currentUser.role === 'admin' ? 'Super Admin' : getUserBadge(currentUser.username);
-
-        if (currentUser.role === 'admin') {
-            document.getElementById('admin-panel').classList.remove('hidden');
-            document.getElementById('user-panel').classList.add('hidden');
-            document.getElementById('profile-panel').classList.add('hidden');
-            document.getElementById('faq-panel').classList.add('hidden');
-            document.getElementById('leaderboard-panel').classList.add('hidden');
-            document.getElementById('requests-panel').classList.add('hidden');
-            document.getElementById('livechat-panel').classList.add('hidden');
-            document.getElementById('nav-profile-btn').classList.add('hidden');
-            renderAdminDashboard();
-        } else {
-            document.getElementById('admin-panel').classList.add('hidden');
-            document.getElementById('user-panel').classList.remove('hidden');
-            document.getElementById('nav-profile-btn').classList.remove('hidden');
-            renderResources();
-        }
+function getCurrentPage() { return document.body?.dataset?.page || 'dashboard'; }
+function navigateToPage(path) {
+    if (!path) return;
+    const clean=String(path).replace(/^\//,'');
+    if (window.location.pathname.endsWith('/'+clean) || window.location.pathname.endsWith(clean)) return;
+    window.location.href=clean;
+}
+function applyPageView() {
+    const page=getCurrentPage();
+    const userViews={dashboard:'user-panel',scripts:'user-panel',profile:'profile-panel',leaderboard:'leaderboard-panel',requests:'requests-panel',livechat:'livechat-panel',faq:'faq-panel',rewards:'profile-panel'};
+    if(currentUser?.role!=='admin'){
+        Object.values(userViews).forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+        const target=userViews[page]||'user-panel'; document.getElementById(target)?.classList.remove('hidden');
+        if(target==='user-panel') renderResources();
+        if(target==='profile-panel') renderProfilePage();
+        if(target==='leaderboard-panel') renderLeaderboardPage();
+        if(target==='requests-panel') renderCommunityRequests();
+        if(target==='livechat-panel') renderUserLiveChatMessages();
+        return;
     }
+    if(page==='login' || !page.startsWith('admin-')) { navigateToPage('admin-dashboard.html'); return; }
+    const sectionMap={
+      'admin-upload':'upload','admin-quests':'quests','admin-rewards':'rewards','admin-users':'users','admin-categories':'categories','admin-broadcast':'broadcast','admin-telegram':'telegram','admin-logs':'logs','admin-livechat':'livechat','admin-requests':'requests','admin-analytics':'analytics','admin-backup':'backup','admin-settings':'settings'
+    };
+    Object.values(sectionMap).forEach(t=>document.getElementById(`admin-${t}-section`)?.classList.add('hidden'));
+    if(sectionMap[page]) document.getElementById(`admin-${sectionMap[page]}-section`)?.classList.remove('hidden');
+    else renderAdminDashboard();
+}
+function checkAuthState() {
+    const authModal=document.getElementById('auth-modal'); const mainApp=document.getElementById('main-app'); const page=getCurrentPage();
+    if(!currentUser){
+        if(page!=='login') navigateToPage('index.html');
+        authModal?.classList.remove('hidden'); mainApp?.classList.add('hidden'); return;
+    }
+    if(page==='login'){ navigateToPage(currentUser.role==='admin'?'admin-dashboard.html':'dashboard.html'); return; }
+    authModal?.classList.add('hidden'); mainApp?.classList.remove('hidden');
+    const nameEl=document.getElementById('user-display-name'); const roleEl=document.getElementById('user-role-badge');
+    if(nameEl) nameEl.textContent=currentUser.username; if(roleEl) roleEl.textContent=currentUser.role==='admin'?'Super Admin':getUserBadge(currentUser.username);
+    const adminPanel=document.getElementById('admin-panel'), userPanel=document.getElementById('user-panel'), profileBtn=document.getElementById('nav-profile-btn');
+    if(currentUser.role==='admin'){ adminPanel?.classList.remove('hidden'); userPanel?.classList.add('hidden'); profileBtn?.classList.add('hidden'); renderAdminDashboard(); }
+    else { adminPanel?.classList.add('hidden'); userPanel?.classList.remove('hidden'); profileBtn?.classList.remove('hidden'); renderResources(); }
+    applyPageView();
 }
 
 function getUserBadge(username) {
@@ -695,29 +708,11 @@ function getUserBadge(username) {
 }
 
 function switchMainView(view) {
-    ['user-panel', 'profile-panel', 'faq-panel', 'leaderboard-panel', 'requests-panel', 'livechat-panel'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
-
-    if (view === 'home') {
-        document.getElementById('user-panel').classList.remove('hidden');
-        renderResources();
-    } else if (view === 'profile') {
-        document.getElementById('profile-panel').classList.remove('hidden');
-        renderProfilePage();
-    } else if (view === 'faq') {
-        document.getElementById('faq-panel').classList.remove('hidden');
-    } else if (view === 'leaderboard') {
-        document.getElementById('leaderboard-panel').classList.remove('hidden');
-        renderLeaderboardPage();
-    } else if (view === 'requests') {
-        document.getElementById('requests-panel').classList.remove('hidden');
-        renderCommunityRequests();
-    } else if (view === 'livechat') {
-        document.getElementById('livechat-panel').classList.remove('hidden');
-        renderUserLiveChatMessages();
-    }
+    if(getCurrentPage()!=='login'){ const pages={home:'dashboard.html',profile:'profile.html',faq:'faq.html',leaderboard:'leaderboard.html',requests:'requests.html',livechat:'livechat.html'}; if(pages[view]){ navigateToPage(pages[view]); return; } }
+    ['user-panel','profile-panel','faq-panel','leaderboard-panel','requests-panel','livechat-panel'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+    const map={home:'user-panel',profile:'profile-panel',faq:'faq-panel',leaderboard:'leaderboard-panel',requests:'requests-panel',livechat:'livechat-panel'}; const target=map[view];
+    if(target) document.getElementById(target)?.classList.remove('hidden');
+    if(view==='home') renderResources(); if(view==='profile') renderProfilePage(); if(view==='leaderboard') renderLeaderboardPage(); if(view==='requests') renderCommunityRequests(); if(view==='livechat') renderUserLiveChatMessages();
 }
 
 function toggleSupportChatModal() {
@@ -827,6 +822,8 @@ function renderLeaderboardPage() {
 }
 
 function switchAdminTab(type) {
+    const pageMap={upload:'admin-upload.html',quests:'admin-quests.html',rewards:'admin-rewards.html',users:'admin-users.html',categories:'admin-categories.html',broadcast:'admin-broadcast.html',telegram:'admin-telegram.html',logs:'admin-logs.html',livechat:'admin-livechat.html',requests:'admin-requests.html',analytics:'admin-analytics.html',backup:'admin-backup.html',settings:'admin-settings.html'};
+    if(getCurrentPage()!=='login' && pageMap[type]){ navigateToPage(pageMap[type]); return; }
     ['upload', 'manage', 'categories', 'users', 'broadcast', 'telegram', 'logs', 'livechat', 'rewards', 'quests', 'requests', 'analytics', 'backup', 'settings'].forEach(t => {
         const sec = document.getElementById(`admin-${t}-section`);
         const btn = document.getElementById(`btn-tab-${t}`);
